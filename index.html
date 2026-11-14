@@ -1167,7 +1167,7 @@ function health(id, v) { const p = S.people[id]; if (p) p.health = clamp(p.healt
 const defOf = id => CAST.find(d => d.id === id) || GUESTS.find(d => d.id === id);
 function eff(id) {
   const p = S.people[id], d = defOf(id); let e = d.spec && d.spec === p.job ? 1.5 : 1;
-  if (p.mood) e *= p.mood.k === 'galit' ? .75 : .85; if (p.health < 40) e *= .5; if (p.stress > 70) e *= .7; if (morale() < 30) e *= .8; return e;
+  if (p.mood) e *= p.mood.k === 'galit' ? .75 : .85; else if (p.happy === S.day) e *= 1.1; if (p.health < 40) e *= .5; if (p.stress > 70) e *= .7; if (morale() < 30) e *= .8; return e;
 }
 const hhmm = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 function phaseName(m) { return m < 660 ? 'Umaga' : m < 780 ? 'Tanghali' : m < 1080 ? 'Hapon' : m < 1320 ? 'Gabi' : 'Hatinggabi'; }
@@ -2143,11 +2143,12 @@ function hourHook(night) {
     if ((st.hu || 0) >= 100) { health(id, -1); stress(id, 1.5); }
     if (st.mood) stress(id, st.mood.k === 'lungkot' ? .6 : .3);
   }
+  if (!night && S.activity) people().forEach(id => { if (!S.people[id].sick) stress(id, -4); });
   if (!night && S.tv && S.min < S.tv.until && roomAtPos(ISHA.x, ISHA.z) === S.tv.room) stress('isha', -6);
 }
 function tagEm(p, st) {
   if (!p.em) p.em = p.tag.querySelector('em'); if (!p.em) return;
-  const e = st?.mood ? (st.mood.k === 'galit' ? '😠' : '😢') : st?.needGo === 'snack' ? '🍞' : st?.needGo ? '🚽' : '';
+  const e = st?.mood ? (st.mood.k === 'galit' ? '😠' : '😢') : st?.needGo === 'snack' ? '🍞' : st?.needGo ? '🚽' : st?.happy === S.day ? '😊' : '';
   if (p.emV !== e) { p.emV = e; p.em.textContent = e; }
 }
 
@@ -2616,18 +2617,21 @@ function startActivity(a) {
   if (a.cost) for (const [k, v] of Object.entries(a.cost)) addRes(k, -v);
   closeSheet(); chime();
   if (a.feast) { S.feast = S.day; toast('Mamayang hapunan: salu-salo! Nagsimula nang magluto sina Nanay Mila at Mama Jen.', 'good'); save(); return; }
-  S.activity = { id: a.id, room: a.room, tv: a.tv, until: S.min + a.dur };
+  S.activity = { id: a.id, room: a.room, tv: a.tv, until: S.min + a.dur, m0: morale() };
   toast(`${a.n}! Pupunta ang lahat sa ${ROOMS[a.room].n}.`, 'good');
   routineAll(); if (cam.mode === 'over') $('#btnView').click();
   if (doing) doing = null; const c = approach(roomCenter(a.room)), look = TVPOS[a.tv] || roomCenter(a.room);
   ISHA.place(c.x, c.z, Math.atan2(look.x - c.x, look.z - c.z)); ISHA.setPose('sit'); save();
 }
 function endActivity() {
-  const a = ACTS.find(x => x.id === S.activity.id), here = roomAtPos(ISHA.x, ISHA.z) === S.activity.room;
+  const a = ACTS.find(x => x.id === S.activity.id), here = roomAtPos(ISHA.x, ISHA.z) === S.activity.room, m0 = S.activity.m0 ?? morale();
   S.activity = null; routineAll();
   if (!a) return;
   const txt = a.fx(); stress('isha', here ? -12 : -5);
-  queueEvent(addGenSheet(a.n, `<p>${txt}</p>`));
+  const lifted = npcs().filter(id => S.people[id].mood && Math.random() < .75);
+  lifted.forEach(id => clearMood(id));
+  people().forEach(id => { if (!S.people[id].sick) S.people[id].happy = S.day; });
+  queueEvent(addGenSheet(a.n, `<p>${txt}</p><p><b>Moral: ${m0}% → ${morale()}%</b>. Masaya ang lahat ngayong araw, kaya mas masipag sila sa trabaho.${lifted.length ? `<br>Gumaan ang loob ni ${lifted.map(N).join(', ')}.` : ''}</p>`));
   save();
 }
 function addGenSheet(title, html) { const id = 'gen' + (++genN); GEN[id] = { kick: 'Pamilya', title, good: 1, body: () => html, choices: [{ t: 'Ang saya!', sub: '', fx: () => '' }] }; return id; }
