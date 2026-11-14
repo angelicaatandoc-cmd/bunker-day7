@@ -152,9 +152,6 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-
 .daycard .sum b{color:var(--text)}
 .small{font-size:12px;color:var(--muted);margin-top:10px}
 body.intro .hud,body.intro #labels{display:none!important}
-#needs{right:12px;left:auto;bottom:calc(var(--sab) + 126px);display:flex;flex-direction:column;align-items:flex-end;gap:4px;pointer-events:none}
-#needs span{font:700 11px var(--f-label);letter-spacing:.03em;background:rgba(14,17,19,.75);border:1px solid var(--line);border-radius:8px;padding:3px 7px;color:var(--muted)}
-#needs span.hi{color:#ffd9a0;border-color:rgba(240,167,58,.6)} #needs span.crit{color:#ffc2bb;border-color:var(--bad)}
 .tag em{font-style:normal;font-size:13px}
 .tag.angry b{color:#ff9b8a} .tag.sad b{color:#a9c8ff}
 .pads{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0}
@@ -188,7 +185,6 @@ body.intro .hud,body.intro #labels{display:none!important}
 <div class="hud" id="meters"></div>
 <div class="hud" id="task" hidden><div id="taskText"></div></div>
 <div class="hud" id="toasts"></div>
-<div class="hud" id="needs"></div>
 <div class="hud" id="bottom">
   <div class="hint" id="hint">Hilahin ang kaliwang bahagi ng screen para maglakad.</div>
   <div class="acts">
@@ -243,7 +239,7 @@ const WALL_H = 2.6;
 // Palitan ang mga pangalan dito kapag may totoong pangalan na.
 const CAST = [
   { id:'isha', name:'Isha', role:'Lider ng bunker', spec:null, player:true, h:1.6, skin:'#c99a74', shirt:'#2f4858', pants:'#26272c', hair:'#1b1410', style:'long', bed:['M',0] },
-  { id:'angel', name:'Angel', role:'Medic at planner', spec:'C', job:'C', h:1.58, skin:'#d1a27c', shirt:'#b5654a', pants:'#3a3f4a', hair:'#241a14', style:'bun', bed:['M',1],
+  { id:'angel', name:'Angel', role:'Partner ni Isha · Medic', spec:'C', job:'C', h:1.58, skin:'#d1a27c', shirt:'#b5654a', pants:'#3a3f4a', hair:'#241a14', style:'bun', bed:['M',1],
     persona:'partner ni Isha; kalmado, organisado, laging may listahan, malambing kay Isha' },
   { id:'mila', name:'Nanay Mila', role:'Kusinera', spec:'K', job:'K', h:1.5, skin:'#b88a66', shirt:'#7a4e6e', pants:'#3b3734', hair:'#cfcac2', style:'bob', bed:['R1',0],
     persona:'matanda na, lola ng pamilya; maalaga, laging nagtatanong kung kumain ka na, pinakamasarap magluto' },
@@ -1145,7 +1141,7 @@ function collides(x, z, r = .24) {
 }
 
 // ---------------------------------------------------------------- game state
-const CAP = { food: 200, meat: 120, water: 200, power: 100, o2: 100, feed: 100 };
+const CAP = { food: 300, meat: 150, water: 300, power: 100, o2: 100, feed: 120 };
 const tmpO = new THREE.Object3D(), tmpC = new THREE.Color();
 const RES = [['food', 'Kain', 'var(--food)'], ['meat', 'Karne', '#d9826a'], ['water', 'Tubig', 'var(--water)'], ['power', 'Ilaw', 'var(--power)'], ['o2', 'O₂', 'var(--o2)'], ['mood', 'Moral', 'var(--mood)']];
 let S = null;
@@ -1154,7 +1150,7 @@ let ISHA = null, MILLIE = null;
 let paused = 1, speed = 1;
 const SAVE_KEY = 'bunker-day7-save-v1';
 function fresh() {
-  const s = { day: 7, min: 360, res: { food: 150, meat: 60, water: 160, power: 85, o2: 100, feed: 70 }, ammo: 14, parts: 6, up: {}, door: { hp: 100, lvl: 0 }, said: {}, acts: {}, helped: [], raids: {}, extra: [], people: {}, flags: {}, done: {}, last: {}, task: null, timers: [], growth: .35, slots: {}, talked: {}, dayStart: null, summary: null };
+  const s = { day: 7, min: 360, res: { food: 240, meat: 90, water: 240, power: 95, o2: 100, feed: 90 }, ammo: 14, parts: 6, up: {}, door: { hp: 100, lvl: 0 }, said: {}, acts: {}, helped: [], raids: {}, extra: [], people: {}, flags: {}, done: {}, last: {}, task: null, timers: [], growth: .35, slots: {}, talked: {}, dayStart: null, summary: null };
   for (const d of CAST) s.people[d.id] = { job: d.player ? null : d.job, stress: d.player ? 15 : rand(8, 22) | 0, health: 100, sick: false, bl: rand(15, 45), bw: rand(10, 40), hu: 30, mood: null };
   return s;
 }
@@ -1225,15 +1221,17 @@ function routineAll(tp) { npcs().forEach(id => P[id] && routine(P[id], tp)); }
 // ---------------------------------------------------------------- simulation
 function hourTick(night = false) {
   const ids = people(), n = ids.reduce((a, id) => a + (defOf(id).kid ? .5 : 1), 0), W = {};
-  if (!night) ids.forEach(id => { const p = P[id]; if (p && p.atWork && S.people[id].job) W[S.people[id].job] = (W[S.people[id].job] || 0) + eff(id); });
+  // people still count for their job while walking to it or stepping out to the CR, at a lower rate
+  if (!night) ids.forEach(id => { const p = P[id], st = S.people[id]; if (p && st.job && st.job !== 'rest' && !st.sick) W[st.job] = (W[st.job] || 0) + eff(id) * (p.atWork ? 1 : .6); });
+  const nf = night ? .5 : 1;   // asleep: half the food, water and air
   const brown = S.res.power <= 0 || !!S.flags.blackout, sun = !night && S.min >= 360 && S.min < 1080;
-  addRes('food', (W.G || 0) * .95 * (S.up.green2 ? 1.3 : 1) * (brown ? .4 : 1) - n * .125 * (W.K ? .82 : 1) * (W.P ? .9 : 1) - .2);
-  addRes('feed', (W.G || 0) * .25 - .35 - (S.up.coop2 ? .15 : 0));
+  addRes('food', (W.G || 0) * .95 * (S.up.green2 ? 1.3 : 1) * (brown ? .4 : 1) - n * .09 * nf * (W.K ? .85 : 1) * (W.P ? .9 : 1) - .1);
+  addRes('feed', (W.G || 0) * .25 - .25 - (S.up.coop2 ? .1 : 0));
   if (S.res.feed > 0) addRes('meat', (W.Y || 0) * .7 * (S.up.coop2 ? 1.4 : 1) + .15);
   if (S.res.feed < 15 && !S.flags.feedWarn) { S.flags.feedWarn = 1; toast('Paubos na ang patuka ng manok at baboy!', 'bad'); } if (S.res.feed > 30) S.flags.feedWarn = 0;
-  addRes('water', (brown ? 0 : (W.W || 0) * 2.3 * (S.up.filter2 ? 1.3 : 1)) - n * .12 - (brown ? 0 : .2) - (S.flags.leak ? 3 : 0));
-  addRes('power', (sun ? 2.7 * (S.up.solar2 ? 1.35 : 1) * (S.flags.dust ? .45 : 1) : 0) + (W.S || 0) * 1.15 - 2.1 * (S.flags.ration ? .62 : 1));
-  addRes('o2', (brown ? 0 : (5.6 + (S.up.scrub2 ? 2 : 0)) * (S.flags.fanBroken ? .35 : 1) + .5) + (W.O || 0) * 1.4 - n * .35);
+  addRes('water', (brown ? 0 : (W.W || 0) * 2.3 * (S.up.filter2 ? 1.3 : 1)) - n * .08 * nf - (brown ? 0 : .1) - (S.flags.leak ? 3 : 0));
+  addRes('power', (sun ? 3.2 * (S.up.solar2 ? 1.35 : 1) * (S.flags.dust ? .45 : 1) : 0) + (W.S || 0) * 1.15 - (night ? 1 : 1.5) * (S.flags.ration ? .62 : 1));
+  addRes('o2', (brown ? 0 : (6.5 + (S.up.scrub2 ? 2 : 0)) * (S.flags.fanBroken ? .35 : 1) + .5) + (W.O || 0) * 1.4 - n * .28 * nf);
   const low = ['food', 'water', 'power', 'o2'].some(k => S.res[k] < CAP[k] * .2);
   ids.forEach(id => {
     const st = S.people[id], p = P[id];
@@ -1906,7 +1904,7 @@ const UPGRADES = [
   { id: 'freezer', n: 'Pangalawang freezer', cost: 2, fx: 'Mas maraming karne ang maiipon' },
 ];
 function applyUpgrades() {
-  CAP.meat = S.up.freezer ? 180 : 120;
+  CAP.meat = S.up.freezer ? 220 : 150;
   if (FX.scrub2) FX.scrub2.visible = !!S.up.scrub2;
   if (FX.extraHens) FX.extraHens.forEach(h => h.g.visible = !!S.up.coop2);
 }
@@ -1940,7 +1938,7 @@ function endMeal() {
   if (m.cook === 'isha') { bonus += 6; lines.push('Ang sarap daw ng luto mo.'); }
   else if (m.cook) { bonus += 3; lines.push(`Luto ni ${N(m.cook)}.`); }
   else { bonus -= 4; lines.push('Walang nagluto. De-lata na naman.'); }
-  if (S.res.meat >= n * .3) { addRes('meat', -n * .3); bonus += 3; lines.push('May ulam na karne.'); } else lines.push('Wala nang karne. Gulay at kanin lang.');
+  if (S.res.meat >= n * .2) { addRes('meat', -n * .2); bonus += 3; lines.push('May ulam na karne.'); } else lines.push('Wala nang karne. Gulay at kanin lang.');
   if (m.isha) { bonus += 4; lines.push('Kumpleto kayo sa hapag.'); } else lines.push('Hinanap ka nila sa hapag.');
   stressAll(-bonus); toast(lines.join(' '), bonus > 6 ? 'good' : ''); routineAll(); save();
 }
@@ -2114,9 +2112,8 @@ function needsTick(dm) {
   if (!S || dm <= 0) return;
   const night = S.min >= 1290;
   for (const id of people()) {
-    const st = S.people[id], d = defOf(id), p = P[id]; if (!st || !p) continue;
-    const me = id === 'isha'; st.bl = (st.bl || 0) + dm * (me ? .25 : d.kid ? .42 : .3); st.bw = (st.bw || 0) + dm * (me ? .06 : .07); st.hu = Math.min(110, (st.hu || 0) + dm * .3);
-    if (id === 'isha') { ishaNeeds(st); continue; }
+    const st = S.people[id], d = defOf(id), p = P[id]; if (!st || !p || id === 'isha') continue;
+    st.bl = (st.bl || 0) + dm * (d.kid ? .42 : .3); st.bw = (st.bw || 0) + dm * .07; st.hu = Math.min(110, (st.hu || 0) + dm * .3);
     if (id === 'butchukok') {
       if ((st.bl >= 90 || st.bw >= 95) && !S.flags.diaper) { S.flags.diaper = S.min; toast('Umiiyak si Butchukok. Puno na ang diaper niya.'); }
       if (S.flags.diaper && S.min - S.flags.diaper > 45) { S.flags.diaper = 0; st.bl = 0; st.bw = Math.min(st.bw, 20); stress('monica', 3); toast('Pinalitan ni Monica ang diaper ni Butchukok.'); }
@@ -2130,21 +2127,13 @@ function needsTick(dm) {
   }
   if (S.activity && S.min >= S.activity.until) endActivity();
 }
-function ishaNeeds(st) {
-  const warn = (k, at, msg) => { const f = 'w' + k; if (st[k] >= at && !S.flags[f]) { S.flags[f] = 1; toast(msg, 'bad'); } if (st[k] < at - 20) S.flags[f] = 0; };
-  warn('bl', 72, 'Naiihi ka na. Pumunta sa CR at pindutin ang Umihi.');
-  warn('bw', 85, 'Natatae ka na! Pumunta sa CR.');
-  warn('hu', 80, 'Gutom ka na. Kumain sa hapag, o kumuha ng meryenda sa ref sa Kusina.');
-  if (st.bl >= 100) { st.bl = 0; S.flags.dirty = 1; stress('isha', 14); beep(300, .3); toast('Hindi ka umabot sa CR... naihi ka. Maligo ka muna.', 'bad'); }
-  if (st.bw >= 100) { st.bw = 0; st.bl = Math.min(st.bl, 20); S.flags.dirty = 1; stress('isha', 22); beep(300, .3); toast('Hindi ka umabot sa CR! Amoy ang buong pasilyo. Maligo ka agad.', 'bad'); }
-}
 function morningNeeds() {
   for (const id of people()) {
     const st = S.people[id]; st.bl = id === 'isha' ? 55 : rand(50, 92); st.bw = Math.min(90, (st.bw || 0) * .4 + rand(25, 55)); st.hu = 55; st.needGo = null;
     if (P[id]) { P[id].useUntil = 0; P[id].waitCR = 0; }
     if (st.mood && st.mood.until < S.day) st.mood = null;
   }
-  S.flags.diaper = 0; S.tv = null; S.activity = null; S.flags.dirty = 0;
+  S.flags.diaper = 0; S.tv = null; S.activity = null;
 }
 function hourHook(night) {
   if (!night && npcs().some(id => S.people[id].job === 'X' && P[id]?.atWork)) S.door.hp = Math.min(doorMax(), S.door.hp + 3);
@@ -2154,12 +2143,6 @@ function hourHook(night) {
     if (st.mood) stress(id, st.mood.k === 'lungkot' ? .6 : .3);
   }
   if (!night && S.tv && S.min < S.tv.until && roomAtPos(ISHA.x, ISHA.z) === S.tv.room) stress('isha', -6);
-  if (!night && S.flags.dirty) npcs().forEach(id => { if (P[id] && Math.hypot(P[id].x - ISHA.x, P[id].z - ISHA.z) < 3) stress(id, .5); });
-}
-function drawNeeds() {
-  const st = S.people.isha, el = $('#needs'); if (!el || !st) return;
-  const c = v => v >= 90 ? 'crit' : v >= 70 ? 'hi' : '';
-  el.innerHTML = `<span class="${c(st.hu)}">Gutom ${Math.round(Math.min(100, st.hu))}</span><span class="${c(st.bl)}">Ihi ${Math.round(Math.min(100, st.bl))}</span><span class="${c(st.bw)}">Dumi ${Math.round(Math.min(100, st.bw))}</span>${S.flags.dirty ? '<span class="crit">Kailangang maligo</span>' : ''}`;
 }
 function tagEm(p, st) {
   if (!p.em) p.em = p.tag.querySelector('em'); if (!p.em) return;
@@ -2214,7 +2197,6 @@ function setupItems() {
   item(46.1, 31.6, 'Magdrawing sa chalkboard', () => play('chalk'), { r: .8 });
   item(24.2, 16.7, 'Tingnan ang board', familySheet, { r: .9 });
   for (const k of ['m', 'Bw', 'Bm']) {
-    for (const s of SPOTS.toilet[k]) item(s.x, k === 'm' ? 2.5 : s.z + .9, () => S.people.isha.bw >= 35 ? 'Magbawas' : 'Umihi', () => useToilet(s), { r: .7 });
     for (const s of SPOTS.shower[k]) item(k === 'm' ? 27.5 : s.x, k === 'm' ? 3.4 : s.z - 1, 'Maligo', () => shower(s), { r: .7 });
   }
 }
@@ -2293,11 +2275,10 @@ function readSheet() {
 function fridgeSheet() {
   openSheet(`<div class="kick">Kusina · ref</div><h2 class="sh-title">Ref</h2><div class="sh-body">${stockLine()}</div>
     <div class="choices"><button class="choice" id="fSnack"><b>Kumain ng meryenda</b><span>Pandesal at keso. Bawas gutom.</span></button>
-    <button class="choice" id="fWater"><b>Uminom ng tubig</b></button><button class="choice" id="fCoffee"><b>Magkape</b><span>Gising ka, pero maiihi ka mamaya.</span></button></div>`);
-  const st = S.people.isha;
-  $('#fSnack').onclick = () => { closeSheet(); if (S.res.food < 1) return toast('Wala nang makain sa ref.', 'bad'); busy(1.4, () => { addRes('food', -.4); st.hu = Math.max(0, st.hu - 45); advance(10); toast(pick(['Kumain ka ng pandesal na may keso.', 'Kumain ka ng tirang kanin at itlog.', 'Kumain ka ng saging at biskwit.']), 'good'); }); };
-  $('#fWater').onclick = () => { closeSheet(); addRes('water', -.2); st.bl += 8; stress('isha', -1); toast('Uminom ka ng malamig na tubig.'); };
-  $('#fCoffee').onclick = () => { closeSheet(); st.bl += 15; stress('isha', -4); advance(10); toast('Mainit na kape. Mas gising ka na.'); };
+    <button class="choice" id="fWater"><b>Uminom ng tubig</b></button><button class="choice" id="fCoffee"><b>Magkape</b><span>Mainit na kape, pampagising.</span></button></div>`);
+  $('#fSnack').onclick = () => { closeSheet(); if (S.res.food < 1) return toast('Wala nang makain sa ref.', 'bad'); busy(1.4, () => { addRes('food', -.4); stress('isha', -3); advance(10); toast(pick(['Kumain ka ng pandesal na may keso.', 'Kumain ka ng tirang kanin at itlog.', 'Kumain ka ng saging at biskwit.']), 'good'); }); };
+  $('#fWater').onclick = () => { closeSheet(); addRes('water', -.2); stress('isha', -1); toast('Uminom ka ng malamig na tubig.'); };
+  $('#fCoffee').onclick = () => { closeSheet(); stress('isha', -4); advance(10); toast('Mainit na kape. Mas gising ka na.'); };
 }
 const NEWS = [
   d => `PHIVOLCS: patuloy ang pagbuga ng abo ng Pinatubo. Iwasan ang paglabas nang walang N95 mask.`,
@@ -2339,18 +2320,10 @@ function journal() {
     toast(`Journal, Araw ${S.day}: Moral ${morale()}%. ${moods.length ? 'Bantayan si ' + moods.join(', ') + '.' : 'Payapa ang lahat ngayon.'} ${100 - S.day} araw pa.`);
   }, 'sit');
 }
-function useToilet(s) {
-  const st = S.people.isha;
-  if (s.taken && s.taken !== 'isha') return toast('May gumagamit pa. Hintayin muna.');
-  if (st.bl < 20 && st.bw < 35) return toast('Hindi ka pa naiihi.');
-  const poop = st.bw >= 35;
-  ISHA.place(s.x, s.z, s.yaw);
-  busy(poop ? 2.4 : 1.4, () => { advance(poop ? 12 : 4); addRes('water', -.05); if (poop) { st.bw = 0; st.bl = Math.min(st.bl, 10); } else st.bl = 0; toast(poop ? 'Ginhawa! Nag-flush ka at naghugas ng kamay.' : 'Umihi ka, nag-flush, at naghugas ng kamay.', 'good'); unstick(ISHA); }, 'sit');
-}
 function shower(s) {
   if (s.taken && s.taken !== 'isha') return toast('May naliligo pa.');
   ISHA.place(s.x, s.z, s.yaw);
-  busy(2.2, () => { advance(15); addRes('water', -1.2); S.flags.dirty = 0; stress('isha', -6); toast('Naligo ka. Ang presko!', 'good'); unstick(ISHA); }, 'stand');
+  busy(2.2, () => { advance(15); addRes('water', -1.2); stress('isha', -6); toast('Naligo ka. Ang presko!', 'good'); unstick(ISHA); }, 'stand');
 }
 
 // ---------------------------------------------------------------- door, armory, raids
@@ -2665,7 +2638,7 @@ function actPlan(p) {
 
 // ---------------------------------------------------------------- endless, non-repeating conversation
 const uniq = (id, gen, tries = 10) => { const mem = (S.said ||= {})[id] ||= []; let s = gen(); for (let i = 0; i < tries && mem.includes(s); i++) s = gen(); mem.push(s); if (mem.length > 150) mem.shift(); return s; };
-const TRAIT = { isha: 'ang lider natin, kahit pagod na', angel: 'ang pinakakalmado sa ating lahat', mila: 'ang puso ng pamilyang ito', fred: 'matigas sa labas, malambot sa loob', su: 'parang halaman, tahimik pero buhay na buhay', na: 'pinakacorny, pero pinakamasipag', aj: 'mainit ang ulo pero mabuti ang puso', nelson: 'seryoso pero maaasahan', paolo: 'laging may checklist', rika: 'ang pinakamatapang na nanay na kilala ko', ria: 'ang liwanag ng bunker', carlo: 'tahimik pero hindi natutulog sa bantay', monica: 'ang may pinakamahabang pasensya', carly: 'matapang kunwari, pero iyakin pala', butchukok: 'ang bunsong pinakamaingay', jen: 'ang dasal ng pamilya', abby: 'ang pinakamadaldal', yssa: 'ang artist na nagpapatawa', dado: 'mabait pero misteryoso', rosa: 'ang pinakamapagpasalamat', bea: 'unti-unti nang ngumingiti', kiko: 'matapang para sa edad niya', ramon: 'ang doktor na hindi natutulog' };
+const TRAIT = { isha: 'ang lider natin, kahit pagod na', angel: 'ang partner mo, at bagay na bagay kayo', mila: 'ang puso ng pamilyang ito', fred: 'matigas sa labas, malambot sa loob', su: 'parang halaman, tahimik pero buhay na buhay', na: 'pinakacorny, pero pinakamasipag', aj: 'mainit ang ulo pero mabuti ang puso', nelson: 'seryoso pero maaasahan', paolo: 'laging may checklist', rika: 'ang pinakamatapang na nanay na kilala ko', ria: 'ang liwanag ng bunker', carlo: 'tahimik pero hindi natutulog sa bantay', monica: 'ang may pinakamahabang pasensya', carly: 'matapang kunwari, pero iyakin pala', butchukok: 'ang bunsong pinakamaingay', jen: 'ang dasal ng pamilya', abby: 'ang pinakamadaldal', yssa: 'ang artist na nagpapatawa', dado: 'mabait pero misteryoso', rosa: 'ang pinakamapagpasalamat', bea: 'unti-unti nang ngumingiti', kiko: 'matapang para sa edad niya', ramon: 'ang doktor na hindi natutulog' };
 const PAIRS = { paolo: 'rika', rika: 'paolo', carlo: 'monica', monica: 'carlo', fred: 'mila', mila: 'fred', angel: 'isha', na: 'su', su: 'na' };
 const JOKES = ['Bakit hindi nag-aaway ang mga sardinas? Kasi kahit siksikan, magkakasama sila. Parang tayo.', 'Anong sabi ng baterya sa solar panel? "Ikaw ang nagbibigay ng liwanag sa buhay ko." Kilig, di ba?', 'Bakit laging kalmado ang oxygen tank? Kasi marunong siyang huminga nang malalim.', 'Knock knock! ...Ay, huwag na pala. Baka barilin ako ni Carlo.', 'Anong paboritong kanta ng manok natin? "Itlog na lang ang kulang."', 'Bakit hindi makatulog ang baboy? Oink-somnia.', 'Ano ang pagkakaiba ng abo at ng ex mo? Wala. Pareho mong ayaw malanghap.', 'Sabi ng bigas sa kaldero: "Ikaw ang nagpapakulo ng damdamin ko."', 'Bakit masaya ang tubig sa filter? Kasi malinis ang konsensya niya.', 'Bakit hindi pumapasok ang multo dito? Kasi pati multo, takot kay Carlo.', 'Sabi ng pechay kay Mama Su: "Ikaw ang araw ko." Kasi wala nang ibang araw dito.', 'Paano mo malalaman na matagal ka na sa bunker? Kilala mo na ang hilik ng bawat isa.', 'Anong sabi ni Millie sa daga? "Huli ka, balbon!"', 'Bakit ang kulit ng orasan dito? Wala siyang ibang magawa kundi tumakbo.', 'Anong tawag sa bunker na puro tawanan? Edi Bunk-tawa! ...Oo na, alam ko.', 'Bakit pumunta sa clinic ang kalendaryo? Kasi bilang na ang mga araw niya.', 'Anong ulam ng mga nasa bunker? Edi tinola... tinola-gay natin ang lahat ng problema.', 'Bakit hindi marunong magsinungaling ang de-lata? Kasi selyado ang katotohanan.'];
 const KIDJOKES = ['Tita Isha, bakit po tumatawid ang manok? Para po makipaglaro kay Millie!', 'Knock knock po! Sino po? Si Butchukok! Hihi.', 'Bakit po malungkot ang lapis? Kasi po wala na siyang point! Hehe.', 'Anong hayop po ang laging basa? Edi... bibe! Kasi naliligo! Hihi.'];
@@ -2676,11 +2649,14 @@ const MEM_C = ['Ewan ko, bigla ko lang naalala.', 'Sana maranasan ulit natin iyo
 const MISS = ['ang amoy ng ulan sa kalsada', 'ang sikat ng araw sa umaga', 'ang dagat sa Zambales', 'ang taho tuwing umaga', 'ang ingay ng jeep', 'ang simbahan tuwing Linggo', 'ang videoke ng kapitbahay', 'ang malamig na halo-halo', 'ang paglalakad sa palengke', 'ang kape sa kanto', 'ang hangin sa Baguio', 'ang mga kaibigan ko', 'ang paliligo sa ilog', 'ang tunog ng mga ibon', 'ang mga bituin sa gabi'];
 const PLANS = ['magpapatayo ng maliit na bahay na may malaking bintana', 'kakain ng lechon nang walang rasyon', 'maliligo sa dagat buong araw', 'magtatanim ng mangga sa bakuran', 'yayakapin ang mga kaibigan na naiwan', 'hihiga sa damuhan sa ilalim ng araw', 'magtatayo ng maliit na karinderya', 'mag-aaral ulit', 'babalik sa simbahan para magpasalamat', 'pupunta sa Baguio at bibili ng strawberry'];
 const FOLLOW = ['Ikaw, kumusta ka talaga?', 'Sa tingin mo, aabot tayo sa Araw 100?', 'Kumain ka na ba?', 'Nakatulog ka ba nang maayos?', 'Ano ang uunahin mo bukas?', 'Ano ang pinakamamiss mo sa labas?'];
+const ANGELQ = ['Mahal kita', 'Yakap muna tayo', 'Kumusta tayong dalawa?', 'Pagod ka na ba, mahal?', 'Ano ang gagawin natin paglabas?', 'Salamat sa lahat, mahal', 'Naaalala mo pa ba noong una tayong nagkita?', 'Sorry kung busy ako lagi'];
+const ANGEL_LOVE = ['Mahal din kita. Kahit nasa ilalim tayo ng lupa.', 'Halika dito. *yumakap nang mahigpit*', 'Ikaw ang dahilan kung bakit kaya ko ito araw-araw.', 'Kahit ilang araw pa tayo dito, basta kasama kita.', '*hinalikan ka sa noo* Kaya natin ito, mahal.', 'Pag-uwi natin, ikaw pa rin ang pipiliin ko. Araw-araw.'];
+const ANGEL_TALK = ['Kumain ka na ba, mahal? Nagtabi ako ng ulam para sa iyo.', 'Ang galing mo ngayong araw. Proud ako sa iyo.', 'Mamaya, tayo lang muna sa kwarto. Manood tayo ng TV, tayong dalawa at si Millie.', 'Pagod ka na. Halika, mamasahehin ko ang balikat mo.', 'Minsan, tinitingnan lang kita habang nag-uutos ka. Ang swerte ko.', 'Ayokong napapagod ka nang mag-isa. Hati tayo sa bigat.', 'Naaalala mo pa ba ang una nating date? Ang kulit mo noon.', 'Paglabas natin, magpapatayo tayo ng bahay na may malaking bintana. Para sa atin at kay Millie.', 'Si Millie, hinahanap ka kanina. Pareho kami.', 'Sabihin mo lang kung kailangan mo ng yakap. Kahit sa harap ng lahat.', 'Huwag mong kalimutang uminom ng tubig, mahal.', 'Ikaw ang lider nila, pero sa akin, ikaw lang si Isha. Mahal ko.'];
 const QUICK = ['Kumusta ka?', 'Kwentuhan tayo', 'Anong iniisip mo?', 'Magbiro ka naman', 'Anong miss mo sa labas?', 'Paglabas natin, anong gagawin mo?', 'Anong masasabi mo kay {x}?', 'Takot ka ba?', 'Kumain ka na?', 'Anong kailangan mo?', 'Salamat sa tulong mo.', 'Kaya natin ito.', 'May problema ba?'];
 function renderQuick(id) {
   const el = $('#quick'); if (!el) return;
   const st = S.people[id], x = pick(people().filter(o => o !== id && o !== 'isha')) || 'angel';
-  const list = [...QUICK].sort(() => Math.random() - .5).slice(0, 4).map(q => q.replace('{x}', N(x)));
+  const list = id === 'angel' ? [...[...ANGELQ].sort(() => Math.random() - .5).slice(0, 3), pick(QUICK).replace('{x}', N(x))] : [...QUICK].sort(() => Math.random() - .5).slice(0, 4).map(q => q.replace('{x}', N(x)));
   if (st.mood) list.unshift(st.mood.k === 'galit' ? 'Pasensya na. Ano ang nangyari?' : 'Nandito lang ako. Yakap?');
   el.innerHTML = list.map(q => `<button>${q}</button>`).join('');
   el.querySelectorAll('button').forEach(b => b.onclick = () => talk(id, b.textContent));
@@ -2715,7 +2691,7 @@ function reply(id, text) {
       return st.mood.k === 'galit' ? `Kasi naman... ${st.mood.why}. Nakakainis lang talaga.` : `Iniisip ko lang... ${st.mood.why}.`; }
     if (Math.random() < .65) return uniq(id, () => st.mood.k === 'galit' ? pick(['Huwag mo muna akong kausapin.', 'Pasensya, mainit lang ang ulo ko ngayon.', `${cap1(st.mood.why)}. Hanggang ngayon, inis pa rin ako.`, 'Hayaan mo muna ako, Isha.', 'Ikaw ba, hindi ka naiinis?']) : pick(['Pasensya, wala ako sa mood.', `Iniisip ko lang na ${st.mood.why}.`, 'Ang bigat ng pakiramdam ko ngayon.', 'Salamat sa pagkausap, kahit papaano.', 'Gusto ko lang umiyak, pero ayokong makita ng mga bata.']));
   }
-  if (S.flags.dirty && Math.random() < .5) return uniq(id, () => pick(['Uy Isha... maligo ka muna yata. Peace!', 'May naaamoy ba ako? Ah, wala, wala. Hehe.', 'Isha, may libreng shower sa CR. Sinasabi ko lang.']));
+  if (id === 'angel') { if (/mahal|love|yakap|hug|halik|kiss|una tayong|tayong dalawa/.test(t)) return uniq(id, () => pick(ANGEL_LOVE)); if (Math.random() < .55) return uniq(id, () => pick(ANGEL_TALK)); }
   const named = people().find(o => o !== id && t.includes(N(o).toLowerCase().replace(/^(nanay|tatay|mama|papa|doc|aling|mang) /, '')));
   if (named) return uniq(id, () => { const o = named, om = S.people[o]?.mood; let s = `${pick(['Si', 'Ah, si', 'Hmm, si'])} ${o === 'isha' ? 'ikaw' : N(o)}? ${cap1(TRAIT[o] || 'mabait siya')}.`;
     if (PAIRS[id] === o) s += pick([' Mahal ko iyan, kahit makulit.', ' Siya ang lakas ko dito.']);
@@ -2962,7 +2938,7 @@ function frame() {
     FX.tvM.material.color.setHSL(mOn ? (t * .06) % 1 : 0, mOn ? .6 : 0, mOn ? .75 + .2 * Math.sin(t * 6) : 1);
     if (FX.dest.visible && !ISHA.path.length) FX.dest.visible = false;
     if (S.task) { FX.marker.visible = true; const s = SPOTS[S.task.room][0]; FX.marker.position.set(s.x, 2.1 + Math.sin(t * 3) * .1, s.z); FX.marker.rotation.y = t * 2; } else FX.marker.visible = false;
-    if ((hudT += dt) > .2) { hudT = 0; updateHUD(); drawNeeds(); }
+    if ((hudT += dt) > .2) { hudT = 0; updateHUD(); }
     if ((actT += dt) > .12 && !paused) { actT = 0; action = cam.mode === 'follow' ? nearest() : null; $('#act').hidden = !action; if (action) $('#actText').textContent = action.label; }
   }
   // camera
@@ -3009,13 +2985,15 @@ function newGame() {
 }
 function continueGame(saved) {
   S = saved; S.res.meat ??= 60; S.res.feed ??= 70; S.ammo ??= 12; S.parts ??= 6; S.up ||= {}; S.door ||= { hp: 100, lvl: S.up.door2 ? 1 : 0 }; S.said ||= {}; S.acts ||= {}; S.helped ||= []; S.raids ||= {}; S.extra ||= [];
+  if (!S.flags.v6) { S.flags.v6 = 1; applyUpgrades(); for (const [k, v] of Object.entries({ food: 240, meat: 90, water: 240, power: 95, o2: 100, feed: 90 })) S.res[k] = Math.max(S.res[k], v); S.flags.restocked = 1; }
   for (const st of Object.values(S.people)) { st.bl ??= 30; st.bw ??= 20; st.hu ??= 30; st.mood ??= null; st.needGo = null; }
   for (const d of S.extra) { if (d.fem) FEMALE.add(d.id); OWN[d.id] ||= ['Salamat sa pagpapasok sa akin.', `Gagawin ko ang lahat bilang ${d.role.toLowerCase()}.`]; TRAIT[d.id] ||= `bagong ${d.role.toLowerCase()}`; } mealPrev = S.min; applyUpgrades();
   for (const id of Object.keys(S.people)) if (!P[id]) spawn(defOf(id), 20, 32);
   ISHA.place(18.5, 3.7, Math.PI); FX.door.rotation.y = 0; doorAnim(0);
   cam.target.set(18.5, 0, 3.7); routineAll(true); refreshWorld(); refreshTask();
   $('#intro').hidden = true;
-  showDayCard(`ARAW ${S.day}`, `${hhmm(S.min)} · ITINULOY`, 'Nandito pa rin kayong lahat. Tuloy ang laban.', () => routineAll());
+  showDayCard(`ARAW ${S.day}`, `${hhmm(S.min)} · ITINULOY`, S.flags.restocked ? 'Habang wala ka, may dumating na tulong: puno ulit ang pantry, tubig, baterya at oxygen. Tuloy ang laban.' : 'Nandito pa rin kayong lahat. Tuloy ang laban.', () => routineAll());
+  S.flags.restocked = 0;
 }
 async function boot(hotData) {
   await Promise.race([document.fonts.load('92px "Saira Stencil One"'), new Promise(r => setTimeout(r, 1500))]).catch(() => {});
