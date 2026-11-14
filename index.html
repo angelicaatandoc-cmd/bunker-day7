@@ -2589,25 +2589,25 @@ function newsTip(tip) {
 
 // ---------------------------------------------------------------- activities everyone joins
 const ACTS = [
-  { id: 'marathon', n: 'Movie marathon', room: 'V', tv: 'V', dur: 180, from: 780, cost: { power: 6 }, sub: 'Tatlong pelikula sa Sinehan, may popcorn.', fx: () => { stressAll(-16); addRes('food', -2); return `Tatlong pelikula, dalawang mangkok ng popcorn. ${N(pick(npcs()))} ang unang nakatulog. ${pick(['Si Abby ang umiyak sa drama.', 'Napasigaw si AJ sa horror.', 'Pinaulit ni Carly ang cartoons nang dalawang beses.'])}`; } },
+  { id: 'marathon', n: 'Movie marathon', room: 'V', tv: 'V', dur: 180, from: 780, cost: { power: 3 }, sub: 'Tatlong pelikula sa Sinehan, may popcorn.', fx: () => { stressAll(-16); addRes('food', -2); return `Tatlong pelikula, dalawang mangkok ng popcorn. ${N(pick(npcs()))} ang unang nakatulog. ${pick(['Si Abby ang umiyak sa drama.', 'Napasigaw si AJ sa horror.', 'Pinaulit ni Carly ang cartoons nang dalawang beses.'])}`; } },
   { id: 'karaoke', n: 'Karaoke night', room: 'L', tv: 'L', dur: 90, from: 960, cost: { power: 3 }, sub: 'Kantahan sa Sala. Maingay pero masaya.', fx: () => { stressAll(-13); const w = pick(people()); return `Pinakamataas ang score ni ${w === 'isha' ? 'ikaw' : N(w)}: 98! ${pick(['Si Tatay Fred, kumanta ng lumang kundiman.', 'Nag-duet sina Paolo at Rika.', 'Sumayaw si Butchukok sa kandungan ni Monica.'])}`; } },
-  { id: 'bingo', n: 'Bingo', room: 'L', dur: 60, from: 600, cost: { food: 2 }, sub: 'Premyo: biskwit at kendi.', fx: () => { stressAll(-10); const w = pick(people()); return `BINGO! Nanalo si ${w === 'isha' ? 'ikaw' : N(w)} ng isang supot ng biskwit. ${pick(['Sigaw nang sigaw si Nanay Mila kahit isa na lang ang kulang.', 'Inakusahan ni Papa Na na nandaraya si Abby.', 'Si Ria ang tagabunot ng numero.'])}`; } },
+  { id: 'bingo', n: 'Bingo', room: 'L', dur: 60, from: 600, cost: { food: 1 }, sub: 'Premyo: biskwit at kendi.', fx: () => { stressAll(-10); const w = pick(people()); return `BINGO! Nanalo si ${w === 'isha' ? 'ikaw' : N(w)} ng isang supot ng biskwit. ${pick(['Sigaw nang sigaw si Nanay Mila kahit isa na lang ang kulang.', 'Inakusahan ni Papa Na na nandaraya si Abby.', 'Si Ria ang tagabunot ng numero.'])}`; } },
   { id: 'henyo', n: 'Hulaan ang salita', room: 'L', dur: 60, from: 600, sub: 'Paramihan ng mahuhulaan, dalawang team.', fx: () => { stressAll(-10); return `${pick(['Team Nanay Mila', 'Team Carlo', 'Team Yssa'])} ang nanalo. Ang pinakamahirap hulaan: "${pick(['blast door', 'sinigang', 'oxygen scrubber', 'si Millie', 'lahar'])}".`; } },
   { id: 'cards', n: 'Card games at sungka', room: 'H', dur: 90, from: 600, sub: 'Tong-its, pusoy, at sungka sa Hobby Room.', fx: () => { stressAll(-10); return `Kampeon sa tong-its si ${N(pick(npcs().filter(id => !defOf(id).kid)))}. Sa sungka, walang tumalo kay Tatay Fred.`; } },
   { id: 'pingpong', n: 'Ping pong tournament', room: 'H', dur: 90, from: 600, sub: 'Isa-isang laban hanggang may kampeon.', fx: () => { stressAll(-9); people().forEach(id => health(id, 2)); return `Kampeon si ${N(pick(npcs().filter(id => !defOf(id).kid)))}! May tropeo pang gawa ni Yssa mula sa lata.`; } },
   { id: 'talent', n: 'Talent show', room: 'L', dur: 90, from: 900, sub: 'Kanta, sayaw, magic tricks.', fx: () => { stressAll(-14); return `${pick(['Sumayaw sina Carly at Bea.', 'Nag-magic trick si Papa Na gamit ang barya.', 'Tumula si Yssa tungkol sa bunker.'])} ${pick(['Standing ovation para kay Ria at sa xylophone niya.', 'Napaiyak si Mama Jen sa kanta ni Angel.', 'Si Millie ang pinakamaraming palakpak.'])}`; } },
-  { id: 'party', n: 'Party ng mga bata', room: 'Pl', dur: 60, from: 600, cost: { food: 3 }, sub: 'Laro, lobo, at spaghetti para sa mga bata.', fx: () => { KID.forEach(k => S.people[k] && stress(k, -20)); stressAll(-6); return 'Musical chairs, pabitin, at spaghetti. Pagod na pagod ang mga bata, at ang mga matatanda rin.'; } },
+  { id: 'party', n: 'Party ng mga bata', room: 'Pl', dur: 60, from: 600, cost: { food: 2 }, sub: 'Laro, lobo, at spaghetti para sa mga bata.', fx: () => { KID.forEach(k => S.people[k] && stress(k, -20)); stressAll(-6); return 'Musical chairs, pabitin, at spaghetti. Pagod na pagod ang mga bata, at ang mga matatanda rin.'; } },
   { id: 'zumba', n: 'Sabayang ehersisyo', room: 'L', dur: 45, from: 360, to: 720, sub: 'Zumba sa Sala, pampalakas ng katawan.', fx: () => { stressAll(-6); people().forEach(id => health(id, 5)); return `Pawis ang lahat. ${pick(['Si Nanay Mila ang pinakamagaling sumayaw.', 'Natumba si Nelson pero tawa nang tawa.', 'Si Monica ang instructor.'])}`; } },
   { id: 'kwentuhan', n: 'Kwentuhan at dasal', room: 'L', dur: 60, from: 1140, sub: 'Bago matulog, sama-sama sa Sala.', fx: () => { stressAll(-9); npcs().forEach(id => { if (S.people[id].mood?.k === 'lungkot' && Math.random() < .6) clearMood(id); }); return `Nagkuwento si ${N(pick(npcs().filter(id => !defOf(id).kid)))} tungkol sa ${pick(['bagyong Yoling', 'unang trabaho niya', 'kasal nila', 'unang Pasko sa probinsya'])}. Nagdasal kayo bago matulog.`; } },
-  { id: 'feast', n: 'Salu-salo sa hapunan', room: 'K', dur: 0, from: 360, to: 1080, cost: { food: 12, meat: 10 }, sub: 'Espesyal na hapunan mamaya: lechon kawali, pancit, leche flan.', feast: true },
+  { id: 'feast', n: 'Salu-salo sa hapunan', room: 'K', dur: 0, from: 360, to: 1080, cost: { food: 8, meat: 6 }, sub: 'Espesyal na hapunan mamaya: lechon kawali, pancit, leche flan.', feast: true },
 ];
 function actSheet() {
   const busyNow = S.activity && S.min < S.activity.until;
   openSheet(`<div class="kick">Araw ${S.day} · ${hhmm(S.min)}</div><h2 class="sh-title">Aktibidad ng pamilya</h2>
-    <div class="sh-body">Lahat ay titigil sa trabaho at sasama. Malaking bawas stress, pero walang gagawa habang nagaganap.${busyNow ? `<br><b>Nagaganap ngayon: ${ACTS.find(a => a.id === S.activity.id)?.n}</b>` : ''}</div>
-    <div class="choices">${ACTS.map(a => { const ok = !busyNow && !(S.acts ||= {})[a.id + S.day] && S.min >= a.from && S.min < (a.to || 1260) && !S.meal && (a.feast || S.min + a.dur <= 1290);
+    <div class="sh-body">Sasama ang lahat, pati ikaw. Pahinga at saya lang, walang kailangang gawin.${busyNow ? `<br><b>Nagaganap ngayon: ${ACTS.find(a => a.id === S.activity.id)?.n}</b>` : ''}</div>
+    <div class="choices">${ACTS.map(a => { const ok = !busyNow && !(S.acts ||= {})[a.id + S.day] && (!a.feast || S.min < 1080) && !S.meal && (a.feast || S.min + a.dur <= 1290);
       const cost = a.cost ? Object.entries(a.cost).map(([k, v]) => `-${v} ${{ food: 'pagkain', meat: 'karne', power: 'kuryente' }[k]}`).join(', ') : 'libre';
-      return `<button class="choice${ok ? '' : ''}" data-a="${a.id}" ${ok ? '' : 'disabled style="opacity:.45"'}><b>${a.n}</b><span>${a.sub} · ${a.feast ? '' : a.dur + ' min · '}${cost}${(S.acts[a.id + S.day]) ? ' · tapos na ngayong araw' : S.min < a.from ? ` · simula ${hhmm(a.from)}` : ''}</span></button>`; }).join('')}</div>`);
+      return `<button class="choice${ok ? '' : ''}" data-a="${a.id}" ${ok ? '' : 'disabled style="opacity:.45"'}><b>${a.n}</b><span>${a.sub} · ${a.feast ? '' : a.dur + ' min · '}${cost}${(S.acts[a.id + S.day]) ? ' · tapos na ngayong araw' : ''}</span></button>`; }).join('')}</div>`);
   $('#sheetBody').querySelectorAll('[data-a]').forEach(b => b.onclick = () => startActivity(ACTS.find(a => a.id === b.dataset.a)));
 }
 function startActivity(a) {
@@ -2617,14 +2617,16 @@ function startActivity(a) {
   if (a.feast) { S.feast = S.day; toast('Mamayang hapunan: salu-salo! Nagsimula nang magluto sina Nanay Mila at Mama Jen.', 'good'); save(); return; }
   S.activity = { id: a.id, room: a.room, tv: a.tv, until: S.min + a.dur };
   toast(`${a.n}! Pupunta ang lahat sa ${ROOMS[a.room].n}.`, 'good');
-  routineAll(); if (cam.mode === 'over') $('#btnView').click(); walkTo(a.room); save();
+  routineAll(); if (cam.mode === 'over') $('#btnView').click();
+  if (doing) doing = null; const c = approach(roomCenter(a.room)), look = TVPOS[a.tv] || roomCenter(a.room);
+  ISHA.place(c.x, c.z, Math.atan2(look.x - c.x, look.z - c.z)); ISHA.setPose('sit'); save();
 }
 function endActivity() {
   const a = ACTS.find(x => x.id === S.activity.id), here = roomAtPos(ISHA.x, ISHA.z) === S.activity.room;
   S.activity = null; routineAll();
   if (!a) return;
-  const txt = a.fx(); if (here) stress('isha', -10); else stressAll(2);
-  queueEvent(addGenSheet(a.n, `<p>${txt}</p>${here ? '' : '<p>Pero hinanap ka nila. Hindi ka nakasama.</p>'}`));
+  const txt = a.fx(); stress('isha', here ? -12 : -5);
+  queueEvent(addGenSheet(a.n, `<p>${txt}</p>`));
   save();
 }
 function addGenSheet(title, html) { const id = 'gen' + (++genN); GEN[id] = { kick: 'Pamilya', title, good: 1, body: () => html, choices: [{ t: 'Ang saya!', sub: '', fx: () => '' }] }; return id; }
