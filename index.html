@@ -311,6 +311,7 @@ const ROOMS = {
   X:{n:'Armory', x:11,z:31,w:4,h:3, floor:'metal', light:'#ffe4c4', job:true, verb:'Mag-ensayo sa armas'},
   Lib:{n:'Library', x:1,z:30,w:9,h:5, floor:'wood', light:'#ffdcae', job:true, verb:'Magbasa'},
   Pl:{n:'Playroom', x:44,z:31,w:4,h:5, floor:'wood', light:'#ffe0b5', job:true, verb:'Makipaglaro sa mga bata'},
+  Dorm:{n:'Dormitoryo', x:49,z:24,w:10,h:12, floor:'wood', light:'#ffdcae'},
   A:{n:'Airlock', x:16,z:31,w:8,h:3, floor:'metal', light:'#ffe9c8'},
 };
 const BUNK_Z = [1, 5, 9, 16, 20];
@@ -320,12 +321,12 @@ BUNK_Z.forEach((z, i) => {
 });
 const DOORS = [[5,9],[18,9],[19,9],[25,2],[32,6],[30,12],[30,15],[25,13],[25,14],[10,13],[5,17],[5,22],[10,24],[18,22],[19,19],[20,19],[21,22],[19,30],[20,30]];
 BUNK_Z.forEach(z => { DOORS.push([40, z + 1], [43, z + 1]); });
-DOORS.push([40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30]);
+DOORS.push([40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
 const JOBS = ['G','K','P','W','S','O','Y','X','C','H','V','U','Lib','Pl','rest'];
 const RELAX = ['H', 'V', 'U', 'Lib', 'Pl'];
 const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', rest:'Pahinga' };
 
-const GW = 49, GH = 37;
+const GW = 60, GH = 37;
 const cell = new Uint8Array(GW * GH);        // 0 bato, 1 sahig, 2 pader, 4 blast door
 const roomOf = new Array(GW * GH).fill(null);
 const blocked = new Uint8Array(GW * GH);
@@ -981,7 +982,7 @@ function buildRooms() {
   ball(.3, MAT.blanketC, 45.6, .18, 25.4).scale.set(1, .5, 1); ball(.3, MAT.blanketA, 46.4, .18, 26).scale.set(1, .5, 1);
   spot('U', 46, 25, 47.65, 25); spot('U', 45, 27, 44.6, 27.2); spot('U', 46, 27, 45.8, 28.8);
   decal('MUSIKA', 45.9, 29.5, .45, Math.PI / 2);
-  buildExtraRooms(); buildGuestBeds();
+  buildExtraRooms(); buildGuestBeds(); buildDorm();
   decal('GREENHOUSE', 6.5, 8.2, .8); decal('KUSINA', 6.5, 16.4, .7); decal('PANTRY', 5.5, 20.2, .6);
   decal('TUBIG', 5, 28.3, .7); decal('SOLAR', 14.5, 25.4, .7); decal('SALA', 18, 13.5, .9, 0, .18);
   decal('OXYGEN', 32.5, 3.4, .55); decal('HOBBY', 30.5, 11.4, .6); decal('CLINIC', 30.5, 18.5, .6);
@@ -1779,7 +1780,7 @@ function spawnAll() {
 
 // ---------------------------------------------------------------- camera & input
 const cam = { mode: 'follow', yaw: 0, pitch: .98, dist: 12, target: new THREE.Vector3(20, 0, 30), over: new THREE.Vector3(GW / 2, 0, GH / 2 + 2), overDist: 46, focus: null };
-function overDistFit() { return innerWidth / innerHeight < .8 ? 78 : 44; }
+function overDistFit() { return innerWidth / innerHeight < .8 ? 85 : 50; }
 function focusOn(v) { cam.focus = { v: v.clone(), until: performance.now() + 2600 }; }
 const joy = { id: null, ox: 0, oy: 0, x: 0, y: 0 };
 const ptrs = new Map(); let pinch0 = 0, tapStart = null;
@@ -1814,7 +1815,7 @@ function endPtr(e) {
 canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
 addEventListener('pointerup', e => { if (e.pointerId === joy.id && e.target !== canvas) resetJoy(); }); addEventListener('pointercancel', e => { if (e.pointerId === joy.id) resetJoy(); });
 canvas.addEventListener('wheel', e => { e.preventDefault(); zoom(e.deltaY > 0 ? 1.1 : .9); }, { passive: false });
-function zoom(f) { if (cam.mode === 'follow') cam.dist = clamp(cam.dist * f, 4.5, 18); else cam.overDist = clamp(cam.overDist * f, 18, 85); }
+function zoom(f) { if (cam.mode === 'follow') cam.dist = clamp(cam.dist * f, 4.5, 18); else cam.overDist = clamp(cam.overDist * f, 18, 95); }
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 function tap(x, y) {
   if (paused) return;
@@ -2769,10 +2770,16 @@ const NEWBIES = [
   { role: 'Guro', job: 'U', spec: 'U', perk: 'kids', say: 'Guro ako. Kaya kong turuan ang mga bata.' },
 ];
 const NB_SKIN = ['#b98a63', '#c08e68', '#a8774f', '#c99a74', '#b4825c'], NB_SHIRT = ['#6b5a45', '#5b6b7a', '#7a4e4e', '#4f6b52', '#8a6f5a', '#3f5f7f'];
-const GBEDS = () => (S.extra || []).length;
+const GBEDS = () => (S.extra || []).length, BEDS_MAX = 26;
+function freeBed() {
+  const used = new Set((S.extra || []).map(d => d.bed[0] + d.bed[1]));
+  for (let i = 0; i < 6; i++) if (!used.has('Lib' + i)) return ['Lib', i];
+  for (let i = 0; i < 20; i++) if (!used.has('Dorm' + i)) return ['Dorm', i];
+  return null;
+}
 function newbieDef(name, t) {
   const fem = /^(Aling|Ate|Lola|Nene)/.test(name), i = GBEDS();
-  return { id: 'nb' + Date.now().toString(36) + i, name, role: t.role, spec: t.spec, job: t.job, h: fem ? 1.56 : 1.68, skin: pick(NB_SKIN), shirt: pick(NB_SHIRT), pants: '#2f2c28', hair: '#1f1712', style: fem ? pick(['long', 'bun', 'pony']) : 'short', bed: ['Lib', i % 6], fem, perk: t.perk, thief: Math.random() < .15 };
+  return { id: 'nb' + Date.now().toString(36) + i, name, role: t.role, spec: t.spec, job: t.job, h: fem ? 1.56 : 1.68, skin: pick(NB_SKIN), shirt: pick(NB_SHIRT), pants: '#2f2c28', hair: '#1f1712', style: fem ? pick(['long', 'bun', 'pony']) : 'short', bed: freeBed(), fem, perk: t.perk, thief: Math.random() < .15 };
 }
 function admit(def) {
   (S.extra ||= []).push(def); if (!defOf(def.id)) GUESTS.push(def); if (def.fem) FEMALE.add(def.id);
@@ -2784,9 +2791,9 @@ function admit(def) {
   if (def.perk === 'door') S.door.hp = doorMax(); if (def.perk === 'meds') people().forEach(id => health(id, 8));
 }
 function genEnter() {
-  const name = pick(KNAMES), t = pick(NEWBIES), look = pick(LOOKS), full = GBEDS() >= 6, id = 'gen' + (++genN);
+  const name = pick(KNAMES), t = pick(NEWBIES), look = pick(LOOKS), full = !freeBed(), id = 'gen' + (++genN);
   GEN[id] = { kind: 'knock', kick: 'Blast door', loc: 'A', sound: 'knock', title: `Gustong pumasok: ${name}`,
-    body: () => `<p>Sa camera: si ${name}, ${look}. <i>"Pakiusap, papasukin ninyo ako. ${t.say} Hindi ako pabigat."</i></p><p>${full ? 'Puno na ang mga kutson sa Library. Wala nang mahihigaan.' : `Matutulog siya sa kutson sa Library. ${people().length + 1} na kayo kapag pumasok siya.`}</p>`,
+    body: () => `<p>Sa camera: si ${name}, ${look}. <i>"Pakiusap, papasukin ninyo ako. ${t.say} Hindi ako pabigat."</i></p><p>${full ? 'Puno na ang Library at ang Dormitoryo. Wala nang mahihigaan.' : `Matutulog siya sa ${freeBed()[0] === 'Lib' ? 'kutson sa Library' : 'bunk bed sa Dormitoryo'}. ${people().length + 1} na kayo kapag pumasok siya.`}</p>`,
     choices: [
       ...(full ? [] : [{ t: `Papasukin si ${name}`, sub: `${t.role}. Isa pang bibig, pero may ambag.`, fx: () => { const d = newbieDef(name, t); admit(d); stress('aj', 4); stress('angel', -4); return `<p>Dumiretso si <b>${name}</b> sa decon shower, tapos sa Clinic para masuri ni Angel. Kinabukasan, nasa ${ROOMS[t.job].n} na siya.</p>`; } }]),
       { t: 'Isang gabi lang sa airlock', sub: '-4 pagkain. Aalis siya bukas.', fx: () => { addRes('food', -4); helped(name); stressAll(-2); return `<p>Natulog si ${name} sa airlock na may kumot at mainit na sabaw. Umalis siya bago mag-umaga, nag-iwan ng sulat ng pasasalamat.</p>`; } },
@@ -2865,6 +2872,29 @@ Object.assign(EVENTS, {
     body: () => '<p>"Tita Isha! Tingnan po!" Hawak ni Carly ang maliit na ngipin, may dugo pa ang ngiti. "Darating pa rin po ba ang tooth fairy kahit nasa ilalim tayo ng lupa?"</p>',
     choices: [{ t: '"Oo naman!"', sub: 'Mag-iiwan ka ng sorpresa sa ilalim ng unan niya.', fx: () => { addRes('food', -1); stress('carly', -18); stress('monica', -6); return '<p>Kinaumagahan, may tsokolate at maliit na drawing ng fairy sa ilalim ng unan ni Carly. Ipinakita niya ito sa lahat, buong araw.</p>'; } }] },
 });
+function buildDorm() {
+  // Dormitoryo: two rows of steel bunk beds on the east side, a lounge with lockers, a long table and a sofa on the west
+  SPOTS.beds.Dorm = [];
+  const blankets = [MAT.blanketA, MAT.blanketB, MAT.blanketC];
+  for (const bx of [55.5, 58.5]) for (let k = 0; k < 5; k++) {
+    const z0 = 24.15 + k * 2.35;
+    for (const [a, b] of [[-.45, .05], [.45, .05], [-.45, 2.05], [.45, 2.05]]) box(.06, 2, .06, MAT.darkSteel, bx + a, 0, z0 + b);
+    for (const y of [.3, 1.4]) { box(.96, .08, 2.06, MAT.darkSteel, bx, y, z0 + 1.05); rbox(.86, .14, 1.94, MAT.linen, bx, y + .08, z0 + 1.05, 0, .05); rbox(.88, .06, 1.2, blankets[(k + (bx > 56 ? 1 : 0)) % 3], bx, y + .22, z0 + 1.35, 0, .03); rbox(.5, .1, .3, MAT.linen, bx, y + .24, z0 + .35, 0, .04); }
+    box(.06, 1.1, .06, MAT.darkSteel, bx - .45, 1.4, z0 + 1.2); for (let r = 0; r < 4; r++) box(.04, .03, .4, MAT.darkSteel, bx - .45, .5 + r * .28, z0 + 1.2);   // ladder
+    block(Math.floor(bx), Math.floor(z0), Math.floor(bx), Math.floor(z0 + 2));
+    SPOTS.beds.Dorm.push({ x: bx, y: .52, z: z0 + 1.05 }, { x: bx, y: 1.62, z: z0 + 1.05 });
+  }
+  for (let k = 0; k < 6; k++) { box(.5, 1.8, .5, k % 2 ? MAT.olive : MAT.darkSteel, 49.35, 0, 28.3 + k * .55); box(.02, .3, .04, MAT.steel, 49.62, 1.1, 28.3 + k * .55); }
+  block(49, 28, 49, 30);
+  box(5, .012, 3, MAT.rug2, 52, 0, 33);
+  box(2.6, .05, .9, MAT.walnut, 52, .73, 32.5); for (const [a, b] of [[50.8, 32.1], [53.2, 32.1], [50.8, 32.9], [53.2, 32.9]]) box(.06, .73, .06, MAT.walnut, a, 0, b);
+  for (const x of [51.2, 52, 52.8]) { chair(x, 31.8, 0); chair(x, 33.2, Math.PI); }
+  block(51, 32, 52, 32);
+  rbox(2.4, .42, .9, MAT.sofa, 52, 0, 35.3, 0, .1); rbox(2.4, .5, .22, MAT.sofa, 52, .3, 35.7, 0, .08); block(51, 35, 52, 35);
+  lamp(50.6, .78, 32.5); plant(49.5, 35.4, 1.1); plant(53.8, 24.6, 1);
+  decal('DORMITORYO', 52, 27, .55);
+  SPOTS.Dorm = [{ x: 52.5, z: 29.5, yaw: 0, taken: null }];
+}
 function buildGuestBeds() {
   SPOTS.beds.Lib = [[3.6, 32], [4.6, 32], [3.6, 34], [4.6, 34], [8.6, 32], [8.6, 34]].map(([x, z]) => { rbox(.75, .1, 1.8, MAT.linen, x, 0, z, 0, .04); rbox(.7, .05, 1.1, MAT.blanketB, x, .1, z + .3, 0, .02); return { x, y: .2, z: z - .05 }; });
 }
