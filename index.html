@@ -1,0 +1,2139 @@
+<!doctype html>
+<html lang="tl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bunker">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e1113">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Bunker: Day 7</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Saira+Condensed:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: full-bleed 3D bunker; HUD pinned to the safe-area corners; sheets rise from the bottom like a field radio */
+:root{
+  --ground:#0e1113; --panel:rgba(17,21,23,.9); --panel-2:#1c2225; --line:rgba(236,232,220,.13);
+  --text:#ece8dc; --muted:#9aa29f; --amber:#f0a73a; --amber-ink:#2a1a03;
+  --food:#8fc46a; --water:#5aa9d8; --power:#f2c94c; --o2:#86d4e6; --mood:#d48bd0;
+  --good:#6cc48a; --bad:#e45b4f;
+  --f-title:"Saira Stencil One", Impact, "Arial Narrow", sans-serif;
+  --f-label:"Saira Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  --gl:max(16px, env(safe-area-inset-left,0px)); --gr:max(16px, env(safe-area-inset-right,0px));
+  --kb:0px;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--ground);color:var(--text);font-family:var(--f-body);overflow:hidden;overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation}
+button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none}
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.tag{position:absolute;left:0;top:0;transform:translate(-50%,-100%);font:700 12px/1 var(--f-label);letter-spacing:.04em;
+  padding:3px 7px 4px;border-radius:9px;background:rgba(10,12,13,.62);color:var(--text);white-space:nowrap;display:flex;gap:5px;align-items:center}
+.tag i{width:7px;height:7px;border-radius:50%;display:none}
+.tag.sick i{display:block;background:var(--bad)} .tag.stress i{display:block;background:var(--mood)}
+.tag.work::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--amber)}
+#fx{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .8s}
+#fx.brown{opacity:1;background:radial-gradient(ellipse at center,transparent 45%,rgba(160,20,10,.45));animation:pulse 1.6s infinite}
+#fx.o2{opacity:1;background:radial-gradient(ellipse at center,rgba(90,170,210,.12) 30%,rgba(40,90,140,.5))}
+@keyframes pulse{50%{opacity:.45}}
+#fade{position:fixed;inset:0;background:#000;opacity:1;pointer-events:none;transition:opacity 1.1s}
+.hud{position:fixed;left:0;right:0;pointer-events:none;padding-left:var(--gl);padding-right:var(--gr)}
+.hud>*{pointer-events:auto}
+#top{top:0;padding-top:calc(var(--sat) + 10px);display:flex;align-items:center;gap:10px}
+.daybox{display:flex;align-items:baseline;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px 10px 4px}
+.daybox span{font:700 11px var(--f-label);letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.daybox b{font:400 26px/1 var(--f-title);color:var(--amber)}
+.clockbox{display:flex;flex-direction:column;line-height:1.05}
+.clockbox b{font:700 17px var(--f-mono);font-variant-numeric:tabular-nums;text-shadow:0 1px 4px #000}
+.clockbox span{font:500 12px var(--f-label);color:var(--muted);letter-spacing:.06em;text-shadow:0 1px 4px #000}
+.spacer{flex:1}
+.chip{font:700 14px var(--f-label);letter-spacing:.05em;padding:8px 12px;border-radius:11px;background:var(--panel);border:1px solid var(--line)}
+.chip.strong{background:var(--amber);color:var(--amber-ink);border-color:transparent}
+.iconbtn{width:38px;height:38px;border-radius:11px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center}
+.iconbtn svg{width:18px;height:18px}
+#meters{top:calc(var(--sat) + 60px);display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.meter{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 6px 6px;min-width:0}
+.meter .row{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.meter .ic{font:700 11px var(--f-label);letter-spacing:.06em;color:var(--muted);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meter .v{font:700 13px var(--f-mono);font-variant-numeric:tabular-nums}
+.meter .bar{height:4px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:4px;overflow:hidden}
+.meter .bar i{display:block;height:100%;width:50%;border-radius:2px;transition:width .5s}
+.meter.low{border-color:var(--bad)} .meter.low .v{color:var(--bad)}
+#task{top:calc(var(--sat) + 112px);display:flex;justify-content:center}
+#task div{font:700 13px var(--f-label);letter-spacing:.04em;background:rgba(240,167,58,.16);border:1px solid rgba(240,167,58,.5);color:#ffd9a0;border-radius:10px;padding:6px 10px;max-width:100%}
+#toasts{top:calc(var(--sat) + 150px);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.toast{font:700 14px var(--f-label);letter-spacing:.03em;background:var(--panel);border:1px solid var(--line);padding:8px 12px;border-radius:10px;max-width:92%;text-align:center;animation:tin .25s ease-out}
+.toast.bad{border-color:var(--bad);color:#ffc2bb} .toast.good{border-color:var(--good);color:#c8f0d4}
+@keyframes tin{from{transform:translateY(-6px);opacity:0}}
+#bottom{bottom:0;padding-bottom:calc(var(--sab) + 18px);display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
+#bottom>*{pointer-events:auto}
+.hint{font:500 13px var(--f-label);color:var(--muted);letter-spacing:.04em;max-width:46%;text-shadow:0 1px 4px #000;pointer-events:none!important}
+.acts{display:flex;align-items:flex-end;gap:12px}
+.round{width:54px;height:54px;border-radius:50%;background:var(--panel);border:1px solid var(--line);font:700 12px var(--f-label);letter-spacing:.04em;display:grid;place-items:center}
+#act{position:relative;width:84px;height:84px;border-radius:50%;background:var(--amber);color:var(--amber-ink);font:700 14px/1.05 var(--f-label);letter-spacing:.02em;padding:6px;text-align:center;box-shadow:0 6px 24px rgba(240,167,58,.35)}
+#act svg{position:absolute;inset:-6px;width:96px;height:96px;transform:rotate(-90deg);pointer-events:none}
+#act circle{fill:none;stroke:#fff;stroke-width:4;stroke-dasharray:289;stroke-dashoffset:289}
+#joy{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.05);pointer-events:none;display:none}
+#joy i{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px;border-radius:50%;background:rgba(240,167,58,.85)}
+/* sheets */
+#sheet{position:fixed;left:0;right:0;bottom:var(--kb);max-height:min(80%,640px);display:flex;flex-direction:column;background:var(--panel-2);
+  border-top:1px solid var(--line);border-radius:20px 20px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.5);
+  padding:8px var(--gr) calc(var(--sab) + 14px) var(--gl);transform:translateY(0);transition:transform .28s ease}
+#sheet[hidden]{display:flex!important;transform:translateY(110%);pointer-events:none}
+#sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 10px}
+#sheet .scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;flex:1;-webkit-user-select:text;user-select:text}
+.kick{font:700 12px var(--f-mono);letter-spacing:.08em;color:var(--amber);text-transform:uppercase}
+.sh-title{font:700 28px/1.05 var(--f-label);margin:4px 0 8px;text-wrap:balance}
+.sh-body{font-size:16px;line-height:1.5;color:#d8d4c8;max-width:62ch}
+.sh-body p{margin:0 0 10px}
+.choices{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.choice{text-align:left;background:#252c30;border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+.choice b{display:block;font:700 17px var(--f-label);letter-spacing:.02em}
+.choice span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.choice.primary{background:var(--amber);color:var(--amber-ink);border-color:transparent}
+.choice.primary span{color:#5a3a08}
+.closex{position:absolute;right:calc(var(--gr) - 4px);top:10px;width:36px;height:36px;border-radius:50%;background:#2a3135;font-size:18px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px}
+.stat label{font:700 11px var(--f-label);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.stat .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:4px}
+.stat .bar i{display:block;height:100%}
+.sec{font:700 12px var(--f-label);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:12px 0 6px}
+.jobs{display:flex;flex-wrap:wrap;gap:6px}
+.job{font:700 13px var(--f-label);padding:7px 10px;border-radius:9px;background:#252c30;border:1px solid var(--line)}
+.job.on{background:var(--amber);color:var(--amber-ink);border-color:transparent}
+.job.spec::after{content:" ★";color:var(--amber)} .job.on.spec::after{color:var(--amber-ink)}
+.chat{display:flex;flex-direction:column;gap:6px;margin:4px 0 8px}
+.msg{max-width:84%;padding:8px 11px;border-radius:14px;font-size:15px;line-height:1.4}
+.msg.me{align-self:flex-end;background:#3a3122;color:#ffe2b5;border-bottom-right-radius:4px}
+.msg.them{align-self:flex-start;background:#273035;border-bottom-left-radius:4px}
+.msg.sys{align-self:center;background:none;color:var(--muted);font-size:13px;text-align:center}
+.quick{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.quick button{flex:none;font:700 13px var(--f-label);padding:7px 11px;border-radius:16px;background:#252c30;border:1px solid var(--line)}
+.say{display:flex;gap:8px;margin-top:6px}
+.say input{flex:1;min-width:0;font:16px var(--f-body);color:var(--text);background:#13181a;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.say button{background:var(--amber);color:var(--amber-ink);font:700 15px var(--f-label);padding:0 16px;border-radius:12px}
+.fam{display:flex;flex-direction:column;gap:6px}
+.famrow{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;text-align:left;background:#252c30;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 15px var(--f-label);color:#111}
+.famrow b{font:700 16px var(--f-label);display:block}
+.famrow small{color:var(--muted);font-size:12px}
+.minibars{display:flex;gap:4px;margin-top:4px}
+.minibars i{display:block;height:4px;width:44px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden;position:relative}
+.minibars i::after{content:"";position:absolute;inset:0;width:var(--w);background:var(--c)}
+.famrow .jb{font:700 12px var(--f-label);letter-spacing:.04em;color:var(--amber)}
+/* overlays */
+.over{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:calc(var(--sat) + 24px) var(--gr) calc(var(--sab) + 28px) var(--gl);
+  background:linear-gradient(to bottom,rgba(8,10,11,.15),rgba(8,10,11,.55) 45%,rgba(8,10,11,.94))}
+.over[hidden]{display:none}
+.title{font:400 clamp(64px,22vw,124px)/.86 var(--f-title);color:var(--text);letter-spacing:.01em;margin:0}
+.title em{font-style:normal;color:var(--amber);display:block;font-size:.62em}
+.lede{font-size:16px;line-height:1.55;color:#d6d1c4;max-width:46ch;margin:14px 0 20px}
+.over .choices{max-width:420px}
+.daycard{justify-content:center;align-items:center;text-align:center;background:rgba(8,10,11,.86)}
+.daycard .big{font:400 clamp(72px,26vw,140px)/.9 var(--f-title);color:var(--amber)}
+.daycard .sub{font:700 16px var(--f-mono);letter-spacing:.1em;color:var(--muted);margin-top:6px}
+.daycard .sum{font-size:15px;line-height:1.6;color:#d6d1c4;max-width:40ch;margin:16px auto 22px;text-align:left}
+.daycard .sum b{color:var(--text)}
+.small{font-size:12px;color:var(--muted);margin-top:10px}
+body.intro .hud,body.intro #labels{display:none!important}
+@media (max-width:560px){ #meters{grid-template-columns:repeat(3,1fr)} #task{top:calc(var(--sat) + 150px)} #toasts{top:calc(var(--sat) + 188px)} }
+@media (min-width:760px){ #meters{max-width:640px;margin:0 auto;left:0;right:0} #sheet{max-width:560px;margin:0 auto;border-radius:20px 20px 0 0} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+
+<div id="stage"></div>
+<div id="labels"></div>
+<div id="fx"></div>
+
+<header class="hud" id="top">
+  <div class="daybox"><span>Araw</span><b id="dayNum">7</b><span>/40</span></div>
+  <div class="clockbox"><b id="clock">06:00</b><span id="phase">Umaga</span></div>
+  <div class="spacer"></div>
+  <button class="chip" id="btnSpeed" aria-label="Bilis ng oras">1×</button>
+  <button class="iconbtn" id="btnSound" aria-label="Tunog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="snd-on" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></button>
+  <button class="chip strong" id="btnFamily">Pamilya</button>
+</header>
+<div class="hud" id="meters"></div>
+<div class="hud" id="task" hidden><div id="taskText"></div></div>
+<div class="hud" id="toasts"></div>
+<div class="hud" id="bottom">
+  <div class="hint" id="hint">Hilahin ang kaliwang bahagi ng screen para maglakad.</div>
+  <div class="acts">
+    <button class="round" id="btnView">Tanaw</button>
+    <button id="act" hidden><span id="actText">Kausapin</span><svg viewBox="0 0 100 100"><circle id="actRing" cx="50" cy="50" r="46"/></svg></button>
+  </div>
+</div>
+<div id="joy"><i></i></div>
+
+<section id="sheet" hidden aria-live="polite">
+  <div class="grab"></div>
+  <button class="closex" id="sheetClose" aria-label="Isara">✕</button>
+  <div class="scroll" id="sheetBody"></div>
+</section>
+
+<section class="over" id="intro">
+  <h1 class="title">BUNKER<em>DAY 7</em></h1>
+  <p class="lede">Tatlong linggo na mula nang muling sumabog ang Bulkang Pinatubo, mas malakas pa kaysa noong 1991. Natatakpan ng abo ang buong Gitnang Luzon, madilim ang langit kahit tanghali, at delikado sa baga ang hangin sa labas. Ayon sa NDRRMC, darating ang convoy ng gobyerno sa Araw 40. Anim na araw kayong naghanda sa bahay. Ngayong umaga, sarado na ang blast door. Ikaw si Isha: ikaw ang mag-uutos, at lahat ng kasama mo ay may ambag. Bawat araw, mas mahirap.</p>
+  <div class="choices" id="introChoices"><button class="choice primary" disabled><b>Naglo-load ang bunker…</b></button></div>
+  <p class="small" id="introNote">Pinakamaganda sa iPhone, naka-patayo. Sa laptop: WASD para maglakad, E para kumilos.</p>
+</section>
+
+<section class="over daycard" id="daycard" hidden>
+  <div class="big" id="dcBig">ARAW 7</div>
+  <div class="sub" id="dcSub">06:00 · SARADO NA ANG PINTO</div>
+  <div class="sum" id="dcSum"></div>
+  <button class="choice primary" id="dcGo" style="min-width:220px;text-align:center"><b>Simulan ang araw</b></button>
+</section>
+<div id="fade"></div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const TOUCH = matchMedia('(pointer: coarse)').matches;
+const WALL_H = 2.6;
+
+// ---------------------------------------------------------------- pamilya
+// Palitan ang mga pangalan dito kapag may totoong pangalan na.
+const CAST = [
+  { id:'isha', name:'Isha', role:'Lider ng bunker', spec:null, player:true, h:1.6, skin:'#c99a74', shirt:'#2f4858', pants:'#26272c', hair:'#1b1410', style:'long', bed:['M',0] },
+  { id:'angel', name:'Angel', role:'Medic at planner', spec:'C', job:'C', h:1.58, skin:'#d1a27c', shirt:'#b5654a', pants:'#3a3f4a', hair:'#241a14', style:'bun', bed:['M',1],
+    persona:'partner ni Isha; kalmado, organisado, laging may listahan, malambing kay Isha' },
+  { id:'mila', name:'Nanay Mila', role:'Kusinera', spec:'K', job:'K', h:1.5, skin:'#b88a66', shirt:'#7a4e6e', pants:'#3b3734', hair:'#cfcac2', style:'bob', bed:['R1',0],
+    persona:'matanda na, lola ng pamilya; maalaga, laging nagtatanong kung kumain ka na, pinakamasarap magluto' },
+  { id:'fred', name:'Tatay Fred', role:'Tagabantay ng pantry', spec:'P', job:'P', h:1.62, skin:'#ad7f5b', shirt:'#9c7b55', pants:'#3d3a36', hair:'#dcd8d0', style:'short', bed:['R1',1],
+    persona:'matanda na, lolo ng pamilya; mabagal magsalita, puno ng kuwento noong araw, mahigpit sa rasyon' },
+  { id:'su', name:'Mama Su', role:'Hardinera', spec:'G', job:'G', h:1.55, skin:'#c08e68', shirt:'#6f8f4e', pants:'#4b4038', hair:'#2b1d16', style:'bob', bed:['R2',0],
+    persona:'mahinahon, mahilig sa halaman, nag-iipon ng buto para sa susunod na taon' },
+  { id:'na', name:'Papa Na', role:'Elektrisyan', spec:'S', job:'S', h:1.7, skin:'#b88660', shirt:'#4f6b52', pants:'#2e3238', hair:'#2a2a2a', style:'short', bed:['R2',1],
+    persona:'tahimik, praktikal, mahilig sa corny na biro' },
+  { id:'aj', name:'AJ', role:'Tagapag-alaga ng hayop', spec:'Y', job:'Y', h:1.75, skin:'#bd8d66', shirt:'#355c7d', pants:'#2a2d33', hair:'#141010', style:'short', bed:['R5',0],
+    persona:'binata, malakas, protective sa pamilya, medyo mainitin ang ulo, mahal ang mga manok at baboy' },
+  { id:'nelson', name:'Nelson', role:'Tubero at mekaniko', spec:'W', job:'W', h:1.68, skin:'#b4825c', shirt:'#8a8f96', pants:'#33363b', hair:'#4a4a4a', style:'short', bed:['R5',1],
+    persona:'medyo may edad na, seryoso, kabisado ang bawat tubo sa bunker' },
+  { id:'paolo', name:'Paolo', role:'Inhinyero ng hangin', spec:'O', job:'O', h:1.72, skin:'#ba8a62', shirt:'#5b4a7a', pants:'#2c2f36', hair:'#1a1410', style:'short', bed:['R3',0],
+    persona:'asawa ni Rika, tatay ni Ria; technical, laging may checklist' },
+  { id:'rika', name:'Rika', role:'Katulong sa Greenhouse', spec:null, job:'G', h:1.57, skin:'#c7966f', shirt:'#c97a5b', pants:'#3e4452', hair:'#2b1d16', style:'pony', bed:['R3',1],
+    persona:'asawa ni Paolo, nanay ni Ria; masipag, praktikal, mabilis matuto' },
+  { id:'ria', name:'Ria', role:'4 taong gulang', spec:null, job:'U', kid:true, h:1.0, skin:'#c99a72', shirt:'#f2a7c3', pants:'#5a6aa8', hair:'#1b130f', style:'pony', bed:['R3',2],
+    persona:'apat na taong gulang, anak nina Paolo at Rika; masigla, maraming tanong, maikli at pambatang magsalita' },
+  { id:'carlo', name:'Carlo', role:'Bantay ng bunker', spec:'X', job:'X', h:1.74, skin:'#b38559', shirt:'#6b7f3a', pants:'#2a2a2e', hair:'#151110', style:'short', bed:['R4',0],
+    persona:'asawa ni Monica, tatay nina Carly at Butchukok; malakas, tahimik, siya ang bantay sa blast door at may hawak ng lisensyadong shotgun ni Tatay Fred' },
+  { id:'monica', name:'Monica', role:'Guro ng mga bata', spec:'U', job:'U', h:1.58, skin:'#c69570', shirt:'#3f7f8f', pants:'#463c3a', hair:'#2a1a12', style:'long', bed:['R4',1],
+    persona:'asawa ni Carlo, nanay nina Carly at Butchukok; pasensyosa, guro, kumakanta para sa mga bata' },
+  { id:'carly', name:'Carly', role:'7 taong gulang', spec:null, job:'U', kid:true, h:1.2, skin:'#c69570', shirt:'#e9c46a', pants:'#4a5a7a', hair:'#21160f', style:'long', bed:['R4',2],
+    persona:'pitong taong gulang, anak nina Carlo at Monica; curious, matapang kunwari pero takot sa dilim, pambatang magsalita' },
+  { id:'butchukok', name:'Butchukok', role:'1 taong gulang', spec:null, job:'U', kid:true, h:.76, skin:'#cfa07a', shirt:'#8ecae6', pants:'#f1f1f1', hair:'#2a1a12', style:'short', bed:['R4',3],
+    persona:'isang taong gulang na baby, anak nina Carlo at Monica; hindi pa nakakapagsalita, sumasagot lang ng tawa, iyak, o isa o dalawang salitang pambata gaya ng "mama", "dede", "wow"' },
+  { id:'jen', name:'Mama Jen', role:'Tagaluto at tagapag-alaga', spec:'K', job:'K', h:1.56, skin:'#cc9d77', shirt:'#a3485a', pants:'#3a3634', hair:'#2b1e18', style:'bob', bed:['R6',0],
+    persona:'nanay ni Angel; malambing, madasalin, laging may baong biro' },
+  { id:'abby', name:'Abby', role:'Katulong sa Greenhouse', spec:'G', job:'G', h:1.57, skin:'#cfa07a', shirt:'#d9b44a', pants:'#4a4f5c', hair:'#3a2418', style:'pony', bed:['R6',1],
+    persona:'kapatid ni Angel; masayahin, madaldal, mahilig sa pelikula' },
+  { id:'yssa', name:'Yssa', role:'Artist', spec:'H', job:'H', h:1.55, skin:'#c8956c', shirt:'#e07a5f', pants:'#3d405b', hair:'#3a2418', style:'long', bed:['R7',0],
+    persona:'kapatid ni Angel; malikhain, nagpapatawa kapag tensyonado ang lahat' },
+];
+const DADO = { id:'dado', name:'Mang Dado', role:'Mekaniko mula sa labas', spec:'S', job:'S', h:1.66, skin:'#a8774f', shirt:'#6b5a45', pants:'#2f2c28', hair:'#5a5550', style:'short', bed:['R8',0],
+  persona:'estrangherong pinapasok nila; mabait pero may itinatago tungkol sa labas; nagpapasalamat palagi' };
+
+const GUESTS = [DADO,
+  { id:'rosa', name:'Aling Rosa', role:'Mananahi', spec:'P', job:'P', h:1.54, skin:'#b98a63', shirt:'#8a6f5a', pants:'#3a3634', hair:'#2a1d16', style:'bun', bed:['R9',0],
+    persona:'inang nakaligtas sa abo kasama ang anak niyang si Bea; mapagpasalamat, laging takot na mapaalis' },
+  { id:'bea', name:'Bea', role:'6 taong gulang', spec:null, job:'U', kid:true, h:1.12, skin:'#c08e68', shirt:'#c9b7e8', pants:'#4a4f5c', hair:'#1b130f', style:'pony', bed:['R9',1],
+    persona:'anim na taong gulang, anak ni Aling Rosa; tahimik, unti-unting nagiging kaibigan nina Carly at Ria, pambatang magsalita' },
+  { id:'kiko', name:'Kiko', role:'15 taong gulang, anak ng kapitbahay', spec:'Y', job:'Y', h:1.6, skin:'#b88660', shirt:'#c44536', pants:'#2a2d33', hair:'#141010', style:'short', bed:['R10',0],
+    persona:'labinlimang taon, naiwan ng pamilya niya sa kapitbahay ninyo; matapang kunwari, magaling umakyat at magtago' },
+  { id:'ramon', name:'Doc Ramon', role:'Doktor', spec:'C', job:'C', h:1.7, skin:'#c49a74', shirt:'#e8e4da', pants:'#3a3f4a', hair:'#7a7670', style:'short', bed:['R10',1],
+    persona:'doktor mula sa ospital na nasunog; pagod, mabait, may alam tungkol sa sakit na dala ng abo' },
+];
+// ---------------------------------------------------------------- mapa
+const ROOMS = {
+  G:{n:'Greenhouse', x:1,z:1,w:11,h:8, floor:'epoxy', light:'#ffd6f0', job:true, verb:'Magdilig at mag-ani'},
+  M:{n:'Master Suite', x:13,z:1,w:12,h:8, floor:'wood', light:'#ffcf9a'},
+  m:{n:'CR ng Master', x:26,z:1,w:3,h:3, floor:'tile', light:'#fff1dc'},
+  O:{n:'Oxygen Control', x:30,z:1,w:5,h:5, floor:'metal', light:'#cfeeff', job:true, verb:'I-check ang oxygen'},
+  H:{n:'Hobby Room', x:26,z:7,w:9,h:5, floor:'wood', light:'#ffd7a6', job:true, verb:'Mag-relax'},
+  K:{n:'Kusina', x:1,z:10,w:9,h:7, floor:'tile', light:'#ffe2b8', job:true, verb:'Magluto'},
+  L:{n:'Sala', x:11,z:10,w:14,h:9, floor:'wood', light:'#ffd3a0'},
+  E:{n:'Pasilyo', x:26,z:13,w:15,h:2, floor:'concrete', light:'#fff0d8', hall:true},
+  D:{n:'Pasilyo ng mga kwarto', x:41,z:1,w:2,h:33, floor:'concrete', light:'#fff0d8', hall:true},
+  C:{n:'Clinic', x:26,z:16,w:9,h:4, floor:'tile', light:'#eef6ff', job:true, verb:'Gamutin ang may sakit'},
+  P:{n:'Pantry', x:1,z:18,w:9,h:4, floor:'concrete', light:'#fff0d0', job:true, verb:'Ayusin ang rasyon'},
+  W:{n:'Water Filtration', x:1,z:23,w:9,h:6, floor:'epoxy', light:'#d6f0ff', job:true, verb:'Linisin ang filter'},
+  S:{n:'Solar at Baterya', x:11,z:20,w:7,h:6, floor:'epoxy', light:'#fff4cf', job:true, verb:'I-maintain ang solar'},
+  F:{n:'Pasilyo', x:19,z:20,w:2,h:10, floor:'concrete', light:'#fff0d8', hall:true},
+  Bw:{n:'CR ng Babae', x:22,z:21,w:7,h:4, floor:'tile', light:'#fbeff6'},
+  Bm:{n:'CR ng Lalaki', x:22,z:26,w:7,h:4, floor:'tile', light:'#eef5ff'},
+  Y:{n:'Manukan at Babuyan', x:30,z:24,w:10,h:6, floor:'concrete', light:'#ffe9c0', job:true, verb:'Magpakain ng hayop'},
+  V:{n:'Sinehan', x:30,z:31,w:10,h:5, floor:'wood', light:'#c9a8ff', job:true, verb:'Manood ng DVD'},
+  U:{n:'Music Room', x:44,z:24,w:4,h:6, floor:'wood', light:'#ffd09a', job:true, verb:'Tumugtog kasama ang mga bata'},
+  X:{n:'Armory', x:11,z:31,w:4,h:3, floor:'metal', light:'#ffe4c4', job:true, verb:'Mag-ensayo sa armas'},
+  A:{n:'Airlock', x:16,z:31,w:8,h:3, floor:'metal', light:'#ffe9c8'},
+};
+const BUNK_Z = [1, 5, 9, 16, 20];
+BUNK_Z.forEach((z, i) => {
+  ROOMS['R' + (i + 1)] = { n:'Kwarto ' + (i + 1), x:36, z, w:4, h:3, floor:'wood', light:'#ffd9a8', bunk:'L' };
+  ROOMS['R' + (i + 6)] = { n:'Kwarto ' + (i + 6), x:44, z, w:4, h:3, floor:'wood', light:'#ffd9a8', bunk:'R' };
+});
+const DOORS = [[5,9],[18,9],[19,9],[25,2],[32,6],[30,12],[30,15],[25,13],[25,14],[10,13],[5,17],[5,22],[10,24],[18,22],[19,19],[20,19],[21,22],[19,30],[20,30]];
+BUNK_Z.forEach(z => { DOORS.push([40, z + 1], [43, z + 1]); });
+DOORS.push([40, 26], [40, 33], [43, 26], [21, 28], [15, 31]);
+const JOBS = ['G','K','P','W','S','O','Y','X','C','H','V','U','rest'];
+const RELAX = ['H', 'V', 'U'];
+const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Y:'Manukan', X:'Bantay', rest:'Pahinga' };
+
+const GW = 49, GH = 37;
+const cell = new Uint8Array(GW * GH);        // 0 bato, 1 sahig, 2 pader, 4 blast door
+const roomOf = new Array(GW * GH).fill(null);
+const blocked = new Uint8Array(GW * GH);
+const ci = (x, z) => z * GW + x;
+for (const [id, r] of Object.entries(ROOMS))
+  for (let z = r.z; z < r.z + r.h; z++) for (let x = r.x; x < r.x + r.w; x++) { cell[ci(x, z)] = 1; roomOf[ci(x, z)] = id; }
+for (const [x, z] of DOORS) { cell[ci(x, z)] = 1; roomOf[ci(x, z)] = 'door'; }
+cell[ci(19, 34)] = 4; cell[ci(20, 34)] = 4;
+for (let z = 35; z < GH; z++) for (let x = 18; x < 22; x++) cell[ci(x, z)] = 5;   // tunnel to the surface: no earth cap
+for (let z = 0; z < GH; z++) for (let x = 0; x < GW; x++) {
+  if (cell[ci(x, z)]) continue;
+  let near = false;
+  for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+    const nx = x + dx, nz = z + dz;
+    if (nx >= 0 && nz >= 0 && nx < GW && nz < GH && cell[ci(nx, nz)] === 1) near = true;
+  }
+  if (near) cell[ci(x, z)] = 2;
+}
+const walkable = (x, z) => x >= 0 && z >= 0 && x < GW && z < GH && cell[ci(x, z)] === 1 && !blocked[ci(x, z)];
+function block(x0, z0, x1, z1) { for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) blocked[ci(x, z)] = 1; }
+const roomCenter = id => { const r = ROOMS[id]; return new THREE.Vector3(r.x + r.w / 2, 0, r.z + r.h / 2); };
+function roomAtPos(x, z) { const id = roomOf[ci(Math.floor(x), Math.floor(z))]; return id === 'door' ? null : id; }
+const SPOTS = {};
+function spot(id, cx, cz, tx, tz, kind = 'work') {
+  (SPOTS[id] ||= []).push({ x: cx + .5, z: cz + .5, yaw: Math.atan2(tx - (cx + .5), tz - (cz + .5)), kind, taken: null });
+}
+
+// ---------------------------------------------------------------- renderer
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+let DPR = Math.min(devicePixelRatio || 1, 2);
+renderer.setPixelRatio(DPR);
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#0b0d0e');
+scene.fog = new THREE.Fog('#0b0d0e', 40, 95);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 200);
+const ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+// lamps, LEDs and screens glow softly, the way real light sources do on a camera
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(innerWidth * DPR, innerHeight * DPR, { type: THREE.HalfFloatType, samples: 4 }));
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), .38, .4, 1.0);
+composer.addPass(bloom); composer.addPass(new OutputPass());
+let BLOOM = true;
+
+// ---------------------------------------------------------------- textures
+function ctex(size, draw, repeat = 1) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d'); draw(g, size);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO;
+  t.repeat.set(repeat, repeat);
+  return t;
+}
+function blotches(g, s, n, rgb, amin, amax, rmin, rmax) {
+  for (let i = 0; i < n; i++) {
+    const x = Math.random() * s, y = Math.random() * s, r = rand(rmin, rmax), a = rand(amin, amax);
+    for (const ox of [-s, 0, s]) for (const oy of [-s, 0, s]) {
+      const gr = g.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, r);
+      gr.addColorStop(0, `rgba(${rgb},${a})`); gr.addColorStop(1, `rgba(${rgb},0)`);
+      g.fillStyle = gr; g.fillRect(x + ox - r, y + oy - r, r * 2, r * 2);
+    }
+  }
+}
+function grain(g, s, amt) {
+  const im = g.getImageData(0, 0, s, s), d = im.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - .5) * amt; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  g.putImageData(im, 0, 0);
+}
+const TEX = {
+  concrete: ctex(512, (g, s) => { // 2m x 2m board-formed concrete with tie holes
+    g.fillStyle = '#b8b2a7'; g.fillRect(0, 0, s, s);
+    blotches(g, s, 70, '70,64,56', .03, .09, 20, 90); blotches(g, s, 30, '255,250,240', .03, .07, 30, 80);
+    g.strokeStyle = 'rgba(60,55,48,.28)'; g.lineWidth = 2;
+    for (let y = 0; y <= s; y += s / 4) { g.beginPath(); g.moveTo(0, y); g.lineTo(s, y); g.stroke(); }
+    for (let x = 0; x <= s; x += s / 2) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, s); g.stroke(); }
+    g.fillStyle = 'rgba(40,36,32,.55)';
+    for (let x = s / 8; x < s; x += s / 4) for (let y = s / 8; y < s; y += s / 4) { g.beginPath(); g.arc(x, y, 3.2, 0, 7); g.fill(); }
+    grain(g, s, 16);
+  }),
+  soil: ctex(256, (g, s) => { g.fillStyle = '#2a231d'; g.fillRect(0, 0, s, s); blotches(g, s, 40, '12,9,7', .1, .3, 10, 40); grain(g, s, 26); }),
+  wood: ctex(512, (g, s) => { // 2m of oak planks, 20cm wide
+    const pw = s / 10;
+    for (let i = 0; i < 10; i++) {
+      let y = 0;
+      while (y < s) {
+        const len = rand(s * .3, s * .8), tone = rand(-14, 14);
+        g.fillStyle = `rgb(${158 + tone},${118 + tone},${80 + tone * .8})`; g.fillRect(i * pw, y, pw, len);
+        g.strokeStyle = 'rgba(70,45,25,.18)';
+        for (let k = 0; k < 6; k++) { g.beginPath(); const xx = i * pw + rand(2, pw - 2); g.moveTo(xx, y); g.bezierCurveTo(xx + rand(-4, 4), y + len * .3, xx + rand(-4, 4), y + len * .6, xx, y + len); g.stroke(); }
+        g.fillStyle = 'rgba(40,25,12,.5)'; g.fillRect(i * pw, y, pw, 1.5);
+        y += len;
+      }
+      g.fillStyle = 'rgba(40,25,12,.45)'; g.fillRect(i * pw, 0, 1.5, s);
+    }
+    grain(g, s, 10);
+  }),
+  tile: ctex(512, (g, s) => { // 50cm porcelain
+    const t = s / 4; g.fillStyle = '#6f6a63'; g.fillRect(0, 0, s, s);
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { const v = rand(-8, 8); g.fillStyle = `rgb(${214 + v},${210 + v},${202 + v})`; g.fillRect(i * t + 2, j * t + 2, t - 4, t - 4); }
+    blotches(g, s, 20, '120,110,100', .02, .05, 20, 60); grain(g, s, 8);
+  }),
+  epoxy: ctex(512, (g, s) => {
+    g.fillStyle = '#7d8682'; g.fillRect(0, 0, s, s); blotches(g, s, 30, '40,50,48', .03, .07, 30, 100);
+    for (let i = 0; i < 2200; i++) { g.fillStyle = pick(['#c9cdc6', '#3c4341', '#9aa39e', '#5b625f']); g.fillRect(Math.random() * s, Math.random() * s, 2, 2); }
+  }),
+  concreteFloor: ctex(512, (g, s) => {
+    g.fillStyle = '#9b968e'; g.fillRect(0, 0, s, s); blotches(g, s, 50, '60,55,50', .03, .08, 30, 110); blotches(g, s, 20, '240,236,228', .03, .06, 40, 90);
+    g.strokeStyle = 'rgba(40,36,32,.45)'; g.lineWidth = 2; g.strokeRect(1, 1, s - 2, s - 2); grain(g, s, 10);
+  }),
+  metal: ctex(256, (g, s) => { // diamond plate
+    g.fillStyle = '#8a8f93'; g.fillRect(0, 0, s, s);
+    for (let y = 0; y < s; y += 16) for (let x = (y / 16) % 2 ? 8 : 0; x < s; x += 16) {
+      g.save(); g.translate(x + 4, y + 4); g.rotate(((x + y) / 16) % 2 ? .7 : -.7);
+      g.fillStyle = 'rgba(255,255,255,.22)'; g.fillRect(-5, -1.5, 10, 3); g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(-5, 1.5, 10, 1); g.restore();
+    }
+    blotches(g, s, 20, '50,45,40', .04, .1, 10, 40);
+  }),
+  walnut: ctex(256, (g, s) => {
+    g.fillStyle = '#6b4a33'; g.fillRect(0, 0, s, s); g.strokeStyle = 'rgba(30,18,10,.25)';
+    for (let i = 0; i < 40; i++) { g.beginPath(); const y = Math.random() * s; g.moveTo(0, y); g.bezierCurveTo(s * .3, y + rand(-8, 8), s * .6, y + rand(-8, 8), s, y); g.stroke(); }
+    grain(g, s, 10);
+  }),
+};
+
+// ---------------------------------------------------------------- materials
+const std = o => new THREE.MeshStandardMaterial(o);
+const glow = c => new THREE.MeshBasicMaterial({ color: c });
+const MAT = {
+  wall: std({ map: TEX.concrete, roughness: .93 }),
+  cap: std({ color: '#2b2723', roughness: 1 }),
+  soilTop: std({ map: TEX.soil, roughness: 1 }),
+  wood: std({ map: TEX.wood, roughness: .62 }),
+  tile: std({ map: TEX.tile, roughness: .32 }),
+  epoxy: std({ map: TEX.epoxy, roughness: .45 }),
+  concrete: std({ map: TEX.concreteFloor, roughness: .55 }),
+  metal: std({ map: TEX.metal, roughness: .5, metalness: .6 }),
+  walnut: std({ map: TEX.walnut, roughness: .55 }),
+  steel: std({ color: '#a2a9ae', metalness: .85, roughness: .32 }),
+  darkSteel: std({ color: '#3b4045', metalness: .7, roughness: .45 }),
+  black: std({ color: '#141516', roughness: .35 }),
+  white: std({ color: '#ebe8e1', roughness: .5 }),
+  cabinet: std({ color: '#d9d4c9', roughness: .55 }),
+  quartz: std({ color: '#f1efe9', roughness: .18 }),
+  linen: std({ color: '#ece7dc', roughness: .9 }),
+  duvet: std({ color: '#7f909b', roughness: .95 }),
+  sofa: std({ color: '#58646a', roughness: .95 }),
+  sofa2: std({ color: '#8a6a52', roughness: .95 }),
+  rug: std({ color: '#8b7563', roughness: 1 }),
+  rug2: std({ color: '#4c5a55', roughness: 1 }),
+  cedar: std({ color: '#8a5f3c', roughness: .8 }),
+  soilBed: std({ color: '#3a2c20', roughness: 1 }),
+  leaf: std({ color: '#4d8a37', roughness: .7 }),
+  leaf2: std({ color: '#2f6b33', roughness: .7 }),
+  fruit: std({ color: '#c8402e', roughness: .45 }),
+  tank: std({ color: '#5f7f8f', metalness: .4, roughness: .4 }),
+  filter: std({ color: '#d8e6ec', roughness: .3 }),
+  pipeRed: std({ color: '#a33a2c', roughness: .5 }),
+  pipeBlue: std({ color: '#3a6d93', roughness: .5 }),
+  olive: std({ color: '#55603f', roughness: .7, metalness: .3 }),
+  yellow: std({ color: '#d6a52c', roughness: .7 }),
+  glass: std({ color: '#cfe6ef', roughness: .05, transparent: true, opacity: .22 }),
+  ppGreen: std({ color: '#1f5c4a', roughness: .6 }),
+  pot: std({ color: '#c9c2b6', roughness: .8 }),
+  rack: std({ color: '#26292c', roughness: .6, metalness: .4 }),
+  blanketA: std({ color: '#9b5d4a', roughness: .95 }), blanketB: std({ color: '#4d6a7f', roughness: .95 }), blanketC: std({ color: '#6c7a4e', roughness: .95 }),
+  hazmat: std({ color: '#d9b331', roughness: .8 }),
+  led: glow('#ffe6c4'), ledCool: glow('#e4f3ff'), grow: glow('#ffc4ea'), lamp: glow('#ffd59a'),
+  screen: glow('#5fd0ff'), screenGreen: glow('#5be08a'), ledGreen: glow('#57e389'), ledAmber: glow('#ffb347'), ledRed: glow('#ff4a3a'),
+  daylight: glow('#7d7a74'),
+};
+for (const m of Object.values(MAT)) if (m.isMeshStandardMaterial) m.envMapIntensity = .5;
+for (const m of Object.values(MAT)) if (m.isMeshBasicMaterial) m.color.multiplyScalar(2.2);   // over 1.0 so only light sources bloom
+MAT.trim = std({ color: '#ddd7cb', roughness: .45 }); MAT.trim.envMapIntensity = .5;
+// surface relief from the same textures: form-tie holes, plank seams, tile grout
+Object.assign(MAT.wall, { bumpMap: TEX.concrete, bumpScale: 1.2 }); Object.assign(MAT.wood, { bumpMap: TEX.wood, bumpScale: .8 });
+Object.assign(MAT.tile, { bumpMap: TEX.tile, bumpScale: 1.2 }); Object.assign(MAT.concrete, { bumpMap: TEX.concreteFloor, bumpScale: .6 });
+Object.assign(MAT.metal, { bumpMap: TEX.metal, bumpScale: 1.5 }); Object.assign(MAT.walnut, { bumpMap: TEX.walnut, bumpScale: .5 }); Object.assign(MAT.epoxy, { bumpMap: TEX.epoxy, bumpScale: .3 });
+const FLOORMAT = { wood: MAT.wood, tile: MAT.tile, epoxy: MAT.epoxy, concrete: MAT.concrete, metal: MAT.metal };
+
+// cutaway: walls between the camera and Isha open up so she never disappears behind them
+const CUT = { uPlayer: { value: new THREE.Vector3() }, uCam: { value: new THREE.Vector3() }, uOn: { value: 1 } };
+function cutaway(mat) {
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, CUT);
+    sh.vertexShader = 'varying vec3 vWP;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = 'varying vec3 vWP;\nuniform vec3 uPlayer;\nuniform vec3 uCam;\nuniform float uOn;\n' + sh.fragmentShader.replace('void main() {', `void main() {
+  if (uOn > 0.5) {
+    vec3 ab = uCam - uPlayer;
+    float t = dot(vWP - uPlayer, ab) / dot(ab, ab);
+    if (t > 0.0) {
+      float d = length(vWP - (uPlayer + ab * t));
+      float k = smoothstep(1.9, 1.1, d);
+      float n = fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453);
+      if (k > n) discard;
+    }
+  }`);
+  };
+  mat.customProgramCacheKey = () => 'cutaway';
+  return mat;
+}
+cutaway(MAT.wall); cutaway(MAT.cap);
+
+// ---------------------------------------------------------------- world helpers
+const staticG = new THREE.Group();   // merged per material after building
+const dyn = new THREE.Group(); scene.add(dyn);
+const FX = {};
+const gcache = new Map();
+const geo = (k, make) => { if (!gcache.has(k)) gcache.set(k, make()); return gcache.get(k); };
+function put(g, mat, x, y, z, ry = 0, parent = staticG) {
+  const m = new THREE.Mesh(g, mat); m.position.set(x, y, z); m.rotation.y = ry;
+  m.castShadow = m.receiveShadow = true; parent.add(m); return m;
+}
+const box = (w, h, d, mat, x, y, z, ry = 0, p) => put(geo(`b${w}|${h}|${d}`, () => new THREE.BoxGeometry(w, h, d)), mat, x, y + h / 2, z, ry, p);
+function rbox(w, h, d, mat, x, y, z, ry = 0, r = .05, p) {
+  const rr = Math.min(r, w / 2 - .002, h / 2 - .002, d / 2 - .002);
+  return put(geo(`r${w}|${h}|${d}|${rr}`, () => new RoundedBoxGeometry(w, h, d, 2, rr)), mat, x, y + h / 2, z, ry, p);
+}
+const cyl = (rt, rb, h, mat, x, y, z, seg = 20, p) => put(geo(`c${rt}|${rb}|${h}|${seg}`, () => new THREE.CylinderGeometry(rt, rb, h, seg)), mat, x, y + h / 2, z, 0, p);
+const ball = (r, mat, x, y, z, p) => put(geo(`s${r}`, () => new THREE.SphereGeometry(r, 18, 12)), mat, x, y, z, 0, p);
+function pipe(x0, z0, x1, z1, y, r, mat) {
+  const L = Math.hypot(x1 - x0, z1 - z0);
+  const m = put(geo(`c${r}|${r}|${L}|10`, () => new THREE.CylinderGeometry(r, r, L, 10)), mat, (x0 + x1) / 2, y, (z0 + z1) / 2);
+  if (Math.abs(x1 - x0) > Math.abs(z1 - z0)) m.rotation.z = Math.PI / 2; else m.rotation.x = Math.PI / 2;
+  return m;
+}
+function plant(x, z, s = 1) { cyl(.18 * s, .14 * s, .34 * s, MAT.pot, x, 0, z, 14); ball(.3 * s, MAT.leaf2, x, .62 * s, z); ball(.22 * s, MAT.leaf, x + .1 * s, .9 * s, z - .05 * s); }
+function lamp(x, y, z) { cyl(.07, .09, .05, MAT.darkSteel, x, y, z, 12); cyl(.015, .015, .32, MAT.darkSteel, x, y + .05, z, 6); cyl(.1, .15, .18, MAT.lamp, x, y + .34, z, 16); }
+function chair(x, z, ry) { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; staticG.add(g);
+  rbox(.44, .06, .44, MAT.walnut, 0, .44, 0, 0, .02, g); rbox(.44, .45, .05, MAT.walnut, 0, .47, -.2, 0, .02, g);
+  for (const [a, b] of [[-.19, -.19], [.19, -.19], [-.19, .19], [.19, .19]]) box(.04, .44, .04, MAT.walnut, a, 0, b, 0, g); }
+function textTex(text, w, h, font, color = 'rgba(235,230,215,1)') {
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
+  g.fillStyle = color; g.font = font; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h / 2);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = ANISO; return t;
+}
+function decal(text, x, z, size = 1, ry = 0, opacity = .32) {
+  const t = textTex(text, 512, 128, '400 92px "Saira Stencil One", Impact, sans-serif');
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(size * 4, size), new THREE.MeshBasicMaterial({ map: t, transparent: true, opacity, depthWrite: false, color: '#d9d2bf' }));
+  m.rotation.x = -Math.PI / 2; m.rotation.z = ry; m.position.set(x, .012, z); m.renderOrder = 1; dyn.add(m); return m;
+}
+
+// ---------------------------------------------------------------- shell: floors, walls, earth
+function worldUV(g) {
+  const p = g.attributes.position, n = g.attributes.normal, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const nx = Math.abs(n.getX(i)), ny = Math.abs(n.getY(i));
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    if (ny > .5) uv.setXY(i, x / 2, z / 2); else if (nx > .5) uv.setXY(i, z / 2, y / 2); else uv.setXY(i, x / 2, y / 2);
+  }
+  return g;
+}
+function buildShell() {
+  const floors = {}, walls = [], caps = [], earth = [];
+  const addFloor = (mat, x, z, w, h) => { const g = new THREE.PlaneGeometry(w, h); g.rotateX(-Math.PI / 2); g.translate(x + w / 2, 0, z + h / 2); (floors[mat] ||= []).push(worldUV(g)); };
+  for (const r of Object.values(ROOMS)) addFloor(r.floor, r.x, r.z, r.w, r.h);
+  for (const [x, z] of DOORS) addFloor('concrete', x, z, 1, 1);
+  for (let z = 0; z < GH; z++) for (let x = 0; x < GW; x++) {
+    const c = cell[ci(x, z)];
+    if (c === 2) {
+      const g = new THREE.BoxGeometry(1, WALL_H, 1); g.translate(x + .5, WALL_H / 2, z + .5); walls.push(worldUV(g).toNonIndexed());
+      const t = new THREE.PlaneGeometry(1, 1); t.rotateX(-Math.PI / 2); t.translate(x + .5, WALL_H + .002, z + .5); caps.push(t.toNonIndexed());
+    } else if (c === 0) { const t = new THREE.PlaneGeometry(1, 1); t.rotateX(-Math.PI / 2); t.translate(x + .5, WALL_H, z + .5); earth.push(worldUV(t).toNonIndexed()); }
+  }
+  // earth apron around the map, with a slot for the entrance tunnel
+  const apron = (x, z, w, h) => { const t = new THREE.PlaneGeometry(w, h); t.rotateX(-Math.PI / 2); t.translate(x + w / 2, WALL_H, z + h / 2); earth.push(worldUV(t).toNonIndexed()); };
+  apron(-60, -60, GW + 120, 60); apron(-60, 0, 60, GH); apron(GW, 0, 60, GH);
+  apron(-60, GH, 78, 10); apron(22, GH, GW + 38, 10); apron(-60, GH + 10, GW + 120, 60);
+  for (const [k, list] of Object.entries(floors)) { const m = new THREE.Mesh(mergeGeometries(list), FLOORMAT[k]); m.receiveShadow = true; scene.add(m); }
+  const wm = new THREE.Mesh(mergeGeometries(walls), MAT.wall); wm.castShadow = wm.receiveShadow = true; scene.add(wm);
+  scene.add(new THREE.Mesh(mergeGeometries(caps), MAT.cap));
+  const em = new THREE.Mesh(mergeGeometries(earth), MAT.soilTop); em.receiveShadow = true; scene.add(em);
+  // baseboards wherever a floor meets a wall, and timber frames at every doorway
+  const isDoor = (x, z) => roomOf[ci(x, z)] === 'door';
+  for (let z = 0; z < GH; z++) for (let x = 0; x < GW; x++) {
+    if (cell[ci(x, z)] !== 1 || isDoor(x, z)) continue;
+    if (cell[ci(x, z - 1)] === 2) box(1, .1, .025, MAT.trim, x + .5, 0, z + .012);
+    if (cell[ci(x, z + 1)] === 2) box(1, .1, .025, MAT.trim, x + .5, 0, z + .988);
+    if (cell[ci(x - 1, z)] === 2) box(.025, .1, 1, MAT.trim, x + .012, 0, z + .5);
+    if (cell[ci(x + 1, z)] === 2) box(.025, .1, 1, MAT.trim, x + .988, 0, z + .5);
+  }
+  for (const [x, z] of DOORS) {
+    const alongZ = cell[ci(x - 1, z)] === 2 || isDoor(x - 1, z) || cell[ci(x + 1, z)] === 2 || isDoor(x + 1, z);
+    if (alongZ) { if (!isDoor(x - 1, z)) box(.07, 2.2, 1.04, MAT.walnut, x + .035, 0, z + .5); if (!isDoor(x + 1, z)) box(.07, 2.2, 1.04, MAT.walnut, x + .965, 0, z + .5); }
+    else { if (!isDoor(x, z - 1)) box(1.04, 2.2, .07, MAT.walnut, x + .5, 0, z + .035); if (!isDoor(x, z + 1)) box(1.04, 2.2, .07, MAT.walnut, x + .5, 0, z + .965); }
+  }
+  // soft shading in the corners where floor meets wall
+  const aoTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const g = c.getContext('2d'); const gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(0,0,0,.5)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 4, 64); return new THREE.CanvasTexture(c); })();
+  const strips = [];
+  for (const r of Object.values(ROOMS)) {
+    const strip = (len, rot, x, z) => { const g = new THREE.PlaneGeometry(len, .55); g.rotateX(-Math.PI / 2); g.rotateY(rot); g.translate(x, .005, z); strips.push(g); };
+    strip(r.w, 0, r.x + r.w / 2, r.z + .275); strip(r.w, Math.PI, r.x + r.w / 2, r.z + r.h - .275);
+    strip(r.h, Math.PI / 2, r.x + .275, r.z + r.h / 2); strip(r.h, -Math.PI / 2, r.x + r.w - .275, r.z + r.h / 2);
+  }
+  const ao = new THREE.Mesh(mergeGeometries(strips), new THREE.MeshBasicMaterial({ map: aoTex, transparent: true, depthWrite: false, color: '#000' }));
+  ao.renderOrder = 1; scene.add(ao);
+  // warm cove light along the top of every room's walls
+  MAT.cove = glow('#ffe1bb');
+  for (const [id, r] of Object.entries(ROOMS)) {
+    const y = 2.4, t = .05, mat = MAT.cove;
+    box(r.w - .1, t, t, mat, r.x + r.w / 2, y, r.z + .03); box(r.w - .1, t, t, mat, r.x + r.w / 2, y, r.z + r.h - .03);
+    box(t, t, r.h - .1, mat, r.x + .03, y, r.z + r.h / 2); box(t, t, r.h - .1, mat, r.x + r.w - .03, y, r.z + r.h / 2);
+    if (r.hall) { // floor guide lights
+      const long = r.w > r.h;
+      if (long) { box(r.w, .01, .04, MAT.ledAmber, r.x + r.w / 2, 0, r.z + .12); box(r.w, .01, .04, MAT.ledAmber, r.x + r.w / 2, 0, r.z + r.h - .12); }
+      else { box(.04, .01, r.h, MAT.ledAmber, r.x + .12, 0, r.z + r.h / 2); box(.04, .01, r.h, MAT.ledAmber, r.x + r.w - .12, 0, r.z + r.h / 2); }
+    }
+  }
+}
+
+// ---------------------------------------------------------------- rooms
+// per-room belongings, keyed by bunk room number
+const kidBed = (x, z) => { rbox(.75, .22, 1.35, MAT.cedar, x, 0, z, 0, .05); rbox(.68, .1, 1.25, MAT.linen, x, .22, z, 0, .04); rbox(.7, .05, .8, MAT.blanketA, x, .3, z + .2, 0, .02); };
+const crib = (x, z) => { box(.7, .5, 1.05, MAT.white, x, 0, z); rbox(.62, .1, .95, std({ color: '#cfe3ef', roughness: .9 }), x, .5, z, 0, .04);
+  for (let k = 0; k < 6; k++) { box(.03, .45, .03, MAT.white, x - .33, .55, z - .45 + k * .18); box(.03, .45, .03, MAT.white, x + .33, .55, z - .45 + k * .18); } box(.7, .04, .04, MAT.white, x, 1.0, z - .5); box(.7, .04, .04, MAT.white, x, 1.0, z + .5); };
+const ROOM_ITEMS = {
+  1: [(r, l, bx, dx, z) => { rbox(.35, .25, .3, MAT.white, dx, .72, z + .1, 0, .06); for (let k = 0; k < 4; k++) box(.24, .05, .17, std({ color: pick(['#7a3b2e', '#2f4f6b', '#ddd2bb']), roughness: .8 }), r.x + 2.3, k * .05, z + .4); box(.4, .5, .4, MAT.walnut, r.x + 2.3, 0, z + 2.3); }],   // Nanay Mila: rice cooker; Tatay Fred: books, rocking stool
+  2: [(r, l, bx, dx, z) => { for (let k = 0; k < 3; k++) { cyl(.08, .06, .12, MAT.pot, r.x + 2.2, 0, z + .3 + k * .25, 10); ball(.09, MAT.leaf, r.x + 2.2, .18, z + .3 + k * .25); } box(.45, .22, .25, MAT.olive, r.x + 2.3, 0, z + 2.4); }],  // Mama Su: seedlings; Papa Na: tool case
+  3: [(r, l, bx, dx, z) => { kidBed(r.x + 2.3, z + .75); ball(.1, std({ color: '#f2a7c3', roughness: .6 }), r.x + 2.6, .1, z + 2.4); }],   // Paolo, Rika and Ria's little bed
+  4: [(r, l, bx, dx, z) => { kidBed(r.x + 2.3, z + .75); crib(r.x + 2.3, z + 2.35); box(.3, .14, .16, MAT.pipeBlue, r.x + 1.5, 0, z + 2.6); }],  // Carlo, Monica, Carly's bed and Butchukok's crib
+  5: [(r, l, bx, dx, z) => { box(.45, .22, .25, MAT.pipeRed, r.x + 2.3, 0, z + .4); for (const o of [-.15, .15]) cyl(.07, .07, .3, MAT.darkSteel, r.x + 2.3 + o, .05, z + 2.4, 10).rotation.z = Math.PI / 2; }],   // AJ & Nelson: toolbox, dumbbells
+  6: [(r, l, bx, dx, z) => { for (let k = 0; k < 6; k++) box(.14, .19, .02, std({ color: pick(['#1b2f4a', '#7a1f1f', '#c9a227', '#5a2d6a']), roughness: .5 }), dx - .05, .72, z + .2 + k * .1); plant(r.x + 2.3, z + 2.4, .6); }],  // Mama Jen & Abby: Abby's DVDs, a plant
+  7: [(r, l, bx, dx, z) => { const g = ball(.16, std({ color: '#b5651d', roughness: .5 }), r.x + 2.3, .3, z + 2.3); g.scale.set(.35, 1.1, .9); box(.04, .5, .05, MAT.walnut, r.x + 2.3, .45, z + 2.3); put(new THREE.PlaneGeometry(.5, .4), new THREE.MeshStandardMaterial({ map: art2(), roughness: .9 }), r.x + 2.3, .012, z + .7, 0).rotation.x = -Math.PI / 2; }],  // Yssa: guitar, a painting
+};
+const art2 = () => ctex(128, (g, s) => { g.fillStyle = '#f2ede2'; g.fillRect(0, 0, s, s); for (let i = 0; i < 8; i++) { g.fillStyle = pick(['#d9a441', '#3f7f8f', '#c95f4a', '#5c8a4a']); g.beginPath(); g.arc(rand(20, 108), rand(20, 108), rand(8, 26), 0, 7); g.fill(); } });
+for (let k = 8; k <= 10; k++) ROOM_ITEMS[k] = [(r, l, bx, dx, z) => { rbox(.6, .4, .3, MAT.olive, r.x + 2, 0, z + .3, 0, .04); rbox(.45, .3, .3, MAT.blanketB, r.x + 2, .4, z + .3, 0, .04); }];  // supplies for anyone who joins later
+function buildRooms() {
+  // Greenhouse: three raised cedar beds under grow lights
+  const plantPos = [];
+  for (const bz of [2, 4, 6]) {
+    box(8, .55, .9, MAT.cedar, 7, 0, bz + .5); box(7.84, .05, .74, MAT.soilBed, 7, .5, bz + .5); block(3, bz, 10, bz);
+    box(7.6, .05, .16, MAT.grow, 7, 2.1, bz + .5); box(7.7, .06, .24, MAT.darkSteel, 7, 2.15, bz + .5);
+    for (const x of [3.4, 10.6]) cyl(.008, .008, .4, MAT.darkSteel, x, 2.2, bz + .5, 4);
+    for (let x = 3.35; x < 10.7; x += .46) plantPos.push([x, bz + .5 + rand(-.12, .12)]);
+  }
+  const N = plantPos.length;
+  FX.leafy = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.17, 1), MAT.leaf, N);
+  FX.tall = new THREE.InstancedMesh(new THREE.ConeGeometry(.13, .55, 7), MAT.leaf2, N);
+  FX.fruit = new THREE.InstancedMesh(new THREE.SphereGeometry(.045, 8, 6), MAT.fruit, N);
+  for (const im of [FX.leafy, FX.tall, FX.fruit]) { im.castShadow = true; dyn.add(im); }
+  FX.plantPos = plantPos;
+  cyl(.42, .42, 1.6, MAT.tank, 1.6, 0, 8.3); block(1, 8, 1, 8);
+  box(.7, .9, 1.8, MAT.cedar, 11.55, 0, 7); block(11, 6, 11, 7);
+  for (let i = 0; i < 4; i++) cyl(.09, .07, .14, MAT.pot, 11.45, .9, 6.3 + i * .45, 10);
+  spot('G', 5, 3, 5.5, 2.5); spot('G', 8, 3, 8.5, 4.5); spot('G', 6, 5, 6.5, 6.5); spot('G', 9, 7, 9.5, 6.5);
+
+  // Master suite
+  box(4.2, .012, 3.4, MAT.rug, 19, 0, 2.9);
+  rbox(2.4, 1.1, .14, MAT.sofa, 19, 0, 1.12, 0, .05);
+  rbox(2.2, .34, 2.15, MAT.walnut, 19, 0, 2.2, 0, .04); rbox(2.04, .26, 2.0, MAT.linen, 19, .34, 2.22, 0, .08);
+  rbox(2.08, .09, 1.35, MAT.duvet, 19, .58, 2.6, 0, .04);
+  rbox(.62, .15, .36, MAT.linen, 18.5, .6, 1.5, 0, .07); rbox(.62, .15, .36, MAT.linen, 19.5, .6, 1.5, 0, .07);
+  block(18, 1, 19, 2);
+  for (const x of [17.45, 20.55]) { rbox(.5, .55, .44, MAT.walnut, x, 0, 1.32, 0, .03); lamp(x, .55, 1.32); }
+  block(17, 1, 17, 1); block(20, 1, 20, 1);
+  box(1.9, 2.2, .6, MAT.walnut, 23.9, 0, 1.33); block(23, 1, 24, 1);
+  box(1.7, .05, .72, MAT.walnut, 14.1, .73, 1.42); box(.05, .73, .66, MAT.walnut, 13.3, 0, 1.42); box(.05, .73, .66, MAT.walnut, 14.9, 0, 1.42);
+  box(.9, .52, .04, MAT.black, 14.1, .92, 1.15); box(.84, .46, .01, MAT.screen, 14.1, .95, 1.175);
+  box(.36, .18, .22, MAT.olive, 14.75, .78, 1.45); chair(14.1, 2.25, Math.PI); block(13, 1, 14, 1);
+  spot('M', 14, 2, 14.1, 1.4, 'cmd');
+  box(2.3, .46, .42, MAT.walnut, 15, 0, 3.3); box(2.1, 1.22, .06, MAT.black, 15, .5, 3.3); box(.5, .06, .25, MAT.black, 15, .46, 3.3);
+  // the TV in your room is on: a sunrise over the old neighbourhood
+  const tvPic = ctex(256, (g, s) => { const gr = g.createLinearGradient(0, 0, 0, s); gr.addColorStop(0, '#2b3a67'); gr.addColorStop(.55, '#f08a4b'); gr.addColorStop(1, '#ffd38a'); g.fillStyle = gr; g.fillRect(0, 0, s, s);
+    g.fillStyle = '#ffe9b0'; g.beginPath(); g.arc(s * .62, s * .62, s * .1, 0, 7); g.fill();
+    g.fillStyle = '#3a2f3f'; g.beginPath(); g.moveTo(0, s); g.lineTo(0, s * .7); g.lineTo(s * .25, s * .58); g.lineTo(s * .45, s * .72); g.lineTo(s * .7, s * .6); g.lineTo(s, s * .74); g.lineTo(s, s); g.fill();
+    g.fillStyle = '#1f1a24'; for (let i = 0; i < 9; i++) g.fillRect(i * s / 9 + 4, s * .82 - (i % 3) * 8, s / 12, s * .2); });
+  tvPic.wrapS = tvPic.wrapT = THREE.ClampToEdgeWrapping;
+  FX.tvM = put(new THREE.PlaneGeometry(2.0, 1.12), new THREE.MeshBasicMaterial({ map: tvPic }), 15, 1.11, 3.335, 0, dyn);
+  box(.35, .08, .2, MAT.black, 14.2, .46, 3.35); box(.16, .3, .16, MAT.black, 13.95, .46, 3.3); box(.16, .3, .16, MAT.black, 16.05, .46, 3.3);
+  block(14, 3, 15, 3);
+  rbox(2.5, .42, .95, MAT.sofa2, 15, 0, 6.7, 0, .1); rbox(2.5, .5, .22, MAT.sofa2, 15, .3, 7.12, 0, .08);
+  rbox(.22, .55, .95, MAT.sofa2, 13.85, 0, 6.7, 0, .08); rbox(.22, .55, .95, MAT.sofa2, 16.15, 0, 6.7, 0, .08);
+  block(14, 6, 16, 6);
+  rbox(1.1, .38, .56, MAT.walnut, 15, 0, 5.1, 0, .03);
+  cyl(.48, .5, .16, MAT.rug2, 22.8, 0, 7.6, 24);
+  // Millie's corner: bowls, toys; your things on the nightstands and dresser
+  cyl(.11, .09, .06, MAT.steel, 23.6, 0, 8.3, 14); cyl(.11, .09, .06, MAT.pipeRed, 23.9, 0, 8.0, 14); ball(.06, MAT.yellow, 22.3, .06, 8.2);
+  const bone = box(.22, .05, .06, MAT.white, 23.3, .16, 7.4); bone.rotation.y = .6;
+  for (const x of [17.32, 20.68]) { const f = box(.16, .13, .02, MAT.walnut, x, .55, 1.2); f.rotation.x = -.2; }
+  box(.24, .04, .17, MAT.blanketB, 20.6, .55, 1.45); box(.22, .03, .16, MAT.blanketA, 17.4, .55, 1.45);
+  box(1.0, .06, .3, MAT.walnut, 22.3, 1.7, 1.08); for (let i = 0; i < 6; i++) box(.05, .24, .2, std({ color: pick(['#7a3b2e', '#2f4f6b', '#b08d3a', '#ddd2bb']), roughness: .8 }), 21.95 + i * .1, 1.76, 1.08);
+  box(.5, .6, .4, std({ color: '#8a6f5a', roughness: .9 }), 24.4, 0, 7.8); box(.4, .02, .3, MAT.white, 15, .38, 5.1); cyl(.04, .04, .1, MAT.white, 15.35, .38, 5.05, 10);
+  plant(13.6, 8.4, 1.1); plant(24.4, 8.4, 1.2); plant(21.8, 1.4, .8);
+
+  // Master CR
+  rbox(.4, .42, .55, MAT.white, 26.4, 0, 1.35, 0, .12); rbox(.85, .85, .5, MAT.cabinet, 28.3, 0, 1.3, 0, .03);
+  box(.5, .02, .36, MAT.white, 28.3, .86, 1.3); box(.9, .8, .03, MAT.ledCool, 28.3, 1.2, 1.03);
+  box(1.2, .06, 1.1, MAT.white, 28.35, 0, 3.4); box(.02, 2, 1.1, MAT.glass, 27.75, 0, 3.4);
+  block(26, 1, 26, 1); block(28, 1, 28, 1); block(28, 3, 28, 3);
+
+  // Oxygen control
+  for (const x of [31, 32.5, 34]) { cyl(.38, .38, 1.9, MAT.steel, x, 0, 1.65); ball(.38, MAT.steel, x, 1.9, 1.65); pipe(x, 1.65, x, 1.65, 2.35, .07, MAT.darkSteel); }
+  block(30, 1, 34, 1);
+  pipe(30, 1.2, 35, 1.2, 2.3, .09, MAT.pipeBlue); pipe(30, 1.45, 35, 1.45, 2.42, .06, MAT.darkSteel);
+  box(.4, 1.5, 1.5, MAT.darkSteel, 34.75, .1, 4.2); block(34, 3, 34, 4);
+  FX.fan = new THREE.Group(); FX.fan.position.set(34.52, .85, 4.2); dyn.add(FX.fan);
+  for (let i = 0; i < 5; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(.02, .6, .16), MAT.steel); b.position.y = .3; const p = new THREE.Group(); p.rotation.x = i * Math.PI * 2 / 5; p.add(b); FX.fan.add(p); }
+  box(.9, 1.15, .34, MAT.darkSteel, 31.3, 0, 5.45); FX.o2screen = box(.7, .4, .01, MAT.screen, 31.3, .78, 5.27);
+  block(31, 5, 31, 5);
+  spot('O', 31, 4, 31.3, 5.4); spot('O', 32, 2, 32.5, 1.6); spot('O', 33, 4, 34.6, 4.2);
+
+  // Hobby room
+  box(5, .012, 3, MAT.rug2, 29, 0, 9.4);
+  box(2.74, .06, 1.52, MAT.ppGreen, 28.6, .7, 9); box(.02, .15, 1.6, MAT.white, 28.6, .76, 9);
+  for (const [a, b] of [[27.5, 8.5], [29.7, 8.5], [27.5, 9.5], [29.7, 9.5]]) box(.06, .7, .06, MAT.darkSteel, a, 0, b);
+  block(27, 8, 29, 9);
+  for (const a of [-.25, .25]) { const l = box(.04, 1.6, .04, MAT.walnut, 33.2 + a, 0, 8.2); l.rotation.z = a * .3; }
+  const art = ctex(256, (g, s) => { g.fillStyle = '#f2ede2'; g.fillRect(0, 0, s, s); for (let i = 0; i < 14; i++) { g.fillStyle = pick(['#d9a441', '#3f7f8f', '#c95f4a', '#5c8a4a', '#2f3a4a']); g.globalAlpha = .75; g.beginPath(); g.arc(rand(40, 216), rand(40, 216), rand(14, 50), 0, 7); g.fill(); } });
+  put(new THREE.PlaneGeometry(.8, .6), new THREE.MeshStandardMaterial({ map: art, roughness: .9 }), 33.2, 1.25, 8.25, Math.PI);
+  box(.36, 2, 1.9, MAT.walnut, 34.78, 0, 10.2); block(34, 9, 34, 11);
+  for (let i = 0; i < 18; i++) box(.24, rand(.22, .3), .05, std({ color: pick(['#7a3b2e', '#2f4f6b', '#b08d3a', '#3e5e3a', '#5a4a6a']), roughness: .8 }), 34.68, .45 + Math.floor(i / 6) * .5, 9.5 + (i % 6) * .25);
+  box(1.3, .78, .42, MAT.black, 31.6, 0, 11.65); box(1.2, .03, .14, MAT.white, 31.6, .78, 11.5); block(31, 11, 32, 11);
+  ball(.42, MAT.blanketA, 26.8, .25, 11.2).scale.set(1, .6, 1); ball(.42, MAT.blanketB, 27.8, .25, 11.4).scale.set(1, .6, 1);
+  spot('H', 28, 10, 28.5, 9.5); spot('H', 30, 9, 29.5, 9); spot('H', 32, 8, 33.2, 8.2); spot('H', 32, 10, 31.6, 11.6);
+
+  // Kusina
+  box(.65, .88, 4, MAT.cabinet, 1.35, 0, 12); box(.7, .05, 4.04, MAT.quartz, 1.35, .88, 12);
+  box(.55, .02, .6, MAT.black, 1.35, .93, 11.4); box(.4, .7, 4, MAT.cabinet, 1.22, 1.55, 12);
+  box(.45, .02, .5, MAT.steel, 1.35, .9, 13.3); box(.6, .5, .7, MAT.steel, 1.25, 1.75, 11.4);
+  block(1, 10, 1, 13);
+  box(.76, 1.9, .72, MAT.steel, 1.42, 0, 14.6); block(1, 14, 1, 14);
+  box(2, .88, .9, MAT.cabinet, 4.5, 0, 11.5); box(2.1, .05, 1, MAT.quartz, 4.5, .88, 11.5); block(3, 11, 5, 11);
+  for (const x of [3.8, 4.5, 5.2]) { cyl(.17, .17, .05, MAT.walnut, x, .66, 12.35, 14); cyl(.02, .02, .66, MAT.darkSteel, x, 0, 12.35, 6); }
+  box(2.4, .05, 1.1, MAT.walnut, 7, .73, 14.2); for (const [a, b] of [[5.9, 13.75], [8.1, 13.75], [5.9, 14.65], [8.1, 14.65]]) box(.06, .73, .06, MAT.walnut, a, 0, b);
+  for (const x of [6.2, 7, 7.8]) { chair(x, 13.4, 0); chair(x, 15.0, Math.PI); }
+  block(6, 14, 8, 14);
+  for (const x of [6.4, 7.6]) { cyl(.004, .004, .7, MAT.darkSteel, x, 1.9, 14.2, 4); ball(.12, MAT.lamp, x, 1.85, 14.2); }
+  spot('K', 2, 11, 1.35, 11.4); spot('K', 2, 13, 1.35, 13.3); spot('K', 4, 12, 4.5, 11.5);
+
+  // Pantry: shelving that empties as food runs down
+  const shelf = (x, z, w, d, ry) => { const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = ry; staticG.add(g);
+    for (const y of [.05, .55, 1.05, 1.55, 1.95]) box(w, .04, d, MAT.darkSteel, 0, y, 0, 0, g);
+    for (const a of [-w / 2 + .02, w / 2 - .02]) for (const b of [-d / 2 + .02, d / 2 - .02]) box(.04, 2, .04, MAT.darkSteel, a, 0, b, 0, g); };
+  shelf(1.3, 20, 3.8, .5, Math.PI / 2); block(1, 18, 1, 21);
+  shelf(9.7, 19.5, 2.8, .5, Math.PI / 2); block(9, 18, 9, 20);
+  for (const x of [2.2, 2.8, 3.4, 7, 7.6, 8.2]) cyl(.15, .15, .45, MAT.pipeBlue, x, 0, 21.6, 12);
+  for (let i = 0; i < 3; i++) rbox(.6, .25, .4, std({ color: '#cdbb92', roughness: 1 }), 7.4, i * .25, 18.4, 0, .1);
+  block(2, 21, 3, 21); block(7, 21, 8, 21); block(7, 18, 7, 18);
+  box(1.1, .85, .65, MAT.white, 4, 0, 18.4); box(1.0, .02, .55, MAT.ledCool, 4, .86, 18.4); block(3, 18, 4, 18);  // chest freezer: meat
+  for (let k = 0; k < 2; k++) rbox(.55, .2, .38, std({ color: '#e8dfc9', roughness: 1 }), 5.6, k * .2, 18.35, 0, .08);  // sacks of rice
+  const crates = [];
+  for (const y of [.09, .59, 1.09, 1.59]) {
+    for (let z = 18.25; z < 21.8; z += .34) crates.push([1.3, y, z]);
+    for (let z = 18.3; z < 20.8; z += .34) crates.push([9.7, y, z]);
+  }
+  FX.crates = new THREE.InstancedMesh(new THREE.BoxGeometry(.4, .34, .28), std({ roughness: .8 }), crates.length);
+  const dummy = new THREE.Object3D(), col = new THREE.Color();
+  crates.forEach(([x, y, z], i) => { dummy.position.set(x, y + .17 + rand(-.02, 0), z); dummy.rotation.y = rand(-.08, .08); dummy.scale.set(1, rand(.7, 1), 1); dummy.updateMatrix(); FX.crates.setMatrixAt(i, dummy.matrix);
+    FX.crates.setColorAt(i, col.set(pick(['#b9874e', '#c9a36a', '#7f9f5f', '#c45a3c', '#d9cfb8', '#4f7fa0']))); });
+  FX.crates.castShadow = true; dyn.add(FX.crates); FX.crateMax = crates.length;
+  spot('P', 2, 19, 1.3, 19.5); spot('P', 8, 20, 9.7, 19.8);
+
+  // Water filtration
+  for (const z of [24.6, 27.4]) { cyl(.9, .9, 2.1, MAT.tank, 2.2, 0, z, 28); for (const y of [.5, 1.6]) cyl(.92, .92, .06, MAT.darkSteel, 2.2, y, z, 28); }
+  block(1, 23, 2, 25); block(1, 26, 2, 28);
+  box(2.4, .2, .8, MAT.darkSteel, 6.3, 0, 25.6);
+  for (const x of [5.5, 6.3, 7.1]) { cyl(.2, .2, 1.5, MAT.filter, x, .2, 25.6, 16); cyl(.21, .21, .1, MAT.pipeBlue, x, 1.6, 25.6, 16); }
+  block(5, 25, 7, 25);
+  pipe(5.5, 25.6, 7.1, 25.6, 1.95, .05, MAT.pipeBlue); pipe(3.1, 25.6, 5.5, 25.6, 1.95, .06, MAT.pipeBlue);
+  box(.8, .7, .5, MAT.tank, 8.6, 0, 27.6); cyl(.2, .2, .55, MAT.pipeBlue, 8.6, .7, 27.6, 14); block(8, 27, 8, 28);
+  cyl(.12, .12, 1.1, MAT.steel, 6.3, .3, 27.8, 12).rotation.z = Math.PI / 2;
+  pipe(1, 23.2, 10, 23.2, 2.3, .07, MAT.pipeBlue);
+  FX.puddle = new THREE.Mesh(new THREE.CircleGeometry(1, 28), std({ color: '#203038', roughness: .04, metalness: .2, transparent: true, opacity: .8 }));
+  FX.puddle.rotation.x = -Math.PI / 2; FX.puddle.position.set(6.3, .015, 26.6); FX.puddle.scale.set(1.3, .8, 1); FX.puddle.visible = false; dyn.add(FX.puddle);
+  spot('W', 4, 24, 2.2, 24.6); spot('W', 6, 24, 6.3, 25.6); spot('W', 7, 27, 8.6, 27.6);
+
+  // Solar & batteries
+  FX.batt = [];
+  [11.7, 12.9, 14.1, 15.3].forEach(x => {
+    box(1.1, 1.9, .6, MAT.rack, x, 0, 20.4);
+    for (let k = 0; k < 5; k++) { const l = box(.14, .05, .01, MAT.ledGreen, x - .3 + k * .15, 1.5, 20.71); FX.batt.push(l); dyn.attach(l); }
+  });
+  block(11, 20, 15, 20);
+  box(.8, 1.4, .42, MAT.darkSteel, 17.6, 0, 24.6); block(17, 24, 17, 25);
+  box(1.6, .05, .8, MAT.darkSteel, 13.5, .73, 23.5); box(.05, .73, .7, MAT.darkSteel, 12.75, 0, 23.5); box(.05, .73, .7, MAT.darkSteel, 14.25, 0, 23.5);
+  FX.solarTex = textTex('', 256, 128, '20px sans-serif');
+  box(1.2, .66, .04, MAT.black, 13.5, .78, 23.2); put(new THREE.PlaneGeometry(1.12, .6), new THREE.MeshBasicMaterial({ map: FX.solarTex }), 13.5, 1.11, 23.18, Math.PI, dyn);
+  block(13, 23, 14, 23);
+  pipe(11, 20.05, 18, 20.05, 2.3, .05, MAT.darkSteel); pipe(11, 20.1, 18, 20.1, 2.4, .05, MAT.pipeRed);
+  spot('S', 12, 21, 12.3, 20.4); spot('S', 14, 21, 14.4, 20.4); spot('S', 13, 24, 13.5, 23.4);
+
+  // Halls: utility pipes
+  pipe(26, 13.08, 41, 13.08, 2.25, .06, MAT.darkSteel); pipe(26, 13.18, 41, 13.18, 2.4, .05, MAT.pipeRed);
+  pipe(41.08, 1, 41.08, 23, 2.25, .06, MAT.darkSteel); pipe(19.08, 20, 19.08, 30, 2.3, .06, MAT.pipeBlue);
+
+  // Common CRs, women's and men's: 5 toilet stalls along one wall, 5 shower stalls along the other
+  for (const [z0, label] of [[21, 'BABAE'], [26, 'LALAKI']]) {
+    for (let i = 0; i < 5; i++) { const x = 23 + i;
+      rbox(.38, .42, .52, MAT.white, x + .5, 0, z0 + .35, 0, .12); box(.04, 1.8, .95, MAT.cabinet, x, 0, z0 + .48);
+      box(.9, .05, 1, MAT.tile, x + .5, 0, z0 + 3.5); box(.03, 2, .95, MAT.glass, x, 0, z0 + 3.5); cyl(.05, .05, .03, MAT.steel, x + .5, 2.0, z0 + 3.8, 10); box(.92, 1.9, .02, MAT.glass, x + .5, .05, z0 + 3.02); }
+    box(.03, 1.8, .95, MAT.cabinet, 28, 0, z0 + .48); box(.03, 2, .95, MAT.glass, 28, 0, z0 + 3.5);
+    box(.5, .85, 1.7, MAT.cabinet, 28.7, 0, z0 + 2); box(.02, .7, 1.6, MAT.ledCool, 28.98, 1.25, z0 + 2);
+    block(23, z0, 27, z0); block(23, z0 + 3, 27, z0 + 3); block(28, z0 + 1, 28, z0 + 2);
+    decal(label, 22.5, z0 + 2, .38, Math.PI / 2, .4);
+  }
+
+  // Clinic
+  for (const x of [27, 33.5]) {
+    box(1, .5, 2.05, MAT.white, x, 0, 17.1); rbox(.9, .14, 1.9, MAT.linen, x, .5, 17.12, 0, .05); rbox(.6, .1, .3, MAT.linen, x, .64, 16.35, 0, .05);
+    box(1, .3, .05, MAT.steel, x, .55, 16.06); cyl(.012, .012, 1.7, MAT.steel, x + .65, 0, 16.4, 6); rbox(.12, .2, .05, MAT.glass, x + .65, 1.5, 16.4, 0, .02);
+  }
+  block(26, 16, 27, 17); block(33, 16, 34, 17);
+  box(.02, 1.9, 2, std({ color: '#9fc4cf', roughness: .9, transparent: true, opacity: .85, side: THREE.DoubleSide }), 28.6, .1, 17);
+  box(2.2, 1.9, .45, MAT.cabinet, 27.6, 0, 19.6); box(2.1, .02, .4, MAT.glass, 27.6, 1.0, 19.38); block(26, 19, 28, 19);
+  box(1.5, .05, .7, MAT.white, 32.6, .73, 19.5); box(.6, .4, .03, MAT.black, 32.6, .95, 19.75); box(.55, .35, .01, MAT.screenGreen, 32.6, .97, 19.73);
+  block(32, 19, 33, 19);
+  spot('C', 28, 17, 27, 17); spot('C', 32, 17, 33.5, 17); spot('C', 31, 18, 32.6, 19.5);
+  SPOTS.bedC = [{ x: 27, z: 17.1, taken: null }, { x: 33.5, z: 17.1, taken: null }];
+
+  // Sala
+  rbox(3.7, .05, 1.35, MAT.walnut, 14.5, .73, 11.2, 0, .02);
+  for (const [a, b] of [[12.8, 10.65], [16.2, 10.65], [12.8, 11.75], [16.2, 11.75]]) box(.07, .73, .07, MAT.walnut, a, 0, b);
+  for (const x of [13.1, 14.1, 15.1, 16.1]) { chair(x, 12.15, Math.PI); chair(x, 10.25, 0); }
+  block(12, 10, 16, 11);
+  box(3.7, 2.1, .4, MAT.walnut, 23, 0, 10.25);
+  for (let i = 0; i < 26; i++) box(.05, rand(.24, .32), .24, std({ color: pick(['#7a3b2e', '#2f4f6b', '#b08d3a', '#3e5e3a', '#ddd2bb']), roughness: .8 }), 21.4 + (i % 13) * .25, .5 + Math.floor(i / 13) * .7, 10.45);
+  block(21, 10, 24, 10);
+  for (const x of [21.9, 23.6]) { rbox(.8, .42, .8, MAT.sofa, x, 0, 12.1, 0, .1); rbox(.8, .45, .2, MAT.sofa, x, .3, 11.8, 0, .07); }
+  box(4.6, .012, 3.3, MAT.rug, 13.7, 0, 16.6);
+  box(2.6, .5, .45, MAT.walnut, 14, 0, 15.3); box(2.1, 1.2, .06, MAT.black, 14, .52, 15.3);
+  FX.tvL = box(2.02, 1.12, .01, glow('#0d1418'), 14, .56, 15.34);
+  block(13, 15, 15, 15);
+  rbox(3.2, .42, .95, MAT.sofa, 14, 0, 17.95, 0, .1); rbox(3.2, .5, .22, MAT.sofa, 14, .3, 18.4, 0, .08);
+  rbox(.95, .42, 1.7, MAT.sofa, 11.95, 0, 17.4, 0, .1); rbox(.22, .5, 1.7, MAT.sofa, 11.55, .3, 17.4, 0, .08);
+  block(11, 16, 12, 18); block(13, 17, 15, 18);
+  rbox(1.3, .38, .7, MAT.walnut, 14, 0, 16.45, 0, .03);
+  box(1.8, .9, 1, MAT.darkSteel, 23, 0, 16.7); block(22, 16, 23, 17);
+  FX.boardTex = textTex('', 512, 256, '20px sans-serif');
+  put(new THREE.PlaneGeometry(2.4, 1.2), new THREE.MeshBasicMaterial({ map: FX.boardTex }), 24.96, 1.45, 16.7, -Math.PI / 2, dyn);
+  box(.05, 1.3, 2.5, MAT.black, 24.98, .8, 16.7);
+  plant(24.4, 18.4, 1.3); plant(20.6, 10.6, 1.1); plant(11.5, 15.4, .9);
+  SPOTS.seats = [...[6.2, 7, 7.8].flatMap(x => [{ x, z: 13.45, yaw: 0, taken: null }, { x, z: 14.95, yaw: Math.PI, taken: null }]),
+    ...[13.1, 14.1, 15.1, 16.1].flatMap(x => [{ x, z: 12.2, yaw: Math.PI, taken: null }, { x, z: 10.3, yaw: 0, taken: null }]), ...[3.8, 4.5, 5.2].map(x => ({ x, z: 12.4, yaw: Math.PI, taken: null }))];
+  SPOTS.sofa = [13, 14, 15, 12.2].map((x, i) => ({ x, z: i < 3 ? 17.85 : 17.4, yaw: i < 3 ? Math.PI : Math.PI / 2, taken: null }));
+  spot('L', 21, 15, 23, 16.7, 'meet'); spot('L', 21, 17, 23, 16.7, 'meet');
+
+  // Airlock & blast door
+  box(.5, 1.9, 1.9, MAT.olive, 16.3, 0, 33.0); for (let i = 0; i < 4; i++) box(.01, 1.8, .02, MAT.darkSteel, 16.56, .05, 32.2 + i * .48);
+  block(16, 32, 16, 33);
+  // Armory: rifles on a wall rack, riot shields, ammo crates, a workbench
+  box(.08, 1.4, 2.6, MAT.walnut, 11.05, .5, 32.5);
+  for (let k = 0; k < 2; k++) { box(.06, 1.05, .07, MAT.black, 11.15, .6, 31.7 + k * .45); box(.07, .25, .09, MAT.walnut, 11.15, .5, 31.7 + k * .45); }   // the licensed shotgun and an air rifle
+  for (let k = 0; k < 3; k++) { box(.04, .55, .07, MAT.steel, 11.15, .9, 32.7 + k * .25); box(.05, .14, .06, MAT.walnut, 11.15, .76, 32.7 + k * .25); }   // bolos
+  for (let k = 0; k < 3; k++) { const sh = box(.55, .9, .05, std({ color: '#2a3036', roughness: .3, metalness: .4 }), 12.2 + k * .55, 0, 33.75); sh.rotation.x = -.15; }
+  for (let k = 0; k < 3; k++) box(.45, .3, .3, MAT.olive, 14.4, k * .3, 31.4);
+  box(1.2, .05, .6, MAT.darkSteel, 13, .85, 31.4); box(.06, .85, .5, MAT.darkSteel, 12.45, 0, 31.4); box(.06, .85, .5, MAT.darkSteel, 13.55, 0, 31.4);
+  box(.3, .08, .2, std({ color: '#d45a1f', roughness: .5 }), 13.1, .9, 31.4); box(.5, .7, .12, MAT.olive, 14.5, 1.2, 33.85);
+  block(11, 31, 11, 33); block(12, 31, 13, 31); block(14, 31, 14, 31); block(12, 33, 13, 33);
+  spot('X', 18, 32, 20, 34.5, 'guard'); spot('X', 21, 32, 20, 34.5, 'guard'); spot('X', 13, 32, 13, 31.4);
+  decal('ARMORY', 13, 32.5, .4);
+  box(.06, 2.2, .06, MAT.steel, 23.2, 0, 31.4); ball(.12, MAT.steel, 23.2, 2.15, 31.6); box(.9, .03, .9, MAT.metal, 23.2, 0, 31.6); block(23, 31, 23, 31);
+  box(1.6, .45, .4, MAT.walnut, 21.5, 0, 33.4);
+  for (const x of [17.4, 22.3]) { const s = put(geo('hz', () => new THREE.CapsuleGeometry(.2, .9, 4, 10)), MAT.hazmat, x, 1.3, 31.15); s.scale.z = .6; }
+  const ring = put(new THREE.TorusGeometry(1.28, .2, 14, 40), MAT.darkSteel, 20, 1.25, 34.5); ring.rotation.y = 0;
+  FX.door = new THREE.Group(); FX.door.position.set(18.82, 1.25, 34.62); dyn.add(FX.door);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(1.16, 1.16, .42, 40), MAT.steel); disc.rotation.x = Math.PI / 2; disc.position.x = 1.18; disc.castShadow = true;
+  const wheel = new THREE.Mesh(new THREE.TorusGeometry(.42, .04, 8, 28), MAT.darkSteel); wheel.position.set(1.18, 0, -.25);
+  FX.door.add(disc, wheel);
+  for (let i = 0; i < 3; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(.84, .05, .05), MAT.darkSteel); sp.position.set(1.18, 0, -.25); sp.rotation.z = i * Math.PI / 3; FX.door.add(sp); }
+  FX.door.rotation.y = -1.7;
+  // tunnel to the surface
+  for (let i = 0; i < 9; i++) box(3.2, .3, 1, MAT.concrete, 20, i * .3 - .3, 35.5 + i);
+  box(.6, 5, 9, MAT.wall, 18.1, 0, 39.5); box(.6, 5, 9, MAT.wall, 21.9, 0, 39.5);
+  put(new THREE.PlaneGeometry(3.2, 3), MAT.daylight, 20, 3.6, 44, Math.PI, dyn);
+  spot('A', 19, 33, 20, 34.5, 'door');
+
+  // Bunk rooms
+  const blankets = [MAT.blanketA, MAT.blanketB, MAT.blanketC];
+  SPOTS.beds = {};
+  for (let i = 1; i <= 10; i++) {
+    const r = ROOMS['R' + i], left = r.bunk === 'L', bx = left ? r.x + .5 : r.x + r.w - .5, z0 = r.z;
+    for (const [a, b] of [[-.45, .05], [.45, .05], [-.45, 2.05], [.45, 2.05]]) box(.06, 2, .06, MAT.darkSteel, bx + a, 0, z0 + b);
+    for (const y of [.3, 1.4]) { box(.96, .08, 2.06, MAT.darkSteel, bx, y, z0 + 1.05); rbox(.86, .14, 1.94, MAT.linen, bx, y + .08, z0 + 1.05, 0, .05); rbox(.88, .06, 1.2, blankets[i % 3], bx, y + .22, z0 + 1.35, 0, .03); }
+    box(.5, 1.6, .5, MAT.olive, bx, 0, z0 + 2.62);
+    box(1.6, .012, 1.2, MAT.rug2, r.x + 2, 0, r.z + 1.5);
+    // everyone's own things: a desk with a lamp, a photo, a bag, and what each person loves
+    const dx = left ? r.x + r.w - .3 : r.x + .3, cx0 = left ? r.x + r.w - 1 : r.x;
+    box(.5, .72, .9, MAT.walnut, dx, 0, z0 + .55); lamp(dx, .72, z0 + .3); box(.14, .11, .02, MAT.walnut, dx, .72, z0 + .75);
+    rbox(.45, .3, .3, pick([MAT.blanketA, MAT.blanketB, MAT.olive]), dx, 0, z0 + 2.5, 0, .08); block(cx0, z0, cx0, z0);
+    const items = ROOM_ITEMS[i] || [];
+    for (const it of items) it(r, left, bx, dx, z0);
+    block(left ? r.x : r.x + r.w - 1, r.z, left ? r.x : r.x + r.w - 1, r.z + 2);
+    SPOTS.beds['R' + i] = [{ x: bx, y: .52, z: z0 + 1.05 }, { x: bx, y: 1.62, z: z0 + 1.05 }];
+    SPOTS['R' + i] = [{ x: left ? r.x + 1.6 : r.x + r.w - 1.6, z: r.z + 1.5, yaw: left ? -Math.PI / 2 : Math.PI / 2, taken: null }];
+    decal(String(i), left ? 40.5 : 43.5, r.z + 1.5, .55, left ? -Math.PI / 2 : Math.PI / 2, .5);
+  }
+  SPOTS.beds.R3.push({ x: ROOMS.R3.x + 2.3, y: .36, z: ROOMS.R3.z + .75 }); SPOTS.beds.R4.push({ x: ROOMS.R4.x + 2.3, y: .36, z: ROOMS.R4.z + .75 }, { x: ROOMS.R4.x + 2.3, y: .62, z: ROOMS.R4.z + 2.2 });
+  SPOTS.beds.M = [{ x: 18.55, y: .66, z: 2.3 }, { x: 19.45, y: .66, z: 2.3 }];
+  SPOTS.M = [{ x: 15, z: 5.9, yaw: Math.PI, taken: null }];
+
+  // floor stencils
+  // Manukan at babuyan: chickens left, pigs right
+  box(4.6, .02, 2.8, std({ color: '#c9a95a', roughness: 1 }), 32.3, 0, 25.5);
+  box(4.6, .02, 2.7, std({ color: '#4a3826', roughness: .55 }), 37.6, 0, 28.6);
+  rbox(1.3, .95, 1, MAT.cedar, 30.9, 0, 24.7, 0, .04); box(1.55, .08, 1.25, MAT.darkSteel, 30.9, .95, 24.7); box(.32, .32, .02, MAT.black, 30.9, .25, 25.21);
+  for (let i = 0; i < 3; i++) box(.4, .32, .4, MAT.cedar, 32.4 + i * .45, .5, 24.3);
+  const rail = (x0, z0, x1, z1, hs, mat) => { const L = Math.hypot(x1 - x0, z1 - z0), along = Math.abs(x1 - x0) > Math.abs(z1 - z0);
+    for (const h of hs) box(along ? L : .04, .05, along ? .04 : L, mat, (x0 + x1) / 2, h, (z0 + z1) / 2);
+    for (let t = 0; t <= L + .01; t += 1) box(.07, hs[hs.length - 1] + .08, .07, mat, along ? x0 + t * Math.sign(x1 - x0) : x0, 0, along ? z0 : z0 + t * Math.sign(z1 - z0)); };
+  rail(30, 26.95, 34.95, 26.95, [.25, .55], MAT.cedar); rail(34.95, 24, 34.95, 26.95, [.25, .55], MAT.cedar);
+  box(4.95, .55, .01, MAT.glass, 32.47, .02, 26.95); box(.01, .55, 2.95, MAT.glass, 34.95, .02, 25.47);
+  rail(35.05, 27.05, 40, 27.05, [.35, .75], MAT.cedar); rail(35.05, 27.05, 35.05, 30, [.35, .75], MAT.cedar);
+  box(1.4, .25, .35, MAT.steel, 37.6, 0, 29.6);
+  for (const x of [30.5, 31.2]) cyl(.28, .28, .8, MAT.olive, x, 0, 29.5, 14);
+  for (let k = 0; k < 4; k++) rbox(.55, .22, .38, std({ color: k % 2 ? '#c9b48a' : '#a8946a', roughness: 1 }), 32.4, k * .22, 29.55, 0, .08);  // patuka sacks: chicken and hog feed
+  block(30, 24, 34, 26); block(35, 27, 39, 29); block(30, 29, 32, 29);
+  spot('Y', 32, 27, 32.5, 26.2); spot('Y', 37, 26, 37.5, 28); spot('Y', 33, 28, 30.8, 29.5);
+  FX.animals = [];
+  const white = std({ color: '#f2eee4', roughness: .9 }), red = std({ color: '#c8352a', roughness: .7 }), beakM = std({ color: '#e0a33a', roughness: .6 }), pink = std({ color: '#e7a99a', roughness: .8 });
+  for (let i = 0; i < 6; i++) { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.SphereGeometry(.13, 12, 10), i % 3 ? white : std({ color: '#9a6a3c', roughness: .9 })); b.scale.set(.85, .85, 1.15); b.position.y = .17; b.castShadow = true;
+    const h = new THREE.Mesh(new THREE.SphereGeometry(.065, 10, 8), b.material); h.position.set(0, .3, .12); const c = new THREE.Mesh(new THREE.BoxGeometry(.02, .05, .06), red); c.position.set(0, .37, .12);
+    const bk = new THREE.Mesh(new THREE.ConeGeometry(.02, .06, 6), beakM); bk.rotation.x = Math.PI / 2; bk.position.set(0, .3, .2); g.add(b, h, c, bk); g.userData = { head: h, comb: c, beak: bk };
+    g.position.set(rand(31.6, 34.5), 0, rand(25.4, 26.6)); dyn.add(g); FX.animals.push({ g, box: [31.7, 34.6, 25.3, 26.7], speed: .5, t: 0 }); }
+  for (let i = 0; i < 2; i++) { const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CapsuleGeometry(.24, .45, 4, 12), pink); b.rotation.x = Math.PI / 2; b.position.y = .38; b.castShadow = true;
+    const h = new THREE.Mesh(new THREE.SphereGeometry(.17, 12, 10), pink); h.position.set(0, .42, .42); const sn = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, .06, 12), std({ color: '#d98f82', roughness: .8 })); sn.rotation.x = Math.PI / 2; sn.position.set(0, .4, .58);
+    g.add(b, h, sn); for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.ConeGeometry(.05, .1, 6), pink); e.position.set(sx * .1, .58, .38); g.add(e); }
+    for (const [lx, lz] of [[-.12, .22], [.12, .22], [-.12, -.22], [.12, -.22]]) { const l = new THREE.Mesh(new THREE.CylinderGeometry(.045, .04, .2, 8), pink); l.position.set(lx, .1, lz); g.add(l); }
+    g.userData = { head: h }; g.position.set(36.5 + i * 2, 0, 28.4); dyn.add(g); FX.animals.push({ g, box: [35.6, 39.5, 27.7, 29.4], speed: .25, t: 0 }); }
+  decal('MANUKAN', 37.5, 25, .55);
+  FX.scrub2 = new THREE.Group(); dyn.add(FX.scrub2); { const t = new THREE.Mesh(new THREE.CylinderGeometry(.32, .32, 1.6, 20), MAT.steel); t.position.set(30.6, .8, 3.5); t.castShadow = true; FX.scrub2.add(t); }
+  FX.extraHens = FX.animals.slice(0, 0);
+  for (let i = 0; i < 4; i++) { const src = FX.animals[i].g, g = src.clone(); g.userData = { head: g.children[1], comb: g.children[2], beak: g.children[3] }; g.position.set(rand(31.8, 34.4), 0, rand(25.4, 26.6)); dyn.add(g); const a = { g, box: [31.7, 34.6, 25.3, 26.7], speed: .5, t: 0 }; FX.animals.push(a); FX.extraHens.push(a); }
+  // Sinehan: big screen, two rows of sofas, walls of DVDs
+  box(9.6, .012, 4.4, MAT.rug2, 35, 0, 33.5);
+  box(.12, 1.7, 3.2, MAT.black, 30.1, .5, 33.5); FX.tvV = box(.01, 1.56, 3.04, glow('#0d1418'), 30.17, .57, 33.5); block(30, 32, 30, 34);
+  for (const [x, mat] of [[33.6, MAT.sofa2], [35.9, MAT.sofa]]) { rbox(.95, .42, 3.2, mat, x, 0, 33.5, 0, .1); rbox(.22, .5, 3.2, mat, x + .45, .3, 33.5, 0, .08); }
+  block(33, 32, 33, 34); block(35, 32, 36, 34);
+  rbox(.6, .38, 1.2, MAT.walnut, 32.4, 0, 33.5, 0, .03);
+  for (const z of [31.25, 35.75]) { box(6, 1.9, .35, MAT.walnut, 34.5, 0, z); }
+  block(32, 31, 37, 31); block(32, 35, 37, 35);
+  const dvds = []; for (const z of [31.43, 35.57]) for (let r = 0; r < 4; r++) for (let x = 31.65; x < 37.4; x += .1) if (Math.random() < .9) dvds.push([x, .12 + r * .45, z]);
+  const dvdM = new THREE.InstancedMesh(new THREE.BoxGeometry(.075, .19, .14), std({ roughness: .5 }), dvds.length);
+  dvds.forEach(([x, y, z], i) => { tmpO.position.set(x, y + .095, z); tmpO.updateMatrix(); dvdM.setMatrixAt(i, tmpO.matrix); dvdM.setColorAt(i, tmpC.set(pick(['#1b2f4a', '#7a1f1f', '#c9a227', '#2d5a3d', '#111', '#e8e2d0', '#5a2d6a', '#d9622b']))); });
+  dvdM.castShadow = true; dyn.add(dvdM);
+  box(.5, 1.1, .5, MAT.pipeRed, 38.9, 0, 31.6); box(.42, .42, .42, MAT.glass, 38.9, 1.1, 31.6); block(38, 31, 38, 31);
+  spot('V', 33, 33, 30, 33.5, 'sit'); spot('V', 35, 35, 30, 33.5, 'sit'); spot('V', 38, 33, 30, 33.5, 'sit');
+  decal('SINEHAN', 38.3, 34.6, .5, Math.PI / 2);
+  // Music room: upright piano, drums, guitars, xylophone for the kids
+  box(4, .012, 2.6, MAT.rug, 46, 0, 27.4);
+  box(.6, 1.25, 1.5, MAT.black, 47.65, 0, 25); box(.3, .04, 1.4, MAT.white, 47.3, .75, 25); block(47, 24, 47, 25);
+  for (const [x, z, r, h] of [[45.6, 28.6, .3, .45], [46.3, 29.1, .2, .3], [45.0, 29.2, .2, .3], [46.6, 28.3, .17, .55]]) { cyl(r, r, h, MAT.white, x, 0, z, 18); cyl(r + .01, r + .01, .03, MAT.steel, x, h, z, 18); }
+  cyl(.16, .16, .01, MAT.yellow, 46.9, .9, 29.3, 18); cyl(.01, .01, .9, MAT.steel, 46.9, 0, 29.3, 6); block(45, 28, 46, 29);
+  for (const [z, col] of [[26.6, '#b5651d'], [27.4, '#2b2b2b'], [28.2, '#c9a24a']]) { const gm = std({ color: col, roughness: .5 }); const b = ball(.17, gm, 47.75, .45, z); b.scale.set(.35, 1.1, .9); const n = box(.04, .55, .05, MAT.walnut, 47.75, .6, z); }
+  box(.5, .25, .9, MAT.walnut, 44.6, 0, 27.2); for (let i = 0; i < 7; i++) box(.06, .03, .7 - i * .05, std({ color: ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#3498db', '#6c5ce7', '#e84393'][i], roughness: .5 }), 44.4 + i * .06, .25, 27.2);
+  ball(.3, MAT.blanketC, 45.6, .18, 25.4).scale.set(1, .5, 1); ball(.3, MAT.blanketA, 46.4, .18, 26).scale.set(1, .5, 1);
+  spot('U', 46, 25, 47.65, 25); spot('U', 45, 27, 44.6, 27.2); spot('U', 46, 27, 45.8, 28.8);
+  decal('MUSIKA', 45.9, 29.5, .45, Math.PI / 2);
+  decal('GREENHOUSE', 6.5, 8.2, .8); decal('KUSINA', 6.5, 16.4, .7); decal('PANTRY', 5.5, 20.2, .6);
+  decal('TUBIG', 5, 28.3, .7); decal('SOLAR', 14.5, 25.4, .7); decal('SALA', 18, 13.5, .9, 0, .18);
+  decal('OXYGEN', 32.5, 3.4, .55); decal('HOBBY', 30.5, 11.4, .6); decal('CLINIC', 30.5, 18.5, .6);
+  decal('KWARTO →', 34, 14, .6); decal('AIRLOCK', 19.9, 27.5, .55, Math.PI / 2);
+}
+
+function bake() {
+  staticG.updateMatrixWorld(true);
+  const byMat = new Map();
+  staticG.traverse(o => {
+    if (!o.isMesh) return;
+    let g = o.geometry.clone().applyMatrix4(o.matrixWorld);
+    if (g.index) g = g.toNonIndexed();
+    for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
+    if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
+    if (!byMat.has(o.material)) byMat.set(o.material, []);
+    byMat.get(o.material).push(g);
+  });
+  for (const [mat, list] of byMat) {
+    const m = new THREE.Mesh(mergeGeometries(list), mat);
+    m.castShadow = !(mat.isMeshBasicMaterial || mat.transparent); m.receiveShadow = true; scene.add(m);
+  }
+}
+
+// ---------------------------------------------------------------- people
+const HIT = [];
+const capG = (r, l) => geo(`cap${r}|${l}`, () => new THREE.CapsuleGeometry(r, l, 4, 10));
+class Person {
+  constructor(def) {
+    this.def = def; this.id = def.id; this.name = def.name;
+    const s = def.h / 1.7, sm = c => std({ color: c, roughness: .75 });
+    const skin = sm(def.skin), shirt = sm(def.shirt), pants = std({ color: def.pants, roughness: .9 }), hair = std({ color: def.hair, roughness: .6 }), shoe = std({ color: '#2a2522', roughness: .6 });
+    for (const m of [skin, shirt, pants, hair, shoe]) m.envMapIntensity = .5;
+    const root = this.root = new THREE.Group(), body = this.body = new THREE.Group(); root.add(body); dyn.add(root);
+    const mesh = (g, m, x, y, z, parent = body) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = true; parent.add(o); return o; };
+    this.legs = [-1, 1].map(side => { const p = new THREE.Group(); p.position.set(side * .1 * s, .88 * s, 0); body.add(p);
+      mesh(capG(.072 * s, .62 * s), pants, 0, -.42 * s, 0, p); const sh = mesh(geo('shoe' + s, () => new RoundedBoxGeometry(.12 * s, .08 * s, .26 * s, 2, .03)), shoe, 0, -.84 * s, .04 * s, p); sh.castShadow = false; return p; });
+    const torso = mesh(capG(.165 * s, .36 * s), shirt, 0, 1.22 * s, 0); torso.scale.set(1, 1, .7);
+    mesh(capG(.15 * s, .12 * s), pants, 0, .94 * s, 0).scale.set(1.02, 1, .72);
+    this.arms = [-1, 1].map(side => { const p = new THREE.Group(); p.position.set(side * .225 * s, 1.43 * s, 0); body.add(p);
+      mesh(capG(.052 * s, .26 * s), shirt, 0, -.16 * s, 0, p); mesh(capG(.045 * s, .22 * s), skin, 0, -.45 * s, 0, p); return p; });
+    mesh(geo('neck' + s, () => new THREE.CylinderGeometry(.045 * s, .05 * s, .1 * s, 10)), skin, 0, 1.52 * s, 0);
+    const head = this.head = mesh(geo('head' + s, () => new THREE.SphereGeometry(.112 * s, 20, 16)), skin, 0, 1.64 * s, 0); head.scale.set(.92, 1.08, 1);
+    if (def.kid) { head.scale.multiplyScalar(1.3); head.position.y += .03 * s; }
+    const eye = geo('eye', () => new THREE.SphereGeometry(.013, 8, 6)), eyeM = MAT.black;
+    for (const side of [-1, 1]) { const e = new THREE.Mesh(eye, eyeM); e.position.set(side * .04 * s, .015 * s, .1 * s); head.add(e);
+      const brow = new THREE.Mesh(geo('brow', () => new THREE.BoxGeometry(.035, .007, .01)), hair); brow.position.set(side * .04 * s, .045 * s, .102 * s); head.add(brow);
+      const sh = mesh(geo('shoulder' + s, () => new THREE.SphereGeometry(.065 * s, 12, 10)), shirt, side * .2 * s, 1.41 * s, 0); sh.scale.set(1, .85, .9); }
+    const mouth = new THREE.Mesh(geo('mouth', () => new THREE.BoxGeometry(.03, .006, .008)), std({ color: '#7a3b34', roughness: .6 })); mouth.position.set(0, -.045 * s, .103 * s); head.add(mouth);
+    const nose = new THREE.Mesh(geo('nose', () => new THREE.SphereGeometry(.014, 8, 6)), skin); nose.position.set(0, -.01 * s, .112 * s); head.add(nose);
+    mesh(geo('belt' + s, () => new THREE.CylinderGeometry(.152 * s, .152 * s, .035 * s, 16)), MAT.black, 0, 1.0 * s, 0).scale.set(1.02, 1, .72);
+    const capH = def.style === 'bob' ? .62 : .5;
+    const cap = mesh(geo(`hair${s}${capH}`, () => new THREE.SphereGeometry(.122 * s, 20, 14, 0, Math.PI * 2, 0, Math.PI * capH)), hair, 0, 1.655 * s, -.012 * s);
+    cap.scale.set(.95, 1.08, 1.05); cap.rotation.x = -.25;
+    if (def.style === 'long') mesh(geo('hl' + s, () => new RoundedBoxGeometry(.24 * s, .34 * s, .07 * s, 2, .03)), hair, 0, 1.5 * s, -.085 * s);
+    if (def.style === 'bun') mesh(geo('hb' + s, () => new THREE.SphereGeometry(.065 * s, 12, 10)), hair, 0, 1.74 * s, -.1 * s);
+    if (def.style === 'pony') { const t = mesh(capG(.035 * s, .2 * s), hair, 0, 1.56 * s, -.13 * s); t.rotation.x = .3; }
+    if (def.player) { const ring = new THREE.Mesh(new THREE.RingGeometry(.34, .42, 36), new THREE.MeshBasicMaterial({ color: '#f0a73a', transparent: true, opacity: .75, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = .02; root.add(ring); }
+    const hit = new THREE.Mesh(geo('hit', () => new THREE.CylinderGeometry(.45, .45, 1.9, 8)), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = .95; hit.userData.person = this; root.add(hit); HIT.push(hit);
+    this.tag = document.createElement('div'); this.tag.className = 'tag'; this.tag.innerHTML = `<b>${def.player ? 'Ikaw' : def.name}</b><i></i>`; $('#labels').appendChild(this.tag);
+    this.path = []; this.pose = 'stand'; this.phase = Math.random() * 6; this.yaw = 0; this.moving = false; this.speed = def.player ? 3.3 : 1.7; this.spot = null; this.s = s;
+  }
+  get x() { return this.root.position.x; } get z() { return this.root.position.z; }
+  place(x, z, yaw = 0) { this.root.position.set(x, 0, z); this.yaw = yaw; this.path = []; this.body.rotation.set(0, 0, 0); this.body.position.set(0, 0, 0); }
+  go(x, z, then) { const p = findPath(this.x, this.z, x, z); this.path = p || []; this.then = then; if (!p) then && then(); this.setPose('stand'); }
+  setPose(p, extra) {
+    this.pose = p; this.body.rotation.set(0, 0, 0); this.body.position.set(0, 0, 0);
+    if (p === 'sleep') { this.body.rotation.x = -Math.PI / 2; this.body.position.set(0, extra || .5, -.85 * this.s); }
+    if (p === 'sit') { this.body.position.y = -.38 * this.s; }
+  }
+  update(dt, t) {
+    const r = this.root;
+    if (this.path.length) {
+      const [tx, tz] = this.path[0], dx = tx - r.position.x, dz = tz - r.position.z, d = Math.hypot(dx, dz);
+      if (d < .12) { this.path.shift(); if (!this.path.length && this.then) { const f = this.then; this.then = null; f(); } }
+      else { const st = Math.min(d, this.speed * dt); r.position.x += dx / d * st; r.position.z += dz / d * st; this.faceTo(Math.atan2(dx, dz), dt); this.moving = true; }
+    }
+    const walking = this.moving;
+    this.phase += dt * (walking ? this.speed * 3.1 : 1.6);
+    const sw = walking ? Math.sin(this.phase) : 0;
+    if (this.pose === 'sleep') { this.legs.forEach(l => l.rotation.x = 0); this.arms.forEach(a => a.rotation.x = 0); }
+    else if (this.pose === 'sit') { this.legs.forEach(l => l.rotation.x = -1.45); this.arms.forEach((a, i) => a.rotation.x = -.35 + Math.sin(t * .8 + i) * .03); }
+    else if (this.pose === 'work' && !walking) { this.legs.forEach(l => l.rotation.x = 0); this.arms.forEach((a, i) => a.rotation.x = -.95 + Math.sin(t * 5 + i * 1.7) * .18); this.body.position.y = Math.sin(t * 5) * .006; }
+    else { this.legs[0].rotation.x = sw * .55; this.legs[1].rotation.x = -sw * .55; this.arms[0].rotation.x = -sw * .45; this.arms[1].rotation.x = sw * .45;
+      this.body.position.y = walking ? Math.abs(Math.cos(this.phase)) * .03 : Math.sin(t * 1.6 + this.phase) * .004; }
+    r.rotation.y = this.yaw;
+    this.moving = false;
+  }
+  faceTo(target, dt) { let d = target - this.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); this.yaw += d * Math.min(1, dt * 10); }
+}
+
+class Dog {
+  constructor() {
+    const fur = std({ color: '#b98a57', roughness: .9 }), dark = std({ color: '#5a3d24', roughness: .8 }); fur.envMapIntensity = .4;
+    const root = this.root = new THREE.Group(); dyn.add(root);
+    const m = (g, mat, x, y, z) => { const o = new THREE.Mesh(g, mat); o.position.set(x, y, z); o.castShadow = true; root.add(o); return o; };
+    m(new THREE.CapsuleGeometry(.13, .38, 4, 10), fur, 0, .36, 0).rotation.x = Math.PI / 2;
+    this.head = m(new THREE.SphereGeometry(.11, 14, 12), fur, 0, .5, .3);
+    m(new RoundedBoxGeometry(.09, .08, .12, 2, .03), fur, 0, .47, .41); m(new THREE.SphereGeometry(.022, 8, 6), MAT.black, 0, .49, .475);
+    for (const s of [-1, 1]) { const e = m(new THREE.SphereGeometry(.05, 8, 6), dark, s * .075, .58, .27); e.scale.set(.5, 1, .8); }
+    this.legs = [[-.07, .16], [.07, .16], [-.07, -.16], [.07, -.16]].map(([x, z]) => m(new THREE.CylinderGeometry(.03, .025, .26, 8), fur, x, .13, z));
+    this.tail = new THREE.Group(); this.tail.position.set(0, .45, -.25); root.add(this.tail);
+    const tl = new THREE.Mesh(new THREE.CapsuleGeometry(.025, .2, 4, 8), fur); tl.position.y = .1; tl.rotation.x = -.5; this.tail.add(tl);
+    this.yaw = 0; this.phase = 0; this.follow = null;
+    const hit = new THREE.Mesh(new THREE.CylinderGeometry(.4, .4, .8, 8), new THREE.MeshBasicMaterial({ visible: false })); hit.position.y = .4; hit.userData.dog = this; root.add(hit); HIT.push(hit);
+    this.tag = document.createElement('div'); this.tag.className = 'tag'; this.tag.innerHTML = '<b>Millie</b><i></i>'; $('#labels').appendChild(this.tag);
+  }
+  get x() { return this.root.position.x; } get z() { return this.root.position.z; }
+  update(dt, t) {
+    const f = this.follow; let moving = false;
+    if (f && f.pose !== 'sleep') {
+      const tx = f.x - Math.sin(f.yaw + .8) * .7, tz = f.z - Math.cos(f.yaw + .8) * .7, dx = tx - this.x, dz = tz - this.z, d = Math.hypot(dx, dz);
+      if (d > 4) this.root.position.set(tx, 0, tz);
+      else if (d > .35) { const st = Math.min(d, (d > 1.2 ? 3.2 : 1.6) * dt); this.root.position.x += dx / d * st; this.root.position.z += dz / d * st;
+        let a = Math.atan2(dx, dz) - this.yaw; a = Math.atan2(Math.sin(a), Math.cos(a)); this.yaw += a * Math.min(1, dt * 8); moving = true; }
+    } else if (f) { this.root.position.set(22.8, 0, 7.6); }
+    this.phase += dt * (moving ? 14 : 2);
+    this.legs.forEach((l, i) => l.rotation.x = moving ? Math.sin(this.phase + (i % 2 ? Math.PI : 0) + (i > 1 ? Math.PI / 2 : 0)) * .5 : 0);
+    this.tail.rotation.z = Math.sin(t * (moving ? 14 : 7)) * .6;
+    this.head.position.y = .5 + (moving ? 0 : Math.sin(t * 1.3) * .01);
+    this.root.rotation.y = this.yaw;
+  }
+}
+
+// ---------------------------------------------------------------- pathfinding (8-way A*)
+function findPath(sx, sz, tx, tz) {
+  const s = [Math.floor(sx), Math.floor(sz)], g = [Math.floor(tx), Math.floor(tz)];
+  if (!walkable(g[0], g[1])) return null;
+  const key = (x, z) => z * GW + x, open = [[0, s[0], s[1]]], came = new Map(), cost = new Map([[key(...s), 0]]);
+  const h = (x, z) => { const dx = Math.abs(x - g[0]), dz = Math.abs(z - g[1]); return Math.max(dx, dz) + .414 * Math.min(dx, dz); };
+  let found = false, guard = 0;
+  while (open.length && guard++ < 4000) {
+    let bi = 0; for (let i = 1; i < open.length; i++) if (open[i][0] < open[bi][0]) bi = i;
+    const [, x, z] = open.splice(bi, 1)[0];
+    if (x === g[0] && z === g[1]) { found = true; break; }
+    for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dz) continue; const nx = x + dx, nz = z + dz;
+      if (!walkable(nx, nz) && !(nx === s[0] && nz === s[1])) continue;
+      if (dx && dz && (!walkable(x + dx, z) || !walkable(x, z + dz))) continue;
+      const nc = cost.get(key(x, z)) + (dx && dz ? 1.414 : 1);
+      if (nc < (cost.get(key(nx, nz)) ?? 1e9)) { cost.set(key(nx, nz), nc); came.set(key(nx, nz), [x, z]); open.push([nc + h(nx, nz), nx, nz]); }
+    }
+  }
+  if (!found) return null;
+  const out = []; let cur = g;
+  while (cur && !(cur[0] === s[0] && cur[1] === s[1])) { out.unshift([cur[0] + .5, cur[1] + .5]); cur = came.get(key(...cur)); }
+  if (out.length) out[out.length - 1] = [tx, tz]; else out.push([tx, tz]);
+  return out;
+}
+function collides(x, z, r = .24) {
+  for (const [ox, oz] of [[-r, -r], [r, -r], [-r, r], [r, r], [0, -r], [0, r], [-r, 0], [r, 0]]) {
+    const cx = Math.floor(x + ox), cz = Math.floor(z + oz);
+    if (!walkable(cx, cz)) return true;
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------- game state
+const CAP = { food: 200, meat: 120, water: 200, power: 100, o2: 100, feed: 100 };
+const tmpO = new THREE.Object3D(), tmpC = new THREE.Color();
+const RES = [['food', 'Kain', 'var(--food)'], ['meat', 'Karne', '#d9826a'], ['water', 'Tubig', 'var(--water)'], ['power', 'Ilaw', 'var(--power)'], ['o2', 'O₂', 'var(--o2)'], ['mood', 'Moral', 'var(--mood)']];
+let S = null;
+const P = {};            // Person objects by id
+let ISHA = null, MILLIE = null;
+let paused = 1, speed = 1;
+const SAVE_KEY = 'bunker-day7-save-v1';
+function fresh() {
+  const s = { day: 7, min: 360, res: { food: 150, meat: 60, water: 160, power: 85, o2: 100, feed: 70 }, ammo: 12, parts: 6, up: {}, people: {}, flags: {}, done: {}, last: {}, task: null, timers: [], growth: .35, slots: {}, talked: {}, dayStart: null, summary: null };
+  for (const d of CAST) s.people[d.id] = { job: d.player ? null : d.job, stress: d.player ? 15 : rand(8, 22) | 0, health: 100, sick: false };
+  return s;
+}
+const people = () => Object.keys(S.people);
+const npcs = () => people().filter(id => id !== 'isha');
+const morale = () => Math.round(100 - people().reduce((a, id) => a + S.people[id].stress, 0) / people().length);
+const pct = k => k === 'mood' ? morale() : Math.round(S.res[k] / CAP[k] * 100);
+function addRes(k, v) { S.res[k] = clamp(S.res[k] + v, 0, CAP[k]); }
+function stress(id, v) { const p = S.people[id]; if (p) p.stress = clamp(p.stress + v, 0, 100); }
+function stressAll(v) { people().forEach(id => stress(id, v)); }
+function health(id, v) { const p = S.people[id]; if (p) p.health = clamp(p.health + v, 5, 100); }
+const defOf = id => CAST.find(d => d.id === id) || GUESTS.find(d => d.id === id);
+function eff(id) {
+  const p = S.people[id], d = defOf(id); let e = d.spec && d.spec === p.job ? 1.5 : 1;
+  if (p.health < 40) e *= .5; if (p.stress > 70) e *= .7; if (morale() < 30) e *= .8; return e;
+}
+const hhmm = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
+function phaseName(m) { return m < 660 ? 'Umaga' : m < 780 ? 'Tanghali' : m < 1080 ? 'Hapon' : m < 1320 ? 'Gabi' : 'Hatinggabi'; }
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage blocked: the game still runs, it just won't remember */ } }
+function loadSave() { try { const t = localStorage.getItem(SAVE_KEY); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+
+// ---------------------------------------------------------------- NPC routines
+function releaseSpot(p) { if (p.spot) { p.spot.taken = null; p.spot = null; } }
+function takeSpot(list, p) { const s = list && list.find(x => !x.taken); if (s) { s.taken = p.id; p.spot = s; } return s; }
+function routine(p, teleport = false) {
+  const st = S.people[p.id]; if (!st || p.def.player) return;
+  let goal;
+  const nightNow = S.min >= 1290;
+  if (nightNow) goal = 'bed';
+  else if (st.sick) goal = 'clinic';
+  else if (S.meal && S.min < S.meal.until) goal = 'meal';
+  else if (st.job === 'rest' || (S.flags.restNoon && S.min < 720)) goal = 'rest';
+  else goal = 'job:' + st.job;
+  if (p.goal === goal && !teleport) return;
+  p.goal = goal; p.atWork = false; releaseSpot(p);
+  let target, after;
+  if (goal === 'meal') {
+    const s = takeSpot(SPOTS.seats, p) || SPOTS.seats[SPOTS.seats.length - 1];
+    target = s; after = () => { p.place(s.x, s.z, s.yaw); p.setPose('sit'); };
+  } else if (goal === 'bed') {
+    const [room, slot] = p.def.bed, b = SPOTS.beds[room][slot];
+    const door = room === 'M' ? { x: 18.5 + slot, z: 3.6 } : SPOTS[room][0];
+    target = door; after = () => { p.place(b.x, b.z, 0); p.setPose('sleep', b.y); };
+  } else if (goal === 'clinic') {
+    const b = takeSpot(SPOTS.bedC, p) || SPOTS.bedC[0];
+    target = { x: 30.5, z: 16.5 }; after = () => { p.place(b.x, b.z + .05, 0); p.setPose('sleep', .62); };
+  } else if (goal === 'rest') {
+    const room = p.def.bed[0]; const s = room === 'M' ? SPOTS.M[0] : SPOTS[room][0];
+    target = s; after = () => { p.yaw = s.yaw; p.setPose('stand'); };
+  } else {
+    const room = st.job, s = takeSpot(SPOTS[room], p);
+    if (s) { target = s; after = () => { p.yaw = s.yaw; p.setPose('work'); p.atWork = true; }; }
+    else { const c = roomCenter(room); target = { x: c.x + rand(-1, 1), z: c.z + rand(-.6, .6) }; if (!walkable(Math.floor(target.x), Math.floor(target.z))) target = { x: c.x, z: c.z };
+      after = () => { p.setPose('work'); p.atWork = true; }; }
+  }
+  if (teleport) { p.place(target.x, target.z); after(); }
+  else { p.setPose('stand'); p.go(target.x, target.z, after); }
+}
+function routineAll(tp) { npcs().forEach(id => P[id] && routine(P[id], tp)); }
+
+// ---------------------------------------------------------------- simulation
+function hourTick(night = false) {
+  const ids = people(), n = ids.reduce((a, id) => a + (defOf(id).kid ? .5 : 1), 0), W = {};
+  if (!night) ids.forEach(id => { const p = P[id]; if (p && p.atWork && S.people[id].job) W[S.people[id].job] = (W[S.people[id].job] || 0) + eff(id); });
+  const brown = S.res.power <= 0 || !!S.flags.blackout, sun = !night && S.min >= 360 && S.min < 1080;
+  addRes('food', (W.G || 0) * .95 * (S.up.green2 ? 1.3 : 1) * (brown ? .4 : 1) - n * .125 * (W.K ? .82 : 1) * (W.P ? .9 : 1) - .2);
+  addRes('feed', (W.G || 0) * .25 - .35 - (S.up.coop2 ? .15 : 0));
+  if (S.res.feed > 0) addRes('meat', (W.Y || 0) * .7 * (S.up.coop2 ? 1.4 : 1) + .15);
+  if (S.res.feed < 15 && !S.flags.feedWarn) { S.flags.feedWarn = 1; toast('Paubos na ang patuka ng manok at baboy!', 'bad'); } if (S.res.feed > 30) S.flags.feedWarn = 0;
+  addRes('water', (brown ? 0 : (W.W || 0) * 2.3 * (S.up.filter2 ? 1.3 : 1)) - n * .12 - (brown ? 0 : .2) - (S.flags.leak ? 3 : 0));
+  addRes('power', (sun ? 2.7 * (S.up.solar2 ? 1.35 : 1) * (S.flags.dust ? .45 : 1) : 0) + (W.S || 0) * 1.15 - 2.1 * (S.flags.ration ? .62 : 1));
+  addRes('o2', (brown ? 0 : (5.6 + (S.up.scrub2 ? 2 : 0)) * (S.flags.fanBroken ? .35 : 1) + .5) + (W.O || 0) * 1.4 - n * .35);
+  const low = ['food', 'water', 'power', 'o2'].some(k => S.res[k] < CAP[k] * .2);
+  ids.forEach(id => {
+    const st = S.people[id], p = P[id];
+    if (!night) {
+      if (p && p.atWork) { if (RELAX.includes(st.job)) stress(id, st.job === 'U' && defOf(id).kid ? -3.5 : -2.4); else stress(id, defOf(id).spec === st.job ? .45 : .75); }
+      else if (st.job === 'rest' || (S.flags.restNoon && S.min < 720)) stress(id, -2.2);
+      if (W.H && defOf(id).spec !== 'H') stress(id, -.25 * W.H);
+    }
+    if (low) stress(id, .9);
+    if (S.res.o2 < 10) health(id, -3);
+    if (S.res.food <= 0) health(id, -1.2);
+    if (S.res.water <= 0) health(id, -2);
+    if (st.sick) { health(id, W.C ? 3 * W.C : -1.5); if (st.health >= 75) { st.sick = false; toast(`${defOf(id).name}: magaling na!`, 'good'); p && routine(p); } }
+    else health(id, .3);
+  });
+  if (brown && !S.flags.wasBrown) { S.flags.wasBrown = 1; beep(440, .4); toast('BROWNOUT! Patay ang oxygen at water pump.', 'bad'); queueEvent('brownout'); }
+  if (!brown) S.flags.wasBrown = 0;
+  if (!night) {
+    const breaking = npcs().find(id => S.people[id].stress >= 92 && (S.last.panic || 0) < S.day);
+    if (breaking) { S.flags.panicWho = breaking; queueEvent('panic'); }
+  }
+  S.timers = S.timers.filter(t => { if (--t.h <= 0) { resolveTimer(t); return false; } return true; });
+  // losing: no oxygen or no water for too long ends the run
+  if (S.res.o2 <= 0 || S.res.water <= 0) { S.crit = (S.crit || 0) + 1; if (S.crit === 3) { beep(330, .5); toast(`KRITIKAL: ubos ang ${S.res.o2 <= 0 ? 'oxygen' : 'tubig'}! Ayusin bago mahuli ang lahat.`, 'bad'); } if (S.crit >= 10) { gameOver(); return; } }
+  else S.crit = 0;
+  refreshWorld();
+}
+function resolveTimer(t) {
+  if (t.kind === 'leak') { S.flags.leak = 0; toast('Naayos na ang tubo.', 'good'); }
+  if (t.kind === 'fan') { S.flags.fanBroken = 0; toast('Umiikot na ulit ang oxygen fan.', 'good'); }
+  if (t.kind === 'dust') { S.flags.dust = 0; toast('Nahugasan na ang abo sa panels. Normal na ang solar.', 'good'); }
+  if (t.kind === 'blackout') { S.flags.blackout = 0; toast('Bumalik na ang kuryente!', 'good'); }
+  if (t.kind === 'ration') { S.flags.ration = 0; toast('Tapos na ang rasyon ng kuryente.'); }
+}
+function advance(mins) {
+  const before = S.min; S.min = Math.min(S.min + mins, 1320);
+  const hours = Math.floor(S.min / 60) - Math.floor(before / 60);
+  for (let i = 0; i < hours; i++) hourTick();
+  if (Math.floor(S.min / 60) !== Math.floor(before / 60)) { routineAll(); save(); }
+  checkSlots();
+}
+
+// ---------------------------------------------------------------- events
+const ev = [];   // queue
+function queueEvent(id) { if (!ev.includes(id)) ev.push(id); }
+const someone = (filter = () => true) => pick(npcs().filter(id => !S.people[id].sick && filter(id))) || 'nelson';
+const N = id => defOf(id).name;
+const EVENTS = {
+  k1: { kick: 'Kabanata 1 · Airlock', loc: 'A', title: 'Sarado na',
+    body: () => `<p>Umikot ang manibela ng blast door hanggang sa huling klik. Tahimik ang lahat. ${people().length} katao at si Millie, at ngayon, ang bunker na ito na ang mundo ninyo.</p><p>Nakatingin silang lahat sa iyo, Isha.</p>`,
+    choices: [
+      { t: 'Lahat may trabaho, simula ngayon.', sub: 'Pupunta ang bawat isa sa trabahong kabisado nila.', fx: () => { npcs().forEach(id => S.people[id].job = defOf(id).job); routineAll();
+        return `<p>Isa-isa silang tumango.</p><p>${npcs().map(id => `<b>${N(id)}</b>: ${defOf(id).role}`).join('<br>')}</p><p>Lahat may ambag. Ikaw ang bahala kung saan sila kailangan.</p>`; } },
+      { t: 'Pahinga muna hanggang tanghali.', sub: 'Bawas stress, pero walang gagawa hanggang 12:00.', fx: () => { S.flags.restNoon = 1; stressAll(-12); routineAll();
+        return '<p>"Anim na araw tayong walang tulog," sabi mo. Nakahinga sila nang maluwag. Pagdating ng tanghali, sabay-sabay kayong magsisimula.</p>'; } },
+    ] },
+  k2: { kick: 'Kabanata 2 · Blast door', loc: 'A', title: 'May kumakatok', sound: 'knock',
+    body: () => '<p>Tatlong katok. Tumigil. Tatlo ulit, mas malakas.</p><p>May boses sa intercom, paos at hinihingal: <i>"Tulong! Isa lang ako. Mekaniko ako, may dala akong gamot. Pakiusap."</i></p><p>Napahawak si AJ sa braso mo. Si Angel, nakatingin sa monitor.</p>',
+    choices: [
+      { t: 'Buksan ang pinto.', sub: 'Isa pang bibig na papakainin, pero may dalang gamot at galing.', fx: () => { S.flags.dadoIn = 1; join('dado'); S.parts += 4;
+        stress('aj', 12); S.flags.meds = 1; return '<p>Pumasok si <b>Mang Dado</b>, nanginginig at puno ng abo. Dumiretso siya sa decon shower. Ang dala niya: isang bag ng antibiotics at mga piyesa ng solar.</p><p>Hindi natutuwa si AJ. "Sana tama ka, Isha."</p>'; } },
+      { t: 'Kausapin lang sa intercom.', sub: 'Bigyan ng pagkain sa labas, alamin ang balita.', fx: () => { addRes('food', -10); S.flags.convoy = 1; stressAll(-2);
+        return '<p>Iniwan ninyo ang isang kahon ng pagkain sa labas ng pinto. Bago siya umalis, may sinabi siya: <i>"May convoy daw na dadaan sa Tarlac. Sa ika-40 araw."</i></p>'; } },
+      { t: 'Huwag pansinin.', sub: 'Ligtas tayo. Pero maririnig ito ng lahat.', fx: () => { stress('angel', 10); stress('ria', 14); stress('carly', 14); S.flags.ignored = 1;
+        return '<p>Ilang minuto pang kumatok. Tapos, wala na. Walang nagsalita sa hapunan.</p>'; } },
+    ] },
+  k3: { kick: 'Kabanata 3 · Master Suite', loc: 'M', title: 'May boses sa radyo', sound: 'chime',
+    body: () => '<p>Sa command desk, biglang kumaluskos ang radyo. Boses ng babae, putol-putol: <i>"...ito ang NDRRMC Region III... nananatili sa Alert Level 5 ang Pinatubo ayon sa PHIVOLCS... evacuation convoy mula Tarlac papuntang Baguio sa ika-40 araw... sa mga may radyo, iulat ang lokasyon at bilang ng inyong grupo..."</i></p><p>Kung sasagot ka, malalaman ng gobyerno na nandito kayo. Pero maririnig din ng kahit sinong may scanner.</p>',
+    choices: [
+      { t: 'Sumagot.', sub: 'Baka sila ang daan palabas. Baka rin hindi.', fx: () => { S.flags.radioReply = 1; stressAll(-6); return '<p>"Narito kami. Labing-isa." Mahabang static. Tapos: <i>"Natanggap. Hintayin ang susunod na mensahe."</i> Napangiti si Tatay Fred.</p>'; } },
+      { t: 'Makinig lang.', sub: 'Itala ang frequency, huwag magpakilala.', fx: () => { S.flags.radioListen = 1; return '<p>Isinulat ni Angel ang frequency sa notebook niya. Tuwing gabi, makikinig kayo.</p>'; } },
+      { t: 'Patayin ang radyo.', sub: 'Mas mabuting walang nakakaalam.', fx: () => { stress('fred', 8); stress('yssa', 6); return '<p>Tahimik ulit ang kwarto. Ligtas. Pero parang mas maliit ang bunker ngayon.</p>'; } },
+    ] },
+  k4: { kick: 'Kabanata 3 · Blast door', loc: 'A', title: 'Kumakatok ulit', sound: 'knock',
+    body: () => `<p>Hindi na ito katok ng isang tao. Kalampag ito ng bakal sa bakal.</p><p><i>"Alam naming may pagkain kayo diyan${S.flags.radioReply ? '. Narinig namin kayo sa radyo' : ''}. Tatlumpung kahon, at aalis kami."</i></p><p>Nakatayo na si AJ at si Carlo sa likod mo.</p>`,
+    choices: [
+      { t: 'Ibigay ang hinihingi.', sub: '-30 pagkain. Walang masasaktan.', fx: () => { addRes('food', -30); stressAll(4); return '<p>Iniwan ninyo ang mga kahon sa airlock at isinara ulit ang pinto. Narinig ninyo ang mga yapak na papalayo.</p>'; } },
+      { t: 'Harangan ang pinto.', sub: 'Matibay ang pinto. Pero gaano katagal?', fx: () => { stressAll(12); stress('aj', 8); stress('carlo', 8); return '<p>Buong gabi silang kumalampag. Bago mag-umaga, tumigil din. Walang nakatulog.</p>'; } },
+      { t: 'Makipag-usap.', sub: 'Mas madali kung mataas ang moral ninyo.', fx: () => { if (morale() >= 55) { addRes('food', -10); addRes('water', 20); stressAll(-4); return '<p>Kalmado ang boses mo. Nagpalitan kayo: sampung kahon ng pagkain para sa isang tangke ng malinis na tubig mula sa kanila. Umalis sila nang tahimik.</p>'; }
+        addRes('food', -20); stressAll(8); return '<p>Hindi sila nakinig. Kinuha nila ang dalawampung kahon na naiwan mo sa airlock, at nagbanta pang babalik.</p>'; } },
+    ] },
+  leak: { kick: 'Water Filtration', loc: 'W', title: 'Tumutulo ang tubo', min: 8, cool: 3, w: 3,
+    body: () => '<p>Basa ang sahig sa Water Filtration. May bitak sa main pipe, at bawat oras, nasasayang ang malinis na tubig.</p>',
+    choices: [
+      { t: 'Ako na ang mag-aayos.', sub: 'Pumunta sa Water Filtration at pindutin ang Gawin.', fx: () => { S.flags.leak = 1; setTask('W', 'leak', 'Ayusin ang tumutulong tubo sa Water Filtration'); return '<p>Kinuha mo ang toolbox. Mas mabilis, mas maliit ang sayang.</p>'; } },
+      { t: 'Ipaayos kay Nelson.', sub: 'Mga 2 oras. Dagdag stress sa kanya.', fx: () => { S.flags.leak = 1; stress('nelson', 8); S.timers.push({ kind: 'leak', h: 2 }); return '<p>"Sige, ako na," sabi ni Nelson, sabay buntong-hininga.</p>'; } },
+      { t: 'Tapalan muna ng tape.', sub: 'Ayos ngayon. Babalik ang problema.', fx: () => { S.last.leak = S.day - 2; return '<p>Pinaikutan mo ng tape. Tumigil ang tulo, sa ngayon.</p>'; } },
+    ] },
+  dust: { kick: 'Solar at Baterya', loc: 'S', title: 'Natabunan ng abo ang solar', min: 8, cool: 4, w: 2,
+    body: () => '<p>Nag-flash ang monitor ni Papa Na: bumagsak sa kalahati ang kuha ng solar panels. Bumuhos ulit ang abo kagabi at natakpan ang mga panel sa itaas. Isang araw bago ito mahugasan nang ligtas.</p>',
+    choices: [
+      { t: 'Magrasyon ng kuryente.', sub: 'Mas mababang konsumo, pero mas madilim at mainit sa loob.', fx: () => { S.flags.dust = 1; S.flags.ration = 1; S.timers.push({ kind: 'dust', h: 24 }, { kind: 'ration', h: 24 }); stressAll(4); return '<p>Pinatay ninyo ang mga hindi kailangan. Tahimik at madilim ang Sala ngayong gabi.</p>'; } },
+      { t: 'Normal lang. Bantayan ang baterya.', sub: 'Delikado kung bumaba sa zero.', fx: () => { S.flags.dust = 1; S.timers.push({ kind: 'dust', h: 24 }); return '<p>Itinutok ni Papa Na ang mata sa battery meter. "Huwag sanang mag-brownout."</p>'; } },
+    ] },
+  argue: { kind: 'trouble', kick: 'Kusina', loc: 'K', title: 'Away sa rasyon', min: 8, cool: 3, w: 2,
+    body: () => '<p>Malakas ang boses sa Kusina. Gusto ni Nanay Mila na dagdagan ang rasyon ng mga bata. Sabi ni Nelson, kung ganyan, ubos ang pantry bago mag-isang buwan.</p>',
+    choices: [
+      { t: 'Kampihan si Nanay Mila.', sub: 'Mas maraming pagkain, mas masaya ang hapag.', fx: () => { addRes('food', -6); stress('nelson', 12); stress('ria', -8); stress('carly', -8); return '<p>Ngumiti si Nanay Mila. Lumabas si Nelson nang walang sinasabi.</p>'; } },
+      { t: 'Kampihan si Nelson.', sub: 'Mahigpit na rasyon. Mas tatagal ang pagkain.', fx: () => { addRes('food', 6); stress('mila', 12); return '<p>"Para sa ating lahat ito," sabi mo. Tumango si Nanay Mila, pero namumula ang mata niya.</p>'; } },
+      { t: 'Family meeting sa Sala.', sub: 'Isang oras, pero maririnig ang lahat.', fx: () => { stressAll(-6); advance(60); return '<p>Umupo kayong lahat sa mahabang mesa. Napagkasunduan: dagdag na rasyon tuwing Linggo lang. Nagkamay ang dalawa.</p>'; } },
+    ] },
+  fever: { kick: 'Clinic', loc: 'C', title: 'May nilalagnat', min: 9, cool: 3, w: 2, pre: () => { S.flags.feverWho = someone(id => id !== 'angel'); },
+    body: () => `<p>Mainit ang noo ni <b>${N(S.flags.feverWho)}</b> at nanginginig. Kailangan itong bantayan bago kumalat.</p>`,
+    choices: [
+      { t: 'Dalhin sa Clinic, ipabantay kay Angel.', sub: 'Pupunta si Angel sa Clinic.', fx: () => { const id = S.flags.feverWho; S.people[id].sick = true; health(id, -30); S.people.angel.job = 'C'; routine(P[id]); routine(P.angel); return `<p>Inilipat si ${N(id)} sa Clinic. Inayos ni Angel ang IV.</p>`; } },
+      { t: 'Bigyan ng gamot mula sa pantry.', sub: '-6 pagkain, mabilis na lunas.', fx: () => { const id = S.flags.feverWho; addRes('food', -6); health(id, -5); return `<p>Uminom ng gamot si ${N(id)} at natulog sandali. Bumaba ang lagnat${S.flags.meds ? ', salamat sa gamot ni Mang Dado' : ''}.</p>`; } },
+    ] },
+  birthday: { kick: 'Hobby Room', loc: 'H', title: 'Kaarawan ni Yssa', min: 10, once: 1, w: 3, good: 1,
+    body: () => '<p>Si Carly ang nakaalala: kaarawan ngayon ni Yssa. Walang cake, walang kandila. Pero may harina pa sa pantry.</p>',
+    choices: [
+      { t: 'Maghanda tayo!', sub: '-10 pagkain. Malaking ginhawa sa lahat.', fx: () => { addRes('food', -10); stressAll(-15); chime(); return '<p>Nagluto si Nanay Mila ng mamon sa kawali. Kumanta kayong lahat, pati si Tatay Fred. Umiyak si Yssa sa tuwa.</p>'; } },
+      { t: 'Simpleng bati lang.', sub: 'Walang gastos.', fx: () => { stress('yssa', -5); return '<p>Niyakap ninyo si Yssa isa-isa. Sapat na raw iyon.</p>'; } },
+    ] },
+  harvest: { kick: 'Greenhouse', loc: 'G', title: 'Ani!', min: 9, cool: 3, w: 4, good: 1, can: () => S.growth > .8,
+    body: () => '<p>Hinog na ang pechay, kamatis at kangkong. Nakangiti si Mama Su, puno ng putik ang kamay.</p>',
+    choices: [
+      { t: 'Handaan ngayong gabi!', sub: '+18 pagkain, at masayang hapunan.', fx: () => { addRes('food', 18); stressAll(-8); S.growth = .3; chime(); return '<p>Unang sariwang gulay sa loob ng dalawang linggo. Tahimik ang hapag, puro nguya.</p>'; } },
+      { t: 'Itago lahat sa pantry.', sub: '+30 pagkain.', fx: () => { addRes('food', 30); S.growth = .3; return '<p>Inayos ni Tatay Fred ang ani sa mga kahon. "Para sa tag-gutom," sabi niya.</p>'; } },
+    ] },
+  rats: { kick: 'Pantry', loc: 'P', title: 'May daga sa pantry', min: 9, cool: 4, w: 2,
+    body: () => '<p>May butas ang sako ng bigas at may maliliit na bakas sa sahig. May daga sa Pantry.</p>',
+    choices: [
+      { t: 'Ipadala si Millie.', sub: 'Matagal na siyang naghihintay ng ganito.', fx: () => { addRes('food', -4); stress('carly', -10); stress('ria', -10); stressAll(-3); return '<p>Labinlimang minuto ng kalampag. Lumabas si Millie na kumakawag ang buntot, may hawak na daga. Bida siya buong araw.</p>'; } },
+      { t: 'Patibong ni Tatay Fred.', sub: 'Mabagal pero sigurado.', fx: () => { addRes('food', -10); stress('fred', 4); return '<p>Gumawa si Tatay Fred ng patibong mula sa lata. Kinabukasan, wala na ang daga, pati ilang kilong bigas.</p>'; } },
+    ] },
+  fan: { kick: 'Oxygen Control', loc: 'O', title: 'Humihina ang oxygen fan', min: 9, cool: 4, w: 2,
+    body: () => '<p>May kakaibang lagitik sa Oxygen Control. Bumagal ang fan ng scrubber, at bumababa na ang oxygen.</p>',
+    choices: [
+      { t: 'Ako na ang mag-aayos.', sub: 'Pumunta sa Oxygen Control at pindutin ang Gawin.', fx: () => { S.flags.fanBroken = 1; setTask('O', 'fan', 'Ayusin ang oxygen fan sa Oxygen Control'); return '<p>Kinuha mo ang flashlight. Bawat minuto ay mahalaga.</p>'; } },
+      { t: 'Ipaayos kay Paolo.', sub: 'Mga 3 oras. Bababa ang oxygen habang naghihintay.', fx: () => { S.flags.fanBroken = 1; stress('paolo', 8); S.timers.push({ kind: 'fan', h: 3 }); S.people.paolo.job = 'O'; routine(P.paolo); return '<p>Binuksan ni Paolo ang checklist niya. "Tatlong oras. Huwag kayong tatakbo."</p>'; } },
+    ] },
+  nightmare: { kick: 'Kwarto 4', loc: 'R4', title: 'Hindi makatulog si Carly', min: 7, cool: 3, w: 2, night: 1,
+    body: () => '<p>May mahinang iyak mula sa Kwarto 4. Si Carly, nakabalot sa kumot. "Paano kung hindi na tayo makalabas?"</p>',
+    choices: [
+      { t: 'Puntahan si Carly.', sub: 'Pagod ka na rin, pero kailangan ka niya.', fx: () => { stress('isha', 4); stress('carly', -22); return '<p>Umupo ka sa gilid ng kama hanggang makatulog siya. Hawak niya ang kamay mo.</p>'; } },
+      { t: 'Ipakuwento kay Tatay Fred.', sub: 'Kuwento noong unang panahon.', fx: () => { stress('fred', 4); stress('carly', -14); stressAll(-3); return '<p>Narinig ng buong pasilyo ang kuwento ni Tatay Fred tungkol sa bagyong Yoling. Natulog si Carly sa gitna ng kuwento.</p>'; } },
+    ] },
+  movie: { kick: 'Sala', loc: 'L', title: 'Movie night', min: 8, cool: 3, w: 2, night: 1, good: 1,
+    body: () => '<p>May nakitang lumang hard drive si Yssa, puno ng pelikula. "Isa lang, please?"</p>',
+    choices: [
+      { t: 'Movie night sa Sala!', sub: 'Kaunting kuryente, malaking ginhawa.', fx: () => { addRes('power', -4); stressAll(-12); S.flags.movie = S.day; return '<p>Nagsiksikan kayo sa sofa. Pinakamalakas ang tawa ni Papa Na sa pinaka-corny na eksena.</p>'; } },
+      { t: 'Maaga tayong matulog.', sub: 'Tipid sa kuryente.', fx: () => { stress('yssa', 4); return '<p>Ibinalik ni Yssa ang hard drive sa bulsa niya. "Bukas na lang."</p>'; } },
+    ] },
+  date: { kick: 'Master Suite', loc: 'M', title: 'Kayong dalawa lang', min: 8, cool: 3, w: 2, night: 1, good: 1,
+    body: () => '<p>Pagbalik mo sa Master Suite, may dalawang tasa ng kape sa mesa at nakasindi ang maliit na lampara. Nakaupo si Angel sa sofa, nakangiti. Nakahiga si Millie sa paanan niya.</p>',
+    choices: [
+      { t: 'Umupo sa tabi niya.', sub: 'Ilang oras na para sa inyong dalawa.', fx: () => { stress('isha', -20); stress('angel', -20); chime(); return '<p>Hindi ninyo napag-usapan ang bunker kahit isang beses. Pinag-usapan ninyo ang bahay na gagawin ninyo paglabas.</p>'; } },
+      { t: 'Pagod ako. Bukas na lang?', sub: 'Maiintindihan niya. Siguro.', fx: () => { stress('angel', 7); return '<p>"Sige," sabi ni Angel, sabay ligpit ng tasa.</p>'; } },
+    ] },
+  homesick: { kind: 'trouble', kick: 'Sala', loc: 'L', title: 'Miss na ang labas', min: 8, cool: 3, w: 2, pre: () => { S.flags.hsWho = someone(); },
+    body: () => `<p>Nakatitig si <b>${N(S.flags.hsWho)}</b> sa lumang litrato ng bahay ninyo. "Naaalala mo pa ba ang amoy ng ulan?"</p>`,
+    choices: [
+      { t: 'Kausapin siya.', sub: 'Bubukas ang usapan ninyong dalawa.', fx: () => { const id = S.flags.hsWho; stress(id, -6); setTimeout(() => personSheet(P[id]), 300); return ''; } },
+      { t: 'Bigyan ng oras sa Hobby Room.', sub: 'Lilipat siya sa Hobby Room ngayong araw.', fx: () => { const id = S.flags.hsWho; S.people[id].job = 'H'; routine(P[id]); return `<p>Pumunta si ${N(id)} sa Hobby Room. Narinig ninyo ang gitara pagkalipas ng ilang minuto.</p>`; } },
+      { t: '"Kaya natin \'to."', sub: 'Maikling salita para sa lahat.', fx: () => { stressAll(-4); return '<p>Hindi mo alam kung totoo. Pero sinabi mo nang malakas, at sapat iyon ngayon.</p>'; } },
+    ] },
+  panic: { kick: 'Babala', loc: null, title: 'Bumibigay na', force: 1,
+    body: () => `<p>Nakaupo si <b>${N(S.flags.panicWho)}</b> sa sahig, mabilis ang hinga, nanginginig ang kamay. Sobra na ang pagod at takot.</p>`,
+    choices: [
+      { t: 'Kausapin siya ngayon.', sub: 'Ikaw ang kailangan niya.', fx: () => { const id = S.flags.panicWho; S.last.panic = S.day; stress(id, -15); setTimeout(() => personSheet(P[id]), 300); return ''; } },
+      { t: 'Pahinga buong araw.', sub: 'Babalik siya sa kwarto niya.', fx: () => { const id = S.flags.panicWho; S.last.panic = S.day; S.people[id].job = 'rest'; stress(id, -20); routine(P[id]); return `<p>Inihatid ni Angel si ${N(id)} sa kwarto. Bukas, titingnan ninyo ulit.</p>`; } },
+    ] },
+  brownout: { kick: 'Babala · Kuryente', loc: 'S', title: 'Brownout', force: 1,
+    body: () => '<p>Pula ang ilaw. Tumigil ang ugong ng oxygen scrubbers at ng water pump. Ubos ang baterya.</p>',
+    choices: [
+      { t: 'Lahat ng puwede, sa Solar!', sub: 'Dalawa pang tao ang ililipat sa Solar.', fx: () => { npcs().filter(id => S.people[id].job !== 'S' && !S.people[id].sick).slice(0, 2).forEach(id => { S.people[id].job = 'S'; routine(P[id]); }); return '<p>Nagtakbuhan sila papunta sa Solar room.</p>'; } },
+      { t: 'Magrasyon ng kuryente.', sub: 'Mas mabagal maubos ang baterya.', fx: () => { S.flags.ration = 1; S.timers.push({ kind: 'ration', h: 24 }); return '<p>Pinatay ninyo ang lahat ng hindi kailangan.</p>'; } },
+    ] },
+  box: { kick: 'Airlock', loc: 'A', title: 'May iniwan sa pinto', force: 1,
+    body: () => '<p>Sa camera ng airlock: isang kahon sa labas ng pinto. Gamot, isang flashlight, at sulat: <i>"Para sa mga bata. Mag-ingat kayo."</i></p>',
+    choices: [{ t: 'Kunin ang kahon.', sub: 'Gamot para sa lahat.', fx: () => { people().forEach(id => health(id, 15)); stress('angel', 6); S.flags.meds = 1; return '<p>Matagal na hawak ni Angel ang sulat bago niya itinupi.</p>'; } }] },
+};
+function join(id) {
+  const d = GUESTS.find(g => g.id === id); if (!d || S.people[id]) return;
+  S.people[id] = { job: d.job, stress: 55, health: 75, sick: false }; spawn(d, 20, 32.4); routine(P[id]); doorAnim(1); setTimeout(() => doorAnim(0), 3500);
+}
+function stockLine() {
+  const n = people().reduce((a, id) => a + (defOf(id).kid ? .5 : 1), 0);
+  return `Tubig: ~${Math.round(S.res.water * 3)} litro (${(S.res.water * 3 / (n * 3.5)).toFixed(1)} araw) · Pagkain: ${(S.res.food / (n * 3)).toFixed(1)} araw (bigas, de-lata, noodles, gulay, itlog) · Karne: ~${Math.round(S.res.meat * .5)} kg sa freezer · Patuka: ${Math.round(S.res.feed * .5)} kg`;
+}
+function defense() { let d = 0; npcs().forEach(id => { if (S.people[id].job === 'X' && P[id]?.atWork) d += eff(id); }); if (S.ammo > 0) d += 1; if (S.flags.drill === S.day) d += 1; if (S.up.door2) d += 1; return d; }
+const raidNeed = () => 1.6 + Math.floor((S.day - 8) / 3) * .5;
+const guardNames = () => npcs().filter(id => S.people[id].job === 'X').map(N).join(' at ') || 'walang bantay';
+Object.assign(EVENTS, {
+  // ---- daily trouble (morning)
+  tScavenge: { kind: 'trouble', kick: 'Airlock', loc: 'A', title: 'Gustong lumabas ni AJ', min: 8, cool: 3, w: 3,
+    body: () => '<p>Nakasuot na si AJ ng hazmat suit. "May grocery sa kanto. Apat na oras lang, Isha." Hinarangan siya ni Nelson: "Makapal ang abo diyan sa labas, masisira ang baga mo!"</p><p>Nagtataasan na ang boses nila.</p>',
+    choices: [
+      { t: 'Payagan, kasama si Carlo.', sub: 'Puwedeng may makuhang supplies. Puwede ring masaktan.', fx: () => { const r = Math.random(); advance(0);
+        if (r < .55) { addRes('food', 20); addRes('meat', 8); S.ammo += 4; S.parts += 3; stress('aj', -15); return '<p>Bumalik sila bago maghapon, puro abo pero nakangiti: dalawang sako ng bigas, de-lata, isang kahon ng bala, at mga piyesa. Tahimik na tumango si Nelson.</p>'; }
+        if (r < .85) { addRes('food', 6); stress('aj', 5); return '<p>Halos wala nang laman ang grocery. Ilang de-lata lang ang naiuwi nila, at may nakita silang grupong nanloloob sa malayo.</p>'; }
+        S.people.aj.sick = true; health('aj', -45); routine(P.aj); stressAll(8); return '<p>Kinaladkad ni Carlo si AJ pabalik. Nadulas siya sa gumuhong pader at may sugat sa binti. Dumiretso sila sa Clinic.</p>'; } },
+      { t: 'Hindi puwede.', sub: 'Ligtas, pero magagalit si AJ.', fx: () => { stress('aj', 16); stress('nelson', -5); return '<p>Hinubad ni AJ ang suit at ibinato sa sahig. Buong umaga siyang hindi nagsalita.</p>'; } },
+    ] },
+  tKitchen: { kind: 'trouble', kick: 'Kusina', loc: 'K', title: 'Sino ang amo sa Kusina?', min: 8, cool: 4, w: 2,
+    body: () => '<p>Dalawang kaldero, dalawang luto, isang kalan. Gusto ni Nanay Mila ng sinigang. Gusto ni Mama Jen ng adobo. Walang gustong umatras.</p>',
+    choices: [
+      { t: 'Si Nanay Mila ang masusunod.', sub: 'Siya ang pinakamatanda.', fx: () => { stress('jen', 10); stress('mila', -6); return '<p>Ngumiti si Nanay Mila. Tahimik na naghiwa ng sibuyas si Mama Jen.</p>'; } },
+      { t: 'Si Mama Jen ang masusunod.', sub: 'Bago naman.', fx: () => { stress('mila', 10); stress('jen', -6); return '<p>"Sige, kayo na," sabi ni Nanay Mila, sabay upo sa sulok.</p>'; } },
+      { t: 'Salitan sila araw-araw.', sub: 'Kailangan mong ayusin ang schedule.', fx: () => { stress('mila', -5); stress('jen', -5); stress('isha', 3); return '<p>May schedule na sa ref. Lunes, Miyerkules, Biyernes: si Nanay Mila. Ang iba: si Mama Jen. Linggo: sabay sila.</p>'; } },
+    ] },
+  tParents: { kind: 'trouble', kick: 'Kwarto 3', loc: 'R3', title: 'Pagod na si Rika', min: 8, cool: 4, w: 2,
+    body: () => '<p>Tatlong gabi nang hindi natutulog si Ria. Nag-aaway sina Paolo at Rika sa pasilyo: "Ikaw naman ngayong gabi!" "Ako ang may hawak ng oxygen, Rika!"</p>',
+    choices: [
+      { t: 'Pahingahin si Rika ngayong araw.', sub: 'Isang kulang sa Greenhouse.', fx: () => { S.people.rika.job = 'rest'; stress('rika', -18); routine(P.rika); return '<p>Natulog si Rika hanggang tanghali. Si Paolo ang nagbantay kay Ria sa Oxygen Control, nakaupo sa sahig na may coloring book.</p>'; } },
+      { t: 'Ipaalaga muna kay Monica si Ria.', sub: 'Sa Music Room muna ang bata.', fx: () => { stress('monica', 6); stress('rika', -10); stress('paolo', -8); return '<p>Kinarga ni Monica si Ria papunta sa Music Room. Pagkalipas ng isang oras, naririnig na ang xylophone.</p>'; } },
+      { t: 'Kausapin silang dalawa.', sub: 'Isang oras na usapan.', fx: () => { stress('rika', -8); stress('paolo', -8); stress('isha', 3); advance(60); return '<p>Umiyak si Rika. Niyakap siya ni Paolo. Napagkasunduan: salitan sila tuwing gabi.</p>'; } },
+    ] },
+  tHoard: { kind: 'trouble', kick: 'Pantry', loc: 'P', title: 'May nakatagong pagkain', min: 9, cool: 5, w: 2,
+    body: () => '<p>Sa ilalim ng kama ni Tatay Fred: sampung de-lata at isang supot ng biskwit. "Para sa mga apo ko, kung sakaling maubos," sabi niya, nanginginig ang boses.</p>',
+    choices: [
+      { t: 'Kunin at ibalik sa pantry.', sub: 'Patas sa lahat.', fx: () => { addRes('food', 12); stress('fred', 15); return '<p>Ibinalik mo ang lahat. Hindi tumingin si Tatay Fred sa iyo buong araw.</p>'; } },
+      { t: 'Kausapin siya nang sarilinan.', sub: 'Ibabalik niya ang karamihan.', fx: () => { addRes('food', 8); stress('fred', -6); return '<p>Hinawakan mo ang kamay niya. "Walang mauubusan, Tay. Pangako." Ibinalik niya ang karamihan, at itinago ang isang biskwit para kay Ria.</p>'; } },
+    ] },
+  tBlackout: { kind: 'trouble', kick: 'Solar at Baterya', loc: 'S', title: 'Biglang brownout', min: 8, cool: 3, w: 3,
+    body: () => '<p>Isang malakas na pitik mula sa Solar room, tapos dilim. Pula ang emergency lights. Umiiyak si Butchukok. Sabi ni Papa Na, sumabog ang isang breaker.</p>',
+    choices: [
+      { t: 'Ako na ang mag-aayos.', sub: 'Pumunta sa Solar at pindutin ang Gawin.', fx: () => { S.flags.blackout = 1; setTask('S', 'blackout', 'Ibalik ang kuryente sa Solar at Baterya'); return '<p>Kinuha mo ang flashlight. Habang madilim, patay ang oxygen scrubbers at water pump.</p>'; } },
+      { t: 'Ipaayos kay Papa Na.', sub: 'Mga 2 oras na brownout.', fx: () => { S.flags.blackout = 1; stress('na', 8); S.timers.push({ kind: 'blackout', h: 2 }); return '<p>"Dalawang oras," sabi ni Papa Na, may hawak na multimeter. "Huwag kayong mag-panic."</p>'; } },
+    ] },
+  tMural: { kind: 'trouble', kick: 'Sala', loc: 'L', title: 'May drawing sa pader', min: 9, cool: 6, w: 1,
+    body: () => '<p>Gumising kayong may malaking mural sa pader ng Sala: ang bahay ninyo dati, si Millie, at araw na kulay dilaw. Pinta ni Yssa, katulong sina Carly at Ria. Galit si Tatay Fred: "Pader ng bunker iyan!"</p>',
+    choices: [
+      { t: 'Hayaan. Ang ganda.', sub: 'Gaan ng loob para sa lahat.', fx: () => { stressAll(-6); stress('fred', 8); return '<p>Tuwing umaga, may tumitigil sa harap ng mural. Pati si Tatay Fred, minsan.</p>'; } },
+      { t: 'Ipabura.', sub: 'Masusunod si Tatay Fred.', fx: () => { stress('yssa', 14); stress('carly', 8); stress('ria', 8); return '<p>Si Yssa mismo ang nagpintura ulit ng kulay abo. Walang nagsalita.</p>'; } },
+    ] },
+  tBlame: { kind: 'trouble', kick: 'Sala', loc: 'L', title: 'Sinisisi ka ni Carlo', min: 9, cool: 4, w: 4, can: () => (S.flags.raidLost || 0) >= S.day - 2,
+    body: () => '<p>"Kung nakinig ka lang sa akin kagabi, buo pa sana ang supplies natin!" Nakatayo si Carlo sa harap mo, sa harap ng lahat.</p>',
+    choices: [
+      { t: 'Aminin ang mali.', sub: 'Mas mababang tingin sa iyo, pero gagaan ang hangin.', fx: () => { stress('isha', 6); stressAll(-3); stress('carlo', -10); return '<p>"Tama ka," sabi mo. Natahimik si Carlo, tapos tumango.</p>'; } },
+      { t: 'Ipaalala kung sino ang lider.', sub: 'Matigas, pero magagalit siya.', fx: () => { stress('carlo', 14); return '<p>Lumabas si Carlo papunta sa Armory. Narinig ninyong nililinis niya ang shotgun, paulit-ulit.</p>'; } },
+      { t: 'Gawin siyang pinuno ng bantay.', sub: 'Siya ang masusunod sa depensa.', fx: () => { S.people.carlo.job = 'X'; routine(P.carlo); S.flags.drill = S.day; stress('carlo', -12); return '<p>Isang oras pagkatapos, may bagong schedule ng bantay sa pinto, sulat-kamay ni Carlo.</p>'; } },
+    ] },
+  tAsh: { kind: 'trouble', kick: 'Oxygen Control', loc: 'O', title: 'Pumapasok ang abo', min: 9, cool: 5, w: 2,
+    body: () => '<p>Umuubo si Abby. May pinong abo sa paligid ng air intake. May butas ang filter seal.</p>',
+    choices: [
+      { t: 'Ako na ang mag-seal.', sub: 'Pumunta sa Oxygen Control at pindutin ang Gawin.', fx: () => { S.flags.fanBroken = 1; setTask('O', 'fan', 'I-seal ang filter sa Oxygen Control'); health('abby', -10); return '<p>Kinuha mo ang sealant at tape.</p>'; } },
+      { t: 'Ipaayos kay Paolo.', sub: 'Mga 3 oras. Bababa ang oxygen.', fx: () => { S.flags.fanBroken = 1; S.timers.push({ kind: 'fan', h: 3 }); stress('paolo', 8); health('abby', -10); return '<p>Nakasuot ng mask si Paolo habang nag-aayos. Pinainom ni Angel ng tubig si Abby.</p>'; } },
+    ] },
+  // ---- a knock every day
+  kKiko: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Unang katok', min: 7, once: 1, w: 9, sound: 'knock',
+    body: () => '<p>Hapon pa lang, may kumakatok na. Sa camera: isang batang lalaki, labinlimang taon siguro, nakabalot ang mukha sa t-shirt. Nakilala siya ni Tatay Fred. "Si Kiko! Anak ng kapitbahay!"</p><p><i>"Iniwan nila ako. Hindi ko alam kung saan sila pumunta."</i></p>',
+    choices: [
+      { t: 'Papasukin si Kiko.', sub: 'Isa pang bibig. Pero bata siya, at kilala natin.', fx: () => { join('kiko'); stress('fred', -10); return '<p>Dumiretso si Kiko sa decon shower. Hindi siya umiyak hanggang yakapin siya ni Nanay Mila.</p>'; } },
+      { t: 'Bigyan ng pagkain at tubig.', sub: 'Pero hindi papapasukin.', fx: () => { addRes('food', -8); addRes('water', -8); stress('fred', 12); return '<p>Iniwan ninyo ang supot sa airlock. Matagal na nakatingin si Kiko sa camera bago umalis.</p>'; } },
+    ] },
+  kMagina: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Mag-ina sa labas', min: 8, once: 1, w: 4, sound: 'knock',
+    body: () => '<p>Mahina ang katok, parang wala nang lakas. Sa camera: isang babae, karga ang batang babae na mga anim na taon. Puro pulang abo ang buhok nila. Punit ang mask ng bata.</p><p><i>"Kahit tubig lang po. Para sa anak ko."</i></p><p>Hawak ni Mama Jen ang braso mo.</p>',
+    choices: [
+      { t: 'Papasukin silang dalawa.', sub: 'Dalawa pang papakainin. May awa ang bunker na ito.', fx: () => { join('rosa'); join('bea'); stress('jen', -10); stress('angel', -8); stress('aj', 6); return '<p>Si <b>Aling Rosa</b> at ang anak niyang si <b>Bea</b>. Nilinis sila ni Angel sa Clinic. Pagdating ng hapunan, katabi na ni Bea si Carly.</p>'; } },
+      { t: 'Bigyan ng tubig at pagkain sa labas.', sub: '-10 tubig, -8 pagkain.', fx: () => { addRes('water', -10); addRes('food', -8); stressAll(-3); return '<p>Iniwan ninyo ang tubig, pagkain, at isang bagong mask. "Salamat po," bulong niya sa camera.</p>'; } },
+      { t: 'Huwag buksan.', sub: 'Ligtas tayo. Pero hindi ito makakalimutan.', fx: () => { stress('jen', 14); stress('angel', 12); stress('monica', 10); return '<p>Matagal silang nakaupo sa labas ng pinto. Pagdilim, wala na sila.</p>'; } },
+    ] },
+  kRaid: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'May sumusubok pumasok', min: 8, cool: 2, w: 4, sound: 'knock',
+    body: () => `<p>Hindi katok. Kalampag ng crowbar sa bakal. Lima, anim na lalaki sa camera, may bolo at crowbar, nakatakip ang mukha ng basang t-shirt.</p><p><i>"Alam naming may pagkain kayo diyan! Buksan n'yo, o susunugin namin ang vent ninyo!"</i></p><p>Nasa pinto sina ${guardNames()}. Depensa ninyo: <b>${defense().toFixed(1)}</b>. Mukhang kailangan ng <b>${raidNeed().toFixed(1)}</b>.</p>`,
+    choices: [
+      { t: 'Ipakita ang lakas.', sub: 'Bantay at shotgun sa pinto. Gagamit ng 2 bala.', fx: () => { S.ammo = Math.max(0, S.ammo - 2);
+        if (defense() >= raidNeed()) { stressAll(-4); stress('carlo', -6); return '<p>Isang putok ng shotgun sa ere mula sa gun port, at sigaw ni Carlo sa intercom. Nagkagulo sila, at umatras sa dilim. Nagpalakpakan ang mga bata sa Sala.</p>'; }
+        addRes('o2', -18); health('carlo', -25); stressAll(10); S.flags.raidLost = S.day; return '<p>Masyado silang marami. Nasunog nila ang isang external vent bago umatras, at nasugatan si Carlo sa braso. Bumaba ang oxygen.</p>'; } },
+      { t: 'Harangan ang pinto at manahimik.', sub: 'Baka mapagod sila. Baka hindi.', fx: () => { if (Math.random() < .45 + defense() * .12) { stressAll(6); return '<p>Isang oras silang kumalampag. Walang huminga sa loob. Tapos, tahimik.</p>'; }
+        addRes('water', -20); stressAll(10); S.flags.raidLost = S.day; return '<p>Hindi nila mabuksan ang pinto, kaya ang external water tank ang binutas nila. Nawalan kayo ng dalawampung litro.</p>'; } },
+      { t: 'Bigyan sila ng pagkain.', sub: '-20 pagkain. Sigurado silang aalis.', fx: () => { addRes('food', -20); stress('aj', 10); stress('carlo', 10); return '<p>Iniwan ninyo ang mga kahon sa airlock. Umalis sila, pero may sumigaw: "Babalik kami!"</p>'; } },
+    ] },
+  kTrader: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Si Aling Bebang, negosyante', min: 8, cool: 3, w: 3, sound: 'knock',
+    body: () => '<p>"Magandang hapon po!" Masyadong masaya ang boses para sa ganitong panahon. Si Aling Bebang, may hilang kariton na puno ng gamit. "Palitan tayo, mga anak!"</p>',
+    choices: [
+      { t: '10 karne kapalit ng 25 tubig.', sub: 'Malinis daw ang tubig niya.', fx: () => { if (S.res.meat < 10) return '<p>Kulang ang karne ninyo. Umiling si Aling Bebang at tumuloy na.</p>'; addRes('meat', -10); addRes('water', 25); return '<p>Tatlong galon ng malinis na tubig. "Balik ako next week!"</p>'; } },
+      { t: '15 pagkain kapalit ng piyesa at bala.', sub: '+3 piyesa, +4 bala.', fx: () => { addRes('food', -15); S.parts += 3; S.ammo += 4; return '<p>Isang kahon ng bala at mga piyesa ng makina. Ngumiti si Carlo sa unang beses ngayong linggo.</p>'; } },
+      { t: '10 pagkain kapalit ng patuka.', sub: '+40 patuka para sa manok at baboy.', fx: () => { addRes('food', -10); addRes('feed', 40); stress('aj', -6); return '<p>Dalawang sako ng patuka. Tuwang-tuwa si AJ.</p>'; } },
+    ] },
+  kSick: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Umuubong estranghero', min: 9, cool: 4, w: 2, sound: 'knock',
+    body: () => '<p>Sa camera: isang lalaking nakaluhod sa abo, walang tigil ang ubo. <i>"Galing ako sa Tarlac... ubo... may gamot ba kayo?"</i></p><p>Sabi ni Angel: kung impeksyon ito sa baga, puwedeng kumalat.</p>',
+    choices: [
+      { t: 'Iwan ang gamot sa airlock.', sub: 'Hindi papasukin, pero matutulungan.', fx: () => { health('isha', 0); stressAll(-2); return '<p>Kinuha niya ang gamot at nag-iwan ng mapa: kung saan daw may bodega na hindi pa nalolooban.</p>'; } },
+      { t: 'Papasukin sa Clinic.', sub: 'May tsansang mahawa ang isa sa inyo.', fx: () => { stress('angel', 6); if (Math.random() < .5) { const id = someone(i => i !== 'angel'); S.people[id].sick = true; health(id, -30); routine(P[id]); return `<p>Ginamot siya ni Angel buong gabi, at umalis siya kinaumagahan. Pero nilalagnat na ngayon si ${N(id)}.</p>`; } return '<p>Ginamot siya ni Angel buong gabi. Kinaumagahan, nagpasalamat siya at umalis. Walang nahawa.</p>'; } },
+      { t: 'Huwag buksan.', sub: 'Masakit pero ligtas.', fx: () => { stress('angel', 8); return '<p>Narinig pa ninyo ang ubo niya nang matagal.</p>'; } },
+    ] },
+  kSoldier: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'May naka-uniporme', min: 10, once: 1, w: 3, sound: 'knock',
+    body: () => '<p>Tatlong katok, malinis, militar. Sa camera: isang lalaking naka-vest ng DSWD, may clipboard. <i>"Taga-DSWD po kami. May sasakyan kami para sa mga bata at senior citizen papunta sa evacuation center. Buksan ninyo lang po."</i></p><p>Napatingin si Monica kina Carly at Butchukok.</p>',
+    choices: [
+      { t: 'Humingi ng patunay sa radyo.', sub: 'Kung totoo siya, alam niya ang frequency.', fx: () => { if (S.flags.radioReply || S.flags.radioListen) { stressAll(-5); return '<p>Binasa ni Angel ang frequency mula sa notebook. Natahimik ang lalaki, tapos tumakbo. Sa camera, may mga lalaking may bolo sa likod niya. Nagpapanggap lang pala.</p>'; } stressAll(4); return '<p>Hindi niya alam ang frequency, pero hindi rin ninyo alam. Nagmura siya at umalis. Hindi ninyo malalaman kung totoo siya.</p>'; } },
+      { t: 'Buksan ang pinto.', sub: 'Para sa mga bata.', fx: () => { if (defense() >= raidNeed() + .5) { S.ammo = Math.max(0, S.ammo - 4); stressAll(8); return '<p>Pagbukas ng pinto, sumugod ang mga lalaking nakatago sa likod niya. Mabilis si Carlo at ang mga bantay. Naisara ninyo ulit ang pinto. Walang nasaktan, pero muntik na.</p>'; }
+        addRes('food', -25); S.ammo = Math.max(0, S.ammo - 4); health('carlo', -20); stressAll(14); S.flags.raidLost = S.day; return '<p>Nagpapanggap lang pala. Sumugod ang mga kasama niya at nakakuha ng mga kahon ng pagkain bago ninyo sila naitulak palabas.</p>'; } },
+      { t: 'Huwag buksan.', sub: 'Mas ligtas.', fx: () => { stress('monica', 8); return '<p>"Pagsisisihan ninyo ito," sabi niya, at umalis.</p>'; } },
+    ] },
+  kDoctor: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Doktor daw siya', min: 10, once: 1, w: 3, sound: 'knock',
+    body: () => '<p>Sa camera: isang lalaking may puting coat na kulay pula na sa abo, may hawak na medical bag. <i>"Doktor ako sa Tarlac Provincial Hospital bago ito gumuho sa bigat ng abo. Marunong akong gumamot ng sakit sa baga dahil sa abo."</i></p>',
+    choices: [
+      { t: 'Papasukin si Doc Ramon.', sub: 'Mas mabilis gagaling ang may sakit.', fx: () => { join('ramon'); S.flags.meds = 1; stress('angel', -10); return '<p>Si <b>Doc Ramon</b>. Pagpasok niya sa Clinic, napabuntong-hininga siya: "Maayos ang setup ninyo." Ngumiti si Angel.</p>'; } },
+      { t: 'Konsulta sa intercom lang.', sub: 'Ituturo niya ang gamutan, bigyan siya ng pagkain.', fx: () => { addRes('food', -8); people().forEach(id => health(id, 8)); return '<p>Isang oras siyang nagturo kay Angel sa intercom. Iniwan ninyo ang pagkain sa airlock.</p>'; } },
+    ] },
+  kKids: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Dalawang batang mag-isa', min: 9, cool: 5, w: 2, sound: 'knock',
+    body: () => '<p>Maliit na katok, sa ibabang bahagi ng pinto. Dalawang batang magkapatid, siguro walo at lima. <i>"Gutom na po kami."</i></p><p>Nakadikit ang mukha ni Carly sa monitor.</p>',
+    choices: [
+      { t: 'Bigyan ng pagkain, kumot, at mask.', sub: '-10 pagkain.', fx: () => { addRes('food', -10); stressAll(-6); return '<p>Iniwan ninyo ang supot. Kumaway ang mas maliit sa camera. Kumaway pabalik si Carly.</p>'; } },
+      { t: 'Huwag buksan.', sub: 'Baka patibong.', fx: () => { stress('monica', 15); stress('carly', 12); stress('ria', 10); return '<p>Umiyak si Carly buong hapon. "Bakit, Tita Isha?"</p>'; } },
+    ] },
+  kSilent: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Walang tao sa camera', min: 8, cool: 3, w: 2, sound: 'knock',
+    body: () => '<p>Tatlong katok. Pagtingin ninyo sa camera: wala. Walang tao. Sa abo sa harap ng pinto, may mga bakas ng paa na papunta sa air vent.</p>',
+    choices: [
+      { t: 'Bantayan ang vent ngayong gabi.', sub: 'Pagod para kina Paolo at AJ.', fx: () => { stress('paolo', 6); stress('aj', 6); return '<p>Buong gabi silang nagbantay. Bandang alas-tres, may narinig silang kalmot sa grille, tapos yapak na papalayo.</p>'; } },
+      { t: 'Hayaan na lang.', sub: 'Baka hangin lang.', fx: () => { addRes('o2', -12); stressAll(5); return '<p>Kinaumagahan, may basura at basahan na nakasiksik sa vent. Bumaba ang oxygen bago ito natanggal ni Paolo.</p>'; } },
+    ] },
+  kOldFriend: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Kaibigan ni AJ', min: 11, once: 1, w: 3, sound: 'knock',
+    body: () => '<p><i>"AJ! Pare, ako ito, si Jomar!"</i> Napatayo si AJ. Kaklase niya. Pero balita sa bayan, kasama na si Jomar ng grupong nanloloob.</p><p><i>"Kasama ko na sila, pare. Buksan mo lang, walang masasaktan. Promise."</i></p>',
+    choices: [
+      { t: 'Hayaang kausapin ni AJ.', sub: 'Baka may malaman tayo. Baka mahulog si AJ sa bitag.', fx: () => { stress('aj', 14); S.flags.drill = S.day; return '<p>Matagal silang nag-usap. Nang matapos, namumutla si AJ: "Babalik sila sa ikalabintatlong araw. Marami sila." Nagtipon agad si Carlo sa Armory.</p>'; } },
+      { t: 'Putulin ang intercom.', sub: 'Walang usapan.', fx: () => { stress('aj', 10); return '<p>Pinatay mo ang intercom. Hindi ka kinausap ni AJ hanggang hapunan.</p>'; } },
+    ] },
+  // ---- nights
+  nFred: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Kuwento ni Tatay Fred', min: 8, cool: 4, w: 2, good: 1,
+    body: () => '<p>Brownout-style ang ilaw, pero sinadya. Nakaupo ang lahat sa sahig ng Sala habang nagkukuwento si Tatay Fred tungkol sa gabing nakilala niya si Nanay Mila, noong 1971, sa isang perya sa Bulacan.</p>',
+    choices: [{ t: 'Makinig hanggang dulo.', sub: 'Gaan ng loob.', fx: () => { stressAll(-10); stress('mila', -8); return '<p>Sa dulo ng kuwento, hinalikan ni Tatay Fred sa noo si Nanay Mila. Pumalakpak ang mga bata.</p>'; } }] },
+});
+const CHAPTERS = { 7: { start: 'k1' }, 9: { knock: 'k2' }, 11: { morning: 'k3' }, 13: { knock: 'k4' } };
+
+function setTask(room, kind, text) { S.task = { room, kind, text }; refreshTask(); }
+function pickKind(kind) {
+  const pool = Object.entries(EVENTS).filter(([id, e]) => e.min && S.day >= e.min && (e.kind || (e.night ? 'night' : 'day')) === kind && !(e.once && S.done[id]) && (S.day - (S.last[id] ?? -9)) >= (e.cool || 0) && (!e.can || e.can()));
+  if (!pool.length) return null;
+  let r = Math.random() * pool.reduce((a, [, e]) => a + (e.w || 1), 0);
+  for (const [id, e] of pool) { r -= e.w || 1; if (r <= 0) return id; }
+  return pool[0][0];
+}
+function checkSlots() {
+  if (!S || paused) return;
+  const sl = S.slots[S.day] ||= {}, ch = CHAPTERS[S.day] || {};
+  const knockAt = (S.knockAt ||= {})[S.day] ??= 900 + Math.floor(Math.random() * 330);
+  const fire = (slot, at, kind, prob) => {
+    if (sl[slot] || S.min < at) return; sl[slot] = 1;
+    const id = ch[slot] || (Math.random() < prob ? pickKind(kind) : null);
+    if (id) queueEvent(id);
+  };
+  fire('morning', 480, 'trouble', 1);                                   // something goes wrong every morning
+  fire('afternoon', 840, 'day', Math.min(.8, .4 + (S.day - 7) * .08));
+  fire('knock', knockAt, 'knock', 1);                                   // somebody knocks every day
+  fire('night', 1230, 'night', .5);
+}
+function runQueue() {
+  if (!ev.length || paused || $('#sheet').hidden === false) return;
+  showEvent(ev.shift());
+}
+function showEvent(id) {
+  const e = EVENTS[id]; if (!e) return;
+  e.pre && e.pre();
+  S.last[id] = S.day; S.done[id] = 1;
+  if (e.loc) focusOn(roomCenter(e.loc));
+  if (e.sound === 'knock') knock(); else if (e.sound === 'chime') chime(); else if (!e.good) beep(660, .15);
+  openSheet(`<div class="kick">Araw ${S.day} · ${hhmm(S.min)} · ${e.kick}</div><h2 class="sh-title">${e.title}</h2><div class="sh-body">${e.body()}</div>
+    <div class="choices">${e.choices.map((c, i) => `<button class="choice${i ? '' : ' primary'}" data-i="${i}"><b>${c.t}</b><span>${c.sub}</span></button>`).join('')}</div>`, { noClose: true });
+  $('#sheetBody').querySelectorAll('.choice').forEach(b => b.onclick = () => {
+    const out = e.choices[+b.dataset.i].fx(); refreshWorld(); save();
+    if (id === 'k4') S.flags.chapterEnd = 1;
+    if (id === 'k1') cam.yaw = 0;
+    if (!out) { closeSheet(); return; }
+    openSheet(`<div class="kick">${e.kick}</div><h2 class="sh-title">${e.title}</h2><div class="sh-body">${out}</div>
+      ${id === 'k4' ? '<div class="sh-body"><p><b>Tapos ang Kabanata 3.</b> Tuloy ang buhay sa bunker. Mas mahirap ang mga susunod na araw.</p></div>' : ''}
+      <div class="choices"><button class="choice primary" id="okBtn"><b>Sige</b></button></div>`, { noClose: true });
+    $('#okBtn').onclick = closeSheet;
+  });
+}
+
+// ---------------------------------------------------------------- sound (WebAudio, all synthesized)
+const AU = { ctx: null, on: true, master: null };
+try { AU.on = localStorage.getItem('bunker-sound') !== '0'; } catch (e) { /* default on */ }
+function audioInit() {
+  if (AU.ctx) { AU.ctx.resume(); return; }
+  const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+  const c = AU.ctx = new C(); AU.master = c.createGain(); AU.master.gain.value = AU.on ? .8 : 0; AU.master.connect(c.destination);
+  const len = c.sampleRate * 2, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0); let last = 0;
+  for (let i = 0; i < len; i++) { last = (last + .02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.5; }
+  const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+  const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 160; const g = c.createGain(); g.gain.value = .35;
+  src.connect(lp).connect(g).connect(AU.master); src.start(); AU.hum = g;
+}
+function tone(type, f0, f1, dur, vol, delay = 0) {
+  if (!AU.ctx) return; const c = AU.ctx, t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.connect(g).connect(AU.master); o.start(t); o.stop(t + dur + .05);
+}
+const knock = () => [0, .26, .52, 1.3, 1.56, 1.82].forEach(d => tone('sine', 90, 40, .22, .9, d));
+const clunk = () => { tone('sine', 60, 28, .9, 1); tone('square', 220, 180, .25, .08, .05); };
+const beep = (f = 880, d = .12) => tone('square', f, f, d, .08);
+const chime = () => { tone('sine', 660, 660, .5, .2); tone('sine', 990, 990, .7, .15, .15); };
+const tick = () => tone('sine', 1200, 900, .05, .05);
+
+// ---------------------------------------------------------------- HUD
+$('#meters').innerHTML = RES.map(([k, n, c]) => `<div class="meter" id="m-${k}"><div class="row"><span class="ic">${n}</span><span class="v">0</span></div><div class="bar"><i style="background:${c}"></i></div></div>`).join('');
+function updateHUD() {
+  $('#dayNum').textContent = S.day; $('#clock').textContent = hhmm(S.min); $('#phase').textContent = phaseName(S.min);
+  for (const [k] of RES) { const v = pct(k), el = $('#m-' + k); el.querySelector('.v').textContent = v; el.querySelector('i').style.width = v + '%'; el.classList.toggle('low', v < 20); }
+}
+function toast(msg, kind = '') { const t = document.createElement('div'); t.className = 'toast ' + kind; t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3800); while ($('#toasts').children.length > 3) $('#toasts').firstChild.remove(); }
+function refreshTask() { $('#task').hidden = !S.task; if (S.task) $('#taskText').textContent = 'Gawain: ' + S.task.text; }
+let hintStep = 0;
+function hint(step, text) { if (step < hintStep) return; hintStep = step + 1; $('#hint').textContent = text; }
+
+// ---------------------------------------------------------------- sheets
+let sheetOpts = {};
+function openSheet(html, opts = {}) {
+  sheetOpts = opts; $('#sheetBody').innerHTML = html; $('#sheetClose').hidden = !!opts.noClose;
+  if ($('#sheet').hidden) { $('#sheet').hidden = false; paused++; }
+  $('#sheetBody').scrollTop = 0;
+}
+function closeSheet() {
+  if ($('#sheet').hidden) return; $('#sheet').hidden = true; paused = Math.max(0, paused - 1);
+  document.activeElement?.blur(); sheetOpts.onClose && sheetOpts.onClose();
+}
+$('#sheetClose').onclick = closeSheet;
+const bar = (v, c) => `<div class="bar"><i style="width:${v}%;background:${c}"></i></div>`;
+function jobLabel(id) {
+  const st = S.people[id], p = P[id];
+  if (id === 'isha') return 'Ikaw ang lider';
+  if (st.sick) return 'Nasa Clinic, nagpapagaling';
+  if (S.min >= 1290) return 'Natutulog';
+  if (st.job === 'rest' || (S.flags.restNoon && S.min < 720)) return 'Nagpapahinga';
+  return (p && p.atWork ? 'Nagtatrabaho sa ' : 'Papunta sa ') + ROOMS[st.job].n;
+}
+function personSheet(p) {
+  if (!p) return; hint(3, 'Pindutin ang Pamilya para makita at utusan ang lahat.');
+  const id = p.id, st = S.people[id], d = p.def;
+  const jobs = id === 'isha' ? '' : `<div class="sec">${d.kid ? 'Saan maglalaro' : 'Utusan'}</div><div class="jobs">${(d.kid ? ['U', 'H', 'V', 'rest'] : JOBS).map(j => `<button class="job${st.job === j ? ' on' : ''}${d.spec === j ? ' spec' : ''}" data-j="${j}">${JOB_NAME[j]}</button>`).join('')}</div>`;
+  openSheet(`<div class="kick">${d.role}</div><h2 class="sh-title">${id === 'isha' ? 'Ikaw (Isha)' : d.name}</h2>
+    <div class="sh-body" id="pNow">${jobLabel(id)}</div>
+    <div class="stats"><div class="stat"><label>Kalusugan ${Math.round(st.health)}</label>${bar(st.health, 'var(--good)')}</div><div class="stat"><label>Stress ${Math.round(st.stress)}</label>${bar(st.stress, 'var(--mood)')}</div></div>
+    ${jobs}
+    ${id === 'isha' ? '' : `<div class="sec">Kausapin</div><div class="chat" id="chat"></div>
+    <div class="quick">${['Kumusta ka?', 'Anong kailangan mo?', 'Salamat sa tulong mo.', 'Kaya natin \'to.'].map(q => `<button>${q}</button>`).join('')}</div>
+    <form class="say" id="sayForm"><input id="sayInput" autocomplete="off" placeholder="Sabihin kay ${d.name}…" enterkeyhint="send"><button>Ipadala</button></form>`}`);
+  $('#sheetBody').querySelectorAll('.job').forEach(b => b.onclick = () => {
+    st.job = b.dataset.j; tick(); routine(p);
+    $('#sheetBody').querySelectorAll('.job').forEach(x => x.classList.toggle('on', x === b)); $('#pNow').textContent = jobLabel(id);
+    toast(`${d.name} → ${JOB_NAME[st.job]}`); save();
+  });
+  if (id === 'isha') return;
+  renderChat(id);
+  $('#sheetBody').querySelectorAll('.quick button').forEach(b => b.onclick = () => talk(id, b.textContent));
+  $('#sayForm').onsubmit = e => { e.preventDefault(); const v = $('#sayInput').value.trim(); if (v) { $('#sayInput').value = ''; talk(id, v); } };
+}
+const CHAT = {};
+function renderChat(id) {
+  const el = $('#chat'); if (!el) return;
+  const list = CHAT[id] || [];
+  el.innerHTML = list.length ? list.map(m => `<div class="msg ${m.role === 'user' ? 'me' : 'them'}"></div>`).join('') : `<div class="msg sys">Pumili ng sasabihin, o mag-type.</div>`;
+  el.querySelectorAll('.msg').forEach((m, i) => { if (list[i]) m.textContent = list[i].content; });
+  const sc = $('#sheetBody'); sc.scrollTop = sc.scrollHeight;
+}
+// Offline conversations: no Claude, no internet, nothing to allow. Replies come from each person's mood,
+// what they're doing, how the bunker is holding up, and a few lines that are only theirs.
+const OWN = {
+  angel: ['Inayos ko na ang listahan ng gamot. Kulang tayo sa paracetamol, pero kaya pa.', 'Halika muna dito, upo ka. Kanina ka pa nakatayo.', 'Tingin mo, makakauwi pa tayo sa bahay natin?', 'Si Millie, ayaw humiwalay sa akin. Alam niyang may mali.'],
+  mila: ['Kumain ka na ba, anak? Nagtabi ako ng kanin para sa iyo.', 'Noong 1991, ganito rin. Nakaligtas kami. Makakaligtas din kayo.', 'Huwag mong pabayaan ang sarili mo. Ikaw ang lakas ng lahat dito.'],
+  fred: ['Bilangin mo lagi ang de-lata, Isha. Ang hindi nabibilang, nawawala.', 'Noong unang sabog ng Pinatubo, tatlong araw kaming walang tulog. Kaya natin ito.', 'Matanda na ako. Pero kaya ko pang magbantay ng pantry.'],
+  su: ['Tumubo na ang pechay. Maliit pa, pero buhay.', 'Kailangan ng mga halaman ng ilaw, parang tayo.', 'Nag-iipon ako ng buto. Para sa araw na makakatanim ulit tayo sa labas.'],
+  na: ['Ayos pa ang baterya. Huwag lang mag-brownout ulit.', 'Alam mo ba kung bakit malungkot ang baterya? Kasi laging drained. Hehe.', 'Kapag kulang ang kuryente, unahin ang oxygen at tubig.'],
+  aj: ['Isha, kaya kong lumabas. Isang oras lang. Pakiusap.', 'Lumalaki na ang mga sisiw. Si Butchukok, gustong humawak.', 'Kung may susubok pumasok, nandito ako.'],
+  nelson: ['Bawat tagas, sayang na tubig. Binabantayan ko ang bawat tubo.', 'Huwag mong payagang lumabas si AJ. Bata pa siya.', 'Sanay ako sa trabaho. Ang hindi ako sanay, ang walang araw.'],
+  paolo: ['Normal ang carbon dioxide ngayon. Basta tuloy-tuloy ang scrubber.', 'Kailangan ni Rika ng pahinga. Pero ako rin, sa totoo lang.', 'Kinakabahan ako tuwing may ubo si Ria.'],
+  rika: ['Hindi natutulog si Ria. Pero nakangiti siya kanina. Sapat na.', 'Kaya ko pa, Isha. Huwag kang mag-alala.', 'Minsan, gusto ko lang umiyak sa banyo. Tapos balik trabaho.'],
+  ria: ['Tita Isha! Tingnan mo, drawing ko si Millie!', 'Bakit wala nang araw?', 'Gusto ko ng ice cream.'],
+  carlo: ['Malinis ang shotgun. Sana hindi natin magamit.', 'Ang pinto ang buhay natin. Hindi ko iiwan ang pwesto ko.', 'Si Carly, natatakot sa katok. Ako rin minsan.'],
+  monica: ['Tinuruan ko silang kumanta ng Bahay Kubo. Paulit-ulit na buong umaga.', 'Basta masaya ang mga bata, kaya ko ang lahat.', 'Salamat sa pagtanggap sa amin dito, Isha.'],
+  carly: ['Tita Isha, sino po ang kumakatok kanina?', 'Tinuruan ako ni Tita Monica ng piano! Teka, si Mama pala yun.', 'Matapang ako. Pero puwede po bang bukas ang ilaw sa gabi?'],
+  butchukok: ['Da-da! Hehe.', 'Mama? Mama!', 'Wow! *pumapalakpak*'],
+  jen: ['Ipagdadasal ko kayong lahat mamayang gabi.', 'Si Angel, bata pa lang, ganyan na: inaalagaan ang lahat.', 'Masarap ang adobo ko, huwag mong sabihin kay Nanay Mila.'],
+  abby: ['May nakita akong DVD ng paborito nating pelikula! Mamayang gabi?', 'Ang dami kong kuwento, pero ikaw muna. Kumusta ka talaga?', 'Mas masipag na ako sa greenhouse. Promise.'],
+  yssa: ['Ipipinta ko ang bunker na ito. Para hindi natin makalimutan.', 'Kapag tensyonado ang lahat, ako ang magpapatawa. Trabaho ko yan.', 'Miss ko ang dagat.'],
+  dado: ['Salamat ulit sa pagpapasok sa akin. Hindi ko makakalimutan.', 'Sa labas, mas malala pa sa nakikita sa camera.'],
+  rosa: ['Salamat po. Kung hindi dahil sa inyo, wala na kami ni Bea.', 'Marunong po akong manahi. Sabihin n\'yo lang kung may punit.'.replace("n'yo", 'ninyo')],
+  bea: ['Kaibigan ko na po si Carly.', 'Hindi na po ako takot.'],
+  kiko: ['Kaya kong umakyat sa vent kung kailangan.', 'Sana buhay pa sina Mama.'],
+  ramon: ['Bantayan ang ubo ng mga matatanda. Delikado ang abo sa baga.', 'Maayos ang clinic ninyo. Mas maayos pa sa ospital namin dati.'],
+};
+const KID = ['ria', 'carly', 'butchukok', 'bea'];
+function reply(id, text) {
+  const st = S.people[id], d = defOf(id), t = text.toLowerCase(), mood = st.stress > 65 ? 'high' : st.stress > 35 ? 'mid' : 'low';
+  if (id === 'butchukok') return pick(OWN.butchukok);
+  if (st.sick) return pick(['Medyo nanghihina pa ako. Pero salamat sa pagdalaw.', 'Sabi ni Angel, kailangan ko lang ng pahinga at tubig.', 'Masakit ang katawan ko, pero mas gumaan nang nakita kita.']);
+  const low = ['water', 'food', 'o2', 'power'].filter(k => pct(k) < 25).map(k => ({ water: 'tubig', food: 'pagkain', o2: 'oxygen', power: 'kuryente' })[k]);
+  if (/kailangan/.test(t)) {
+    if (mood === 'high') return pick(['Pahinga. Kahit kalahating araw lang.', 'Kailangan ko lang ng tulog, Isha. Pagod na pagod na ako.']);
+    if (low.length) return `Kulang na tayo sa ${low.join(' at ')}. Iyon ang kailangan nating lahat.`;
+    return pick(['Wala naman. Basta sabihin mo lang kung saan ako kailangan.', d.kid ? 'Laruan po! At kayo.' : 'Mas maraming kamay sana sa ' + JOB_NAME[st.job || 'G'] + '.']);
+  }
+  if (/salamat|thank/.test(t)) return pick(d.kid ? ['Walang anuman po!', 'Hehe, love you Tita Isha!'] : ['Wala yun. Pamilya tayo.', 'Ikaw ang dapat pasalamatan, Isha.', 'Salamat din sa pagdala sa amin dito.']);
+  if (/kaya|laban|lakas/.test(t)) return pick(mood === 'high' ? ['Sana nga. Sana nga, Isha.', 'Pinipilit ko. Pero natatakot ako.'] : ['Kaya natin. ' + (40 - S.day) + ' araw na lang bago ang convoy.', 'Oo naman. Magkakasama tayo.']);
+  if (Math.random() < .55) return pick(OWN[id] || ['Nandito lang ako.']);
+  if (d.kid) return pick(['Opo!', 'Laro tayo, Tita Isha?', 'Bakit po?']);
+  return pick({ low: ['Ayos lang ako, Isha. Kaya pa.', 'Medyo okay ngayon. Salamat sa pagtanong.', 'Basta magkakasama tayo, kakayanin natin.'],
+    mid: ['Medyo pagod na, pero tuloy lang.', 'Iniisip ko kung gaano pa tayo katagal dito.', 'Sana makatulog ako nang maayos mamaya.'],
+    high: ['Hindi ko na alam, Isha. Ang bigat na.', 'Kailangan ko ng pahinga. Kahit isang araw lang.', 'Natatakot ako. Pasensya na.'] }[mood]);
+}
+function talk(id, text) {
+  const list = CHAT[id] ||= [];
+  list.push({ role: 'user', content: text }); renderChat(id);
+  const today = S.talked[id + S.day] || 0;
+  if (today < 3) { stress(id, -5); S.talked[id + S.day] = today + 1; }
+  const el = $('#chat'), bubble = document.createElement('div'); bubble.className = 'msg them'; bubble.textContent = '…'; el.appendChild(bubble);
+  const sc = $('#sheetBody'); sc.scrollTop = sc.scrollHeight;
+  const r = reply(id, text);
+  setTimeout(() => { bubble.textContent = r; list.push({ role: 'assistant', content: r }); sc.scrollTop = sc.scrollHeight; }, 500 + Math.random() * 500);
+}
+function familySheet() {
+  const ids = people();
+  const canSleep = S.min >= 1200;
+  openSheet(`<div class="kick">Araw ${S.day} · ${hhmm(S.min)} · Moral ${morale()}%</div><h2 class="sh-title">Pamilya</h2><div class="sh-body" style="margin-bottom:10px">${nextMealLine()}<br>${stockLine()}<br>Armory: ${S.ammo} bala · Depensa ${defense().toFixed(1)} · Piyesa: ${S.parts}</div><div class="choices" style="margin:0 0 10px"><button class="choice" id="upBtn"><b>Upgrades</b><span>Gamitin ang piyesa para palakasin ang bunker</span></button></div>
+    <div class="fam">${ids.map(id => { const st = S.people[id], d = defOf(id);
+      return `<button class="famrow" data-id="${id}"><span class="av" style="background:${d.shirt}">${d.name[0]}</span><span><b>${id === 'isha' ? 'Ikaw (Isha)' : d.name}</b><small>${d.role}</small>
+      <span class="minibars"><i style="--w:${st.health}%;--c:var(--good)"></i><i style="--w:${st.stress}%;--c:var(--mood)"></i></span></span><span class="jb">${id === 'isha' ? '' : st.sick ? 'May sakit' : JOB_NAME[st.job] || ''}</span></button>`; }).join('')}</div>
+    <div class="sec">Pumunta sa</div><div class="jobs">${Object.entries(ROOMS).filter(([, r]) => !r.hall).map(([rid, r]) => `<button class="job" data-go="${rid}">${r.n}</button>`).join('')}</div>
+    <div class="choices"><button class="choice${canSleep ? ' primary' : ''}" id="endDay" ${canSleep ? '' : 'disabled style="opacity:.5"'}><b>Tapusin ang araw</b><span>${canSleep ? 'Matutulog ang lahat. Puwede rin sa kama mo sa Master Suite.' : 'Puwede pagsapit ng 20:00.'}</span></button></div>`);
+  $('#sheetBody').querySelectorAll('.famrow').forEach(b => b.onclick = () => { closeSheet(); personSheet(P[b.dataset.id]); });
+  $('#sheetBody').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { closeSheet(); if (cam.mode === 'over') $('#btnView').click(); walkTo(b.dataset.go); });
+  $('#upBtn').onclick = upgradeSheet;
+  let armed = false;
+  $('#endDay').onclick = e => { if (!canSleep) return; if (!armed) { armed = true; e.currentTarget.querySelector('b').textContent = 'Sigurado? Pindutin ulit'; return; } closeSheet(); endDay(); };
+}
+
+// ---------------------------------------------------------------- world reactions
+const tmpM = new THREE.Object3D();
+function refreshWorld() {
+  const g = S.growth;
+  FX.plantPos.forEach(([x, z], i) => {
+    const leafy = i % 3 !== 1, s = .35 + g * .85;
+    tmpM.position.set(x, .56 + .08 * s, z); tmpM.scale.set(leafy ? s : 0, leafy ? s * .7 : 0, leafy ? s : 0); tmpM.rotation.set(0, i, 0); tmpM.updateMatrix(); FX.leafy.setMatrixAt(i, tmpM.matrix);
+    tmpM.position.set(x, .56 + .27 * s, z); tmpM.scale.setScalar(leafy ? 0 : s); tmpM.updateMatrix(); FX.tall.setMatrixAt(i, tmpM.matrix);
+    const f = !leafy && g > .6 ? 1 : 0; tmpM.position.set(x + .08, .56 + .3 * s, z + .05); tmpM.scale.setScalar(f); tmpM.updateMatrix(); FX.fruit.setMatrixAt(i, tmpM.matrix);
+  });
+  for (const im of [FX.leafy, FX.tall, FX.fruit]) im.instanceMatrix.needsUpdate = true;
+  FX.crates.count = Math.round(FX.crateMax * S.res.food / CAP.food);
+  const lit = Math.ceil(S.res.power / 20), m = S.res.power < 25 ? MAT.ledRed : S.res.power < 50 ? MAT.ledAmber : MAT.ledGreen;
+  FX.batt.forEach((l, i) => { l.material = (i % 5) < lit ? m : MAT.black; });
+  FX.puddle.visible = !!S.flags.leak;
+  drawBoards();
+}
+function drawBoards() {
+  let c = FX.boardTex.image, g = c.getContext('2d');
+  g.fillStyle = '#0b1517'; g.fillRect(0, 0, 512, 256);
+  g.fillStyle = '#6fd6ea'; g.font = '700 26px "JetBrains Mono", monospace'; g.textAlign = 'left';
+  g.fillText(`BUNKER · ARAW ${S.day} · ${hhmm(S.min)}`, 24, 42);
+  RES.forEach(([k, n], i) => { const v = pct(k), y = 82 + i * 34; g.fillStyle = '#9fb9bd'; g.font = '600 20px "JetBrains Mono", monospace'; g.fillText(n.toUpperCase(), 24, y + 6);
+    g.fillStyle = '#1d3034'; g.fillRect(190, y - 10, 250, 16); g.fillStyle = v < 20 ? '#ff5a4a' : '#6fd6ea'; g.fillRect(190, y - 10, 2.5 * v, 16); g.fillStyle = '#d8f4f8'; g.fillText(v + '%', 452, y + 6); });
+  FX.boardTex.needsUpdate = true;
+  c = FX.solarTex.image; g = c.getContext('2d');
+  g.fillStyle = '#10140c'; g.fillRect(0, 0, 256, 128); g.fillStyle = '#f2c94c'; g.font = '700 20px "JetBrains Mono", monospace'; g.fillText(`SOLAR ${S.flags.dust ? '45%' : 'OK'}`, 14, 30);
+  g.fillText(`BATT ${pct('power')}%`, 14, 60); g.fillStyle = '#2b2f22'; g.fillRect(14, 78, 228, 28); g.fillStyle = S.res.power < 25 ? '#ff5a4a' : '#f2c94c'; g.fillRect(14, 78, 2.28 * pct('power'), 28);
+  FX.solarTex.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------- lights
+const hemi = new THREE.HemisphereLight('#eef2f3', '#4a433c', .8); scene.add(hemi);
+const key = new THREE.DirectionalLight('#fff1dc', 1.45);
+key.castShadow = true; key.shadow.mapSize.set(TOUCH ? 1536 : 2048, TOUCH ? 1536 : 2048);
+Object.assign(key.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, near: 1, far: 40 }); key.shadow.bias = -.0004; key.shadow.normalBias = .03;
+scene.add(key, key.target);
+const POOL = Array.from({ length: 5 }, () => { const l = new THREE.PointLight('#ffd3a0', 0, 11, 2); scene.add(l); return l; });
+const roomList = Object.entries(ROOMS);
+function assignLights(center) {
+  const near = roomList.map(([id, r]) => [id, r, Math.hypot(r.x + r.w / 2 - center.x, r.z + r.h / 2 - center.z)]).sort((a, b) => a[2] - b[2]).slice(0, 5);
+  near.forEach(([id, r], i) => { const l = POOL[i]; l.position.set(r.x + r.w / 2, 2.25, r.z + r.h / 2); l.color.set(r.light); l.userData.base = 12 + Math.min(26, r.w * r.h * .55); l.distance = Math.max(r.w, r.h) * 1.1 + 3; });
+}
+
+// ---------------------------------------------------------------- spawning
+function spawn(def, x, z) { const p = new Person(def); P[def.id] = p; p.place(x, z, Math.PI); return p; }
+function spawnAll() {
+  CAST.forEach((d, i) => spawn(d, 17.5 + (i % 5) * 1.1, 31.6 + Math.floor(i / 5) * 1.2));
+  ISHA = P.isha; MILLIE = new Dog(); MILLIE.follow = P.angel; MILLIE.root.position.set(22.5, 0, 32.5);
+}
+
+// ---------------------------------------------------------------- camera & input
+const cam = { mode: 'follow', yaw: 0, pitch: .98, dist: 12, target: new THREE.Vector3(20, 0, 30), over: new THREE.Vector3(GW / 2, 0, GH / 2 + 2), overDist: 46, focus: null };
+function overDistFit() { return innerWidth / innerHeight < .8 ? 78 : 44; }
+function focusOn(v) { cam.focus = { v: v.clone(), until: performance.now() + 2600 }; }
+const joy = { id: null, ox: 0, oy: 0, x: 0, y: 0 };
+const ptrs = new Map(); let pinch0 = 0, tapStart = null;
+const canvas = renderer.domElement, keys = {};
+canvas.addEventListener('pointerdown', e => {
+  try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointer: nothing to capture */ } audioInit();
+  if (cam.mode === 'follow' && e.pointerType !== 'mouse' && e.clientX < innerWidth * .5 && joy.id === null) {
+    joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; joy.x = joy.y = 0;
+    const j = $('#joy'); j.style.display = 'block'; j.style.left = e.clientX + 'px'; j.style.top = e.clientY + 'px'; j.firstChild.style.transform = ''; return;
+  }
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); }
+  tapStart = { x: e.clientX, y: e.clientY, t: performance.now() };
+});
+canvas.addEventListener('pointermove', e => {
+  if (e.pointerId === joy.id) {
+    let dx = e.clientX - joy.ox, dy = e.clientY - joy.oy; const d = Math.hypot(dx, dy), R = 50;
+    if (d > R) { dx *= R / d; dy *= R / d; } joy.x = dx / R; joy.y = dy / R; $('#joy').firstChild.style.transform = `translate(${dx}px,${dy}px)`; return;
+  }
+  const p = ptrs.get(e.pointerId); if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+  if (ptrs.size === 2) { const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch0) zoom(pinch0 / d); pinch0 = d; return; }
+  if (cam.mode === 'follow') { cam.yaw -= dx * .006; cam.pitch = clamp(cam.pitch + dy * .004, .55, 1.35); }
+  else { const k = cam.overDist / 900, s = Math.sin(cam.yaw), c = Math.cos(cam.yaw); cam.over.x -= (dx * c + dy * s) * k; cam.over.z -= (-dx * s + dy * c) * k; cam.over.x = clamp(cam.over.x, 0, GW); cam.over.z = clamp(cam.over.z, 0, GH + 8); }
+});
+function endPtr(e) {
+  if (e.pointerId === joy.id) { joy.id = null; joy.x = joy.y = 0; $('#joy').style.display = 'none'; return; }
+  ptrs.delete(e.pointerId); pinch0 = 0;
+  if (tapStart && Math.hypot(e.clientX - tapStart.x, e.clientY - tapStart.y) < 10 && performance.now() - tapStart.t < 350) tap(e.clientX, e.clientY);
+  tapStart = null;
+}
+canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
+canvas.addEventListener('wheel', e => { e.preventDefault(); zoom(e.deltaY > 0 ? 1.1 : .9); }, { passive: false });
+function zoom(f) { if (cam.mode === 'follow') cam.dist = clamp(cam.dist * f, 4.5, 18); else cam.overDist = clamp(cam.overDist * f, 18, 85); }
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function tap(x, y) {
+  if (paused) return;
+  ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(HIT, false)[0];
+  if (hit?.object.userData.person) personSheet(hit.object.userData.person);
+  else if (hit?.object.userData.dog) { toast('Kumawag ang buntot ni Millie.'); stressAll(-.5); }
+  else if (cam.mode === 'over' && ray.ray.intersectPlane(GROUND, v3)) { const id = roomAtPos(v3.x, v3.z); if (id) walkTo(id, v3.x, v3.z); }
+}
+const GROUND = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function walkTo(id, px, pz) {
+  const r = ROOMS[id], c = roomCenter(id), cells = [];
+  for (let z = r.z; z < r.z + r.h; z++) for (let x = r.x; x < r.x + r.w; x++) if (walkable(x, z)) cells.push([x + .5, z + .5]);
+  const ax = px ?? c.x, az = pz ?? c.z;
+  cells.sort((a, b) => Math.hypot(a[0] - ax, a[1] - az) - Math.hypot(b[0] - ax, b[1] - az));
+  if (!cells.length) return;
+  if (doing) doing = null;
+  ISHA.go(cells[0][0], cells[0][1], () => toast('Nasa ' + r.n + ' ka na.'));
+  toast('Papunta sa ' + r.n + '…');
+}
+addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; keys[e.key.toLowerCase()] = true; if (e.key.toLowerCase() === 'e' && !$('#act').hidden) $('#act').click(); if (e.key === 'Escape' && !sheetOpts.noClose) closeSheet(); });
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+$('#btnView').onclick = () => { tick(); cam.mode = cam.mode === 'follow' ? 'over' : 'follow'; $('#btnView').textContent = cam.mode === 'follow' ? 'Tanaw' : 'Lakad'; if (cam.mode === 'over') cam.yaw = 0; cam.overDist = overDistFit(); CUT.uOn.value = cam.mode === 'follow' ? 1 : 0; if (cam.mode === 'over') hint(4, 'Hilahin para gumalaw ang tanaw. I-tap ang tao para kausapin.'); };
+$('#btnFamily').onclick = () => { if (!paused) { tick(); familySheet(); } };
+$('#btnSpeed').onclick = () => { speed = speed === 1 ? 3 : 1; $('#btnSpeed').textContent = speed + '×'; tick(); };
+function soundIcon() { $('#snd-on').style.display = AU.on ? '' : 'none'; }
+$('#btnSound').onclick = () => { audioInit(); AU.on = !AU.on; if (AU.master) AU.master.gain.value = AU.on ? .8 : 0; try { localStorage.setItem('bunker-sound', AU.on ? '1' : '0'); } catch (e) { /* not remembered */ } soundIcon(); };
+soundIcon();
+
+// ---------------------------------------------------------------- context action
+let action = null, doing = null;
+function nearest() {
+  let best = null, bd = 1.6;
+  for (const id of npcs()) { const p = P[id]; if (!p) continue; const d = Math.hypot(p.x - ISHA.x, p.z - ISHA.z); if (d < bd && p.pose !== 'sleep') { bd = d; best = { kind: 'talk', p, label: 'Kausapin ' + p.name }; } }
+  if (best) return best;
+  const room = roomAtPos(ISHA.x, ISHA.z);
+  if (room === 'M' && S.min >= 1200 && Math.hypot(ISHA.x - 19, ISHA.z - 3.6) < 1.8) return { kind: 'sleep', label: 'Matulog' };
+  if (room && ROOMS[room].job && SPOTS[room]) {
+    const s = SPOTS[room].find(s => Math.hypot(s.x - ISHA.x, s.z - ISHA.z) < 1.3);
+    if (s) { const fix = S.task && S.task.room === room, cw = cookWindow(); return { kind: 'work', room, label: fix ? 'Ayusin' : room === 'K' && cw >= 0 ? 'Magluto ng ' + MEALS[cw].n.toLowerCase() : ROOMS[room].verb, s }; }
+  }
+  if (room === 'A' && ISHA.z > 32.6) return { kind: 'door', label: 'Intercom' };
+  return null;
+}
+$('#act').onclick = () => {
+  if (!action || doing || paused) return;
+  tick();
+  if (action.kind === 'talk') personSheet(action.p);
+  else if (action.kind === 'sleep') endDay();
+  else if (action.kind === 'door') toast(S.flags.chapterEnd ? 'Tahimik sa labas. Masyadong tahimik.' : 'Static lang sa intercom. Walang tao sa labas.');
+  else if (action.kind === 'work') { doing = { room: action.room, t: 0, dur: 2.2, x: ISHA.x, z: ISHA.z }; ISHA.yaw = action.s.yaw; ISHA.setPose('work'); }
+};
+function finishWork(room) {
+  const fix = S.task && S.task.room === room;
+  const fx = { G: () => { addRes('food', 7); S.growth = Math.min(1, S.growth + .03); return 'Nadiligan ang mga tanim. +7 pagkain'; },
+    K: () => { const cw = cookWindow(); if (cw >= 0) { S.cooked = S.day + ':' + cw; const ulam = S.res.meat >= people().length * .3 ? pick(['adobo', 'sinigang na baboy', 'tinola', 'chicken curry', 'giniling']) : pick(['ginisang gulay', 'tortang talong', 'pritong itlog at kanin']);
+      return `Nagluto ka ng ${ulam} para sa ${MEALS[cw].n.toLowerCase()}.`; } stressAll(-2); return 'Nagluto ka ng meryenda. Gumaan ang loob ng lahat.'; },
+    X: () => { S.flags.drill = S.day; return 'Nag-ensayo kayo sa pagbabantay. Mas handa ang depensa ngayong araw.'; },
+    Y: () => { addRes('meat', 6); addRes('feed', -3); return 'Pinakain mo ang mga manok at baboy, at nangolekta ng itlog. +6 karne'; },
+    P: () => { addRes('food', 4); return 'Inayos mo ang rasyon. +4 pagkain'; },
+    W: () => { addRes('water', 10); return 'Nilinis mo ang filter. +10 tubig'; },
+    S: () => { addRes('power', 9); return 'Pinunasan mo ang mga panel. +9 kuryente'; },
+    O: () => { addRes('o2', 10); return 'Na-calibrate ang scrubbers. +10 oxygen'; },
+    C: () => { const sick = people().filter(id => S.people[id].sick); sick.forEach(id => health(id, 20)); return sick.length ? 'Ginamot mo ang may sakit.' : 'Inayos mo ang mga gamot sa Clinic.'; },
+    H: () => { stress('isha', -16); return 'Nag-gitara ka sandali. Bawas stress.'; },
+    V: () => { stress('isha', -14); addRes('power', -1); return `Nanood ka ng ${pick(['lumang aksyon na pelikula', 'romcom na paborito ni Angel', 'horror na DVD', 'cartoon kasama sina Ria at Carly', 'concert DVD'])}. Bawas stress.`; },
+    U: () => { stress('isha', -10); ['ria', 'carly', 'butchukok'].forEach(k => stress(k, -10)); return 'Tumugtog kayo ng mga bata. Ang ingay, pero ang saya.'; } };
+  let msg = fx[room]();
+  if (room !== 'H') stress('isha', 4);
+  if (fix) { if (S.task.kind === 'leak') S.flags.leak = 0; if (S.task.kind === 'fan') S.flags.fanBroken = 0; if (S.task.kind === 'blackout') S.flags.blackout = 0; msg = 'Naayos mo! ' + msg; S.task = null; refreshTask(); chime(); }
+  toast(msg, 'good'); advance(30); refreshWorld(); save();
+  hint(5, 'Bawat Gawin ay 30 minuto at dagdag stress sa iyo.');
+}
+
+// ---------------------------------------------------------------- upgrades
+const UPGRADES = [
+  { id: 'solar2', n: 'Dagdag na solar panel', cost: 3, fx: '+35% kuha ng solar' },
+  { id: 'filter2', n: 'Bagong water filter', cost: 3, fx: '+30% malinis na tubig' },
+  { id: 'scrub2', n: 'Pangalawang oxygen scrubber', cost: 4, fx: 'Mas maraming oxygen, kahit gabi' },
+  { id: 'green2', n: 'Dagdag na grow lights', cost: 2, fx: '+30% ani sa Greenhouse' },
+  { id: 'coop2', n: 'Mas malaking manukan', cost: 2, fx: '+40% karne at itlog, dagdag na manok' },
+  { id: 'freezer', n: 'Pangalawang freezer', cost: 2, fx: 'Mas maraming karne ang maiipon' },
+  { id: 'door2', n: 'Pinatibay na blast door', cost: 4, fx: '+1 depensa laban sa nanloloob' },
+];
+function applyUpgrades() {
+  CAP.meat = S.up.freezer ? 180 : 120;
+  if (FX.scrub2) FX.scrub2.visible = !!S.up.scrub2;
+  if (FX.extraHens) FX.extraHens.forEach(h => h.g.visible = !!S.up.coop2);
+}
+function upgradeSheet() {
+  openSheet(`<div class="kick">Piyesa: ${S.parts} · makukuha sa pag-scavenge, kay Aling Bebang, at sa mga bisita</div><h2 class="sh-title">Upgrades</h2>
+    <div class="choices">${UPGRADES.map(u => `<button class="choice${S.up[u.id] ? '' : S.parts >= u.cost ? ' primary' : ''}" data-u="${u.id}" ${S.up[u.id] || S.parts < u.cost ? 'disabled style="opacity:.55"' : ''}><b>${u.n}${S.up[u.id] ? ' ✓' : ''}</b><span>${u.fx} · ${u.cost} piyesa</span></button>`).join('')}</div>`);
+  $('#sheetBody').querySelectorAll('[data-u]').forEach(b => b.onclick = () => { const u = UPGRADES.find(x => x.id === b.dataset.u); if (S.up[u.id] || S.parts < u.cost) return;
+    S.parts -= u.cost; S.up[u.id] = 1; applyUpgrades(); chime(); toast(`Na-upgrade: ${u.n}`, 'good'); save(); upgradeSheet(); });
+}
+
+// ---------------------------------------------------------------- shared meals
+const MEALS = [{ at: 420, n: 'Almusal' }, { at: 720, n: 'Tanghalian' }, { at: 1110, n: 'Hapunan' }];
+let mealPrev = 360;
+function cookWindow() { return MEALS.findIndex(m => S.min >= m.at - 60 && S.min < m.at); }
+function mealTick(a, b) {
+  MEALS.forEach((m, i) => {
+    if (a < m.at - 30 && b >= m.at - 30) toast(`${m.n} sa 30 minuto. Ikaw ba ang magluluto? Pumunta sa Kusina.`);
+    if (a < m.at && b >= m.at) startMeal(i);
+  });
+  if (S.meal) { const r = roomAtPos(ISHA.x, ISHA.z); if (r === 'K' || r === 'L') S.meal.isha = true; if (b >= S.meal.until) endMeal(); }
+}
+function startMeal(i) {
+  const cook = npcs().find(id => S.people[id].job === 'K' && !S.people[id].sick);
+  S.meal = { i, until: MEALS[i].at + 45, cook: S.cooked === S.day + ':' + i ? 'isha' : cook || null, isha: false };
+  chime(); toast(`${MEALS[i].n} na! Sabay-sabay tayong kakain sa Kusina.`, 'good'); routineAll();
+}
+function endMeal() {
+  const m = S.meal; S.meal = null; const n = people().length, lines = []; let bonus = 3;
+  if (m.cook === 'isha') { bonus += 6; lines.push('Ang sarap daw ng luto mo.'); }
+  else if (m.cook) { bonus += 3; lines.push(`Luto ni ${N(m.cook)}.`); }
+  else { bonus -= 4; lines.push('Walang nagluto. De-lata na naman.'); }
+  if (S.res.meat >= n * .3) { addRes('meat', -n * .3); bonus += 3; lines.push('May ulam na karne.'); } else lines.push('Wala nang karne. Gulay at kanin lang.');
+  if (m.isha) { bonus += 4; lines.push('Kumpleto kayo sa hapag.'); } else lines.push('Hinanap ka nila sa hapag.');
+  stressAll(-bonus); toast(lines.join(' '), bonus > 6 ? 'good' : ''); routineAll(); save();
+}
+function nextMealLine() {
+  const m = MEALS.find(x => x.at > S.min); if (!m) return 'Tapos na ang kainan ngayong araw.';
+  const i = MEALS.indexOf(m), cook = S.cooked === S.day + ':' + i ? 'ikaw' : (npcs().filter(id => S.people[id].job === 'K').map(N)[0] || 'wala pa, walang nasa Kusina');
+  return `Susunod na kainan: ${m.n} ${hhmm(m.at)} · Magluluto: ${cook}`;
+}
+
+// ---------------------------------------------------------------- day flow
+function snapshotRes() { return { ...S.res }; }
+function endDay() {
+  if (S.min < 1200) return toast('Masyado pang maaga para matulog.');
+  paused++; $('#fade').style.opacity = 1;
+  setTimeout(() => {
+    for (let i = 0; i < 8; i++) hourTick(true);
+    people().forEach(id => { const st = S.people[id]; stress(id, -18); if (!st.sick) health(id, 8); });
+    const growthDay = S.growth; S.growth = Math.min(1, S.growth + .13);
+    if (S.flags.restNoon) S.flags.restNoon = 0;
+    npcs().forEach(id => { if (S.people[id].job === 'rest' && S.people[id].stress < 40) S.people[id].job = defOf(id).job; });
+    const prev = S.dayStart || snapshotRes(), lines = [];
+    const diff = (k, n) => { const d = Math.round(S.res[k] - prev[k]); lines.push(`${n}: <b>${d >= 0 ? '+' : ''}${d}</b> (${pct(k)}%)`); };
+    diff('food', 'Pagkain'); diff('water', 'Tubig'); diff('power', 'Kuryente'); diff('o2', 'Oxygen');
+    const warn = [];
+    ['food', 'water', 'power', 'o2'].forEach(k => { if (pct(k) < 30) warn.push(`Mababa ang ${RES.find(r => r[0] === k)[1].toLowerCase()}.`); });
+    const tired = npcs().filter(id => S.people[id].stress > 70).map(N); if (tired.length) warn.push(`Pagod na pagod: ${tired.join(', ')}.`);
+    if (growthDay < .8 && S.growth >= .8) warn.push('Malapit nang anihin ang greenhouse.');
+    S.day++; S.min = 360; S.dayStart = snapshotRes();
+    if (S.day >= 40) { save(); showEnding(); return; }
+    if (S.flags.ignored && !S.done.box && S.day >= 10) queueEvent('box');
+    save(); saveDayStart();
+    npcs().forEach(id => { const p = P[id]; releaseSpot(p); p.goal = null; const room = p.def.bed[0], sp = room === 'M' ? SPOTS.M[0] : SPOTS[room][0]; p.place(sp.x, sp.z, sp.yaw || 0); p.setPose('stand'); });
+    ISHA.place(18.5, 3.7, Math.PI); ISHA.setPose('stand');
+    showDayCard(`ARAW ${S.day}`, `06:00 · ${40 - S.day} ARAW BAGO ANG CONVOY`, `<b>Kahapon</b><br>${lines.join('<br>')}${warn.length ? '<br><br><b>Bantayan</b><br>' + warn.join('<br>') : ''}`, () => { routineAll(); });
+  }, 1200);
+}
+function saveDayStart() { try { localStorage.setItem(SAVE_KEY + '-day', JSON.stringify(S)); } catch (e) { /* no retry point without storage */ } }
+function gameOver() {
+  paused++; save();
+  $('#dcBig').textContent = 'TALO'; $('#dcSub').textContent = `ARAW ${S.day} · ${hhmm(S.min)}`;
+  $('#dcSum').innerHTML = `Sampung oras na walang ${S.res.o2 <= 0 ? 'sapat na hangin' : 'malinis na tubig'} ang bunker. Isa-isang bumagsak sa sahig ang mga matatanda at bata. Kinailangan ninyong buksan ang blast door at lumikas sa abo, at hindi lahat ay nakaabot.<br><br>Puwede mong ulitin ang araw na ito mula 06:00.`;
+  $('#dcGo').innerHTML = '<b>Ulitin ang araw</b>'; $('#daycard').hidden = false;
+  $('#dcGo').onclick = () => { let snap = null; try { snap = localStorage.getItem(SAVE_KEY + '-day'); if (snap) localStorage.setItem(SAVE_KEY, snap); else localStorage.removeItem(SAVE_KEY); } catch (e) { /* storage blocked: start over */ } location.reload(); };
+}
+function showEnding() {
+  const ids = people(), hurt = ids.filter(id => S.people[id].health < 40).map(N), m = morale(), guests = GUESTS.filter(g => S.people[g.id]).map(g => g.name);
+  const title = !hurt.length && m >= 60 ? 'KUMPLETO KAYO' : m < 40 ? 'BUHAY, PERO SUGATAN' : 'NAKALIGTAS KAYO';
+  $('#dcBig').textContent = 'ARAW 40'; $('#dcSub').textContent = 'DUMATING ANG CONVOY · ' + title;
+  $('#dcSum').innerHTML = `${S.flags.radioReply ? 'Alam ng convoy kung nasaan kayo, dahil sumagot ka sa radyo noong Araw 11. Kumatok sila sa blast door nang alas-sais ng umaga.' : 'Walang nakaaalam na nandito kayo. Kinailangan ninyong maglakad nang dalawang kilometro sa abo papunta sa highway para salubungin ang convoy.'}<br><br>
+    ${ids.length} katao at si Millie ang sumakay sa mga trak papuntang Baguio.${guests.length ? ` Kasama ang mga pinapasok ninyo: ${guests.join(', ')}.` : ''}<br><br>
+    ${hurt.length ? `Mahina pa sina ${hurt.join(', ')}, kaya sa unang trak sila, kasama ng mga medic.` : 'Lahat kayo, nakatayo sa sariling paa.'} ${m >= 60 ? 'Kumakanta pa ang mga bata habang umaandar ang trak.' : m < 40 ? 'Tahimik ang lahat sa biyahe. Matagal bago maghilom ang 34 na araw sa ilalim ng lupa.' : 'Pagod ang lahat, pero magkakasama.'}<br><br>Moral sa dulo: <b>${m}%</b>`;
+  $('#dcGo').innerHTML = '<b>Maglaro ulit</b>'; $('#daycard').hidden = false; $('#fade').style.opacity = 0;
+  $('#dcGo').onclick = () => { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_KEY + '-day'); } catch (e) { /* nothing saved */ } location.reload(); };
+}
+function showDayCard(big, sub, sum, then) {
+  $('#dcBig').textContent = big; $('#dcSub').textContent = sub; $('#dcSum').innerHTML = sum; $('#daycard').hidden = false;
+  $('#fade').style.opacity = 0;
+  $('#dcGo').innerHTML = '<b>Simulan ang araw</b>';
+  $('#dcGo').onclick = () => { tick(); $('#daycard').hidden = true; paused = Math.max(0, paused - 1); then && then(); };
+}
+function doorAnim(open) { FX.doorTarget = open ? -1.7 : 0; }
+
+// ---------------------------------------------------------------- loop
+const clock = new THREE.Clock(); let hudT = 0, lightT = 0, actT = 0, fpsAcc = 0, fpsN = 0;
+const camPos = new THREE.Vector3(), lookT = new THREE.Vector3(), v3 = new THREE.Vector3();
+function frame() {
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  if (S && !paused) {
+    // Isha movement
+    let mx = joy.x, my = joy.y;
+    if (keys.w || keys.arrowup) my = -1; if (keys.s || keys.arrowdown) my = 1; if (keys.a || keys.arrowleft) mx = -1; if (keys.d || keys.arrowright) mx = 1;
+    const mag = Math.min(1, Math.hypot(mx, my));
+    if (mag > .12 && cam.mode === 'follow') {
+      const s = Math.sin(cam.yaw), c = Math.cos(cam.yaw), fx = -s, fz = -c, rx = c, rz = -s;
+      let dx = rx * mx - fx * my, dz = rz * mx - fz * my; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
+      const st = ISHA.speed * mag * dt; ISHA.path = [];
+      const bx = collides(ISHA.x + dx * st, ISHA.z), bz = collides(ISHA.x, ISHA.z + dz * st);
+      if (!bx) ISHA.root.position.x += dx * st;
+      if (!bz) ISHA.root.position.z += dz * st;
+      // doorway assist: blocked on one axis but the next cell is open, so slide toward the doorway's centre line
+      if (bx && Math.abs(dx) > .3 && walkable(Math.floor(ISHA.x + Math.sign(dx) * .6), Math.floor(ISHA.z))) { const c = Math.floor(ISHA.z) + .5, d = c - ISHA.z; if (!collides(ISHA.x, ISHA.z + Math.sign(d) * Math.min(Math.abs(d), st))) ISHA.root.position.z += Math.sign(d) * Math.min(Math.abs(d), st); }
+      if (bz && Math.abs(dz) > .3 && walkable(Math.floor(ISHA.x), Math.floor(ISHA.z + Math.sign(dz) * .6))) { const c = Math.floor(ISHA.x) + .5, d = c - ISHA.x; if (!collides(ISHA.x + Math.sign(d) * Math.min(Math.abs(d), st), ISHA.z)) ISHA.root.position.x += Math.sign(d) * Math.min(Math.abs(d), st); }
+      ISHA.faceTo(Math.atan2(dx, dz), dt); ISHA.moving = true; ISHA.speed = 3.3;
+      if (ISHA.pose !== 'stand') ISHA.setPose('stand');
+      if (doing) { doing = null; toast('Hindi natapos.'); }
+      hint(1, 'Lapitan ang kapamilya at pindutin ang Kausapin.');
+    }
+    if (doing) {
+      doing.t += dt; $('#actRing').style.strokeDashoffset = 289 * (1 - doing.t / doing.dur);
+      if (doing.t >= doing.dur) { const r = doing.room; doing = null; ISHA.setPose('stand'); $('#actRing').style.strokeDashoffset = 289; finishWork(r); }
+    } else $('#actRing').style.strokeDashoffset = 289;
+    // clock
+    if (S.min < 1320) {
+      const before = S.min; S.min = Math.min(1320, S.min + dt * 4 * speed);
+      if (Math.floor(S.min / 60) !== Math.floor(before / 60)) { hourTick(); routineAll(); save(); }
+      if (before < 1290 && S.min >= 1290) routineAll();
+      if (before < 1200 && S.min >= 1200) toast('Gabi na. Puwede nang matulog sa Master Suite.');
+      if (S.min >= 1320 && before < 1320) toast('Hatinggabi na. Matulog sa kama mo, o pindutin ang Pamilya → Tapusin ang araw.');
+      checkSlots();
+    }
+    mealTick(mealPrev, S.min); mealPrev = S.min;
+    if (S.flags.restNoon && S.min >= 720) { S.flags.restNoon = 0; routineAll(); toast('Tanghali na. Balik-trabaho ang lahat.'); }
+    runQueue();
+  }
+  // actors
+  for (const p of Object.values(P)) p.update(dt, t);
+  MILLIE && MILLIE.update(dt, t);
+  // effects
+  if (S) {
+    const brown = S.res.power <= 0 || !!S.flags.blackout, lowO2 = S.res.o2 < 25;
+    FX.fan.rotation.x += dt * (brown ? 0 : S.flags.fanBroken ? 1.5 : 9);
+    if (FX.doorTarget !== undefined) FX.door.rotation.y += (FX.doorTarget - FX.door.rotation.y) * Math.min(1, dt * 1.6);
+    const night = S.min >= 1200 ? 1 : 0, pulse = .5 + .5 * Math.sin(t * 4);
+    MAT.cove.color.set(brown ? '#ff2a1a' : night ? '#ffc98f' : '#ffe1bb').multiplyScalar(brown ? .6 + 1.4 * pulse : 1.5);
+    POOL.forEach(l => { const target = (l.userData.base || 0) * (brown ? .12 : night ? .85 : 1); l.intensity += (target - l.intensity) * Math.min(1, dt * 4); if (brown) l.color.set('#ff5040'); });
+    hemi.intensity = brown ? .2 : night ? .65 : .8; key.intensity = brown ? .3 : night ? 1.15 : 1.45;
+    $('#fx').className = brown ? 'brown' : lowO2 ? 'o2' : '';
+    scene.fog.near = lowO2 ? 6 : 40; scene.fog.far = lowO2 ? 30 : 95; scene.fog.color.set(lowO2 ? '#3d6f86' : '#0b0d0e');
+    if (brown && Math.floor(t * .5) !== Math.floor((t - dt) * .5)) beep(520, .2);
+    for (const a of FX.animals) { a.t -= dt; const g = a.g;
+      if (a.t <= 0 || !a.to) { a.to = [rand(a.box[0], a.box[1]), rand(a.box[2], a.box[3])]; a.t = rand(2, 6); a.peck = Math.random() < .5; }
+      const dx = a.to[0] - g.position.x, dz = a.to[1] - g.position.z, d = Math.hypot(dx, dz);
+      if (d > .08) { g.position.x += dx / d * a.speed * dt; g.position.z += dz / d * a.speed * dt; g.rotation.y = Math.atan2(dx, dz); }
+      const h = g.userData.head; if (g.userData.comb) { const bob = a.peck && d <= .08 ? Math.max(0, Math.sin(t * 9 + a.box[0])) * .12 : 0; h.position.y = .3 - bob; g.userData.comb.position.y = .37 - bob; g.userData.beak.position.y = .3 - bob; } }
+    const movie = S.flags.movie === S.day && S.min > 1230;
+    FX.tvL.material.color.setHSL(movie ? (t * .05) % 1 : 0, movie ? .5 : 0, movie ? .35 + .15 * Math.sin(t * 7) : .03);
+    if (S.task) { FX.marker.visible = true; const s = SPOTS[S.task.room][0]; FX.marker.position.set(s.x, 2.1 + Math.sin(t * 3) * .1, s.z); FX.marker.rotation.y = t * 2; } else FX.marker.visible = false;
+    if ((hudT += dt) > .2) { hudT = 0; updateHUD(); }
+    if ((actT += dt) > .12 && !paused) { actT = 0; action = cam.mode === 'follow' ? nearest() : null; $('#act').hidden = !action; if (action) $('#actText').textContent = action.label; }
+  }
+  // camera
+  let tgt;
+  if (cam.focus && performance.now() < cam.focus.until) tgt = cam.focus.v;
+  else { cam.focus = null; tgt = cam.mode === 'follow' && ISHA ? v3.set(ISHA.x, 0, ISHA.z) : cam.over; }
+  cam.target.lerp(tgt, Math.min(1, dt * (cam.focus ? 2.5 : 6)));
+  const dist = cam.mode === 'follow' && !cam.focus ? cam.dist : cam.mode === 'follow' ? Math.max(cam.dist, 14) : cam.overDist;
+  const pitch = cam.mode === 'follow' ? cam.pitch : 1.08;
+  camPos.set(cam.target.x + Math.sin(cam.yaw) * Math.cos(pitch) * dist, Math.sin(pitch) * dist + .9, cam.target.z + Math.cos(cam.yaw) * Math.cos(pitch) * dist);
+  camera.position.lerp(camPos, Math.min(1, dt * 8)); lookT.set(cam.target.x, .9, cam.target.z); camera.lookAt(lookT);
+  if (ISHA) { CUT.uPlayer.value.set(ISHA.x, 1, ISHA.z); CUT.uCam.value.copy(camera.position); }
+  key.position.set(cam.target.x + 4, 14, cam.target.z + 6); key.target.position.copy(cam.target);
+  if ((lightT += dt) > .3) { lightT = 0; assignLights(cam.target); }
+  // name tags
+  for (const p of [...Object.values(P), MILLIE].filter(Boolean)) {
+    v3.set(p.x, p === MILLIE ? .9 : 2.0 * (p.s || 1), p.z).project(camera);
+    const d = Math.hypot(p.x - camera.position.x, p.z - camera.position.z);
+    const show = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1 && (cam.mode === 'over' || d < 16) && $('#intro').hidden;
+    p.tag.style.display = show ? '' : 'none';
+    if (show) { p.tag.style.transform = `translate(${(v3.x * .5 + .5) * innerWidth}px,${(-v3.y * .5 + .5) * innerHeight}px) translate(-50%,-100%)`;
+      if (p.def && S) { const st = S.people[p.id]; p.tag.className = 'tag' + (st?.sick ? ' sick' : st?.stress > 70 ? ' stress' : '') + (p.atWork ? ' work' : ''); } }
+  }
+  if (BLOOM) composer.render(); else renderer.render(scene, camera);
+  // adaptive resolution for older phones
+  fpsAcc += dt; fpsN++;
+  if (fpsAcc > 3) { const avg = fpsAcc / fpsN; if (avg > .026 && DPR > 1) { DPR = Math.max(1, DPR - .25); renderer.setPixelRatio(DPR); composer.setPixelRatio(DPR); if (DPR <= 1.25) BLOOM = false; } fpsAcc = 0; fpsN = 0; }
+  requestAnimationFrame(frame);
+}
+function resize() { renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.fov = camera.aspect < .8 ? 60 : 45; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+if (window.visualViewport) visualViewport.addEventListener('resize', () => { const kb = Math.max(0, innerHeight - visualViewport.height - visualViewport.offsetTop); document.documentElement.style.setProperty('--kb', kb + 'px'); });
+
+// ---------------------------------------------------------------- boot
+function newGame() {
+  S = fresh(); S.dayStart = snapshotRes(); applyUpgrades(); saveDayStart();
+  npcs().forEach(id => { releaseSpot(P[id]); P[id].goal = null; });
+  CAST.forEach((d, i) => P[d.id].place(17.5 + (i % 5) * 1.1, 31.6 + Math.floor(i / 5) * 1.2, Math.PI));
+  ISHA.place(20, 32.3, Math.PI); FX.door.rotation.y = -1.7; doorAnim(1);
+  cam.mode = 'follow'; cam.yaw = Math.PI; cam.target.set(20, 0, 31); refreshWorld(); refreshTask();
+  $('#intro').hidden = true; $('#fade').style.opacity = 0;
+  setTimeout(() => { doorAnim(0); clunk(); }, 1400);
+  setTimeout(() => showDayCard('ARAW 7', '06:00 · SARADO NA ANG PINTO', 'Sa labas, abo ang hangin at walang araw. Patay ang kuryente sa buong probinsya, at may mga grupong nanloloob ng kahit ano. Ayon sa NDRRMC, may convoy papuntang Baguio sa <b>Araw 40</b>. Kailangan ninyong umabot. Sa loob, kayong lahat: ikaw, si Angel, si Millie, at ang buong pamilya.<br><br>Bantayan ang <b>pagkain, tubig, kuryente at oxygen</b>. Utusan ang bawat isa, o gawin mo mismo.', () => queueEvent('k1')), 3200);
+}
+function continueGame(saved) {
+  S = saved; S.res.meat ??= 60; S.res.feed ??= 70; S.ammo ??= 12; S.parts ??= 6; S.up ||= {}; mealPrev = S.min; applyUpgrades();
+  for (const id of Object.keys(S.people)) if (!P[id]) spawn(defOf(id), 20, 32);
+  ISHA.place(18.5, 3.7, Math.PI); FX.door.rotation.y = 0; doorAnim(0);
+  cam.target.set(18.5, 0, 3.7); routineAll(true); refreshWorld(); refreshTask();
+  $('#intro').hidden = true;
+  showDayCard(`ARAW ${S.day}`, `${hhmm(S.min)} · ITINULOY`, 'Nandito pa rin kayong lahat. Tuloy ang laban.', () => routineAll());
+}
+async function boot(hotData) {
+  await Promise.race([document.fonts.load('92px "Saira Stencil One"'), new Promise(r => setTimeout(r, 1500))]).catch(() => {});
+  buildShell(); buildRooms(); bake();
+  FX.marker = new THREE.Mesh(new THREE.OctahedronGeometry(.18), glow('#f0a73a')); dyn.add(FX.marker); FX.marker.visible = false;
+  S = fresh(); spawnAll(); routineAll(true); refreshWorld(); applyUpgrades(); paused = 1;
+  CUT.uOn.value = 0; cam.mode = 'over'; cam.overDist = overDistFit(); cam.target.copy(cam.over);
+  camera.position.set(cam.over.x, 40, cam.over.z + 30);
+  requestAnimationFrame(frame);
+  $('#fade').style.opacity = 0;
+  let saved = hotData?.save || loadSave();
+  if (saved && Object.keys(saved.people || {}).some(id => !defOf(id))) saved = null;   // save from before the real family names
+  const ch = $('#introChoices');
+  ch.innerHTML = (saved ? `<button class="choice primary" id="bCont"><b>Ituloy · Araw ${saved.day}</b><span>${hhmm(saved.min)} · babalik ka sa bunker</span></button>` : '') +
+    `<button class="choice${saved ? '' : ' primary'}" id="bNew"><b>${saved ? 'Bagong laro' : 'Simulan ang Day 7'}</b><span>${saved ? 'Buburahin ang dating save' : 'Isasara na ang blast door'}</span></button>`;
+  const startIntro = () => { audioInit(); cam.mode = 'follow'; CUT.uOn.value = 1; $('#btnView').textContent = 'Tanaw'; };
+  if (saved) $('#bCont').onclick = () => { startIntro(); cam.yaw = 0; continueGame(saved); };
+  $('#bNew').onclick = () => { startIntro(); paused = 1; newGame(); };
+  window.claude?.hot?.snapshot?.(() => ({ save: S }));
+  // slow orbit behind the title
+  document.body.classList.add('intro');
+  (function orbit() { if (!$('#intro').hidden) { cam.yaw += .0012; requestAnimationFrame(orbit); } else document.body.classList.remove('intro'); })();
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+</script>
+
+</body>
+</html>
