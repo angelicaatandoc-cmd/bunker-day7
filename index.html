@@ -159,6 +159,7 @@ body.intro .hud,body.intro #labels{display:none!important}
 .pads button:active{filter:brightness(1.35);transform:scale(.97)}
 .rbar{height:14px;border-radius:7px;background:#1a1f22;overflow:hidden;margin:4px 0 10px} .rbar i{display:block;height:100%}
 .raidbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.raidbtns button.mg{background:#7a2a1f;border-color:transparent}
 .raidbtns button{min-height:80px;border-radius:12px;font:700 16px var(--f-label);background:#252c30;border:1px solid var(--line);color:var(--text);touch-action:manipulation}
 .raidbtns button.fire{background:#b8432f;border-color:transparent}
 .raidbtns button:active{transform:scale(.96)}
@@ -175,7 +176,7 @@ body.intro .hud,body.intro #labels{display:none!important}
 <div id="fx"></div>
 
 <header class="hud" id="top">
-  <div class="daybox"><span>Araw</span><b id="dayNum">7</b><span>/100</span></div>
+  <div class="daybox"><span>Araw</span><b id="dayNum">7</b></div>
   <div class="clockbox"><b id="clock">06:00</b><span id="phase">Umaga</span></div>
   <div class="spacer"></div>
   <button class="chip" id="btnSpeed" aria-label="Bilis ng oras">1×</button>
@@ -202,7 +203,7 @@ body.intro .hud,body.intro #labels{display:none!important}
 
 <section class="over" id="intro">
   <h1 class="title">BUNKER<em>DAY 7</em></h1>
-  <p class="lede">Tatlong linggo na mula nang lumabas ang Z-virus sa isang lab sa Clark. Isang kagat lang, at sa loob ng dalawang araw, nagiging zombie ang tao. Bumagsak na ang Pampanga, Tarlac at Bulacan, at mas marami na ang patay na naglalakad kaysa sa buhay. Ayon sa AFP, darating ang rescue convoy sa Araw 100. Anim na araw kayong naghanda sa bahay. Ngayong umaga, sarado na ang blast door. Ikaw si Isha: ikaw ang mag-uutos, at lahat ng kasama mo ay may ambag. Bawat araw, mas mahirap.</p>
+  <p class="lede">Tatlong linggo na mula nang lumabas ang Z-virus sa isang lab sa Clark. Isang kagat lang, at sa loob ng dalawang araw, nagiging zombie ang tao. Bumagsak na ang Pampanga, Tarlac at Bulacan, at mas marami na ang patay na naglalakad kaysa sa buhay. Ayon sa AFP, may rescue convoy sa Araw 100. Pero walang nakakaalam kung matutuloy ito, o kung gaano katagal kayo dito: isang taon, o higit pa. Anim na araw kayong naghanda sa bahay. Ngayong umaga, sarado na ang blast door. Ikaw si Isha: ikaw ang mag-uutos, at lahat ng kasama mo ay may ambag. Bawat araw, mas mahirap.</p>
   <div class="choices" id="introChoices"><button class="choice primary" disabled><b>Naglo-load ang bunker…</b></button></div>
   <p class="small" id="introNote">Pinakamaganda sa iPhone, naka-patayo. Sa laptop: WASD para maglakad, E para kumilos.</p>
 </section>
@@ -313,6 +314,7 @@ const ROOMS = {
   Pl:{n:'Playroom', x:44,z:31,w:4,h:5, floor:'wood', light:'#ffe0b5', job:true, verb:'Makipaglaro sa mga bata'},
   Dorm:{n:'Dormitoryo', x:49,z:24,w:10,h:12, floor:'wood', light:'#ffdcae'},
   A:{n:'Airlock', x:16,z:31,w:8,h:3, floor:'metal', light:'#ffe9c8'},
+  Q:{n:'Quarantine', x:25,z:31,w:4,h:5, floor:'tile', light:'#e4f7ff'},
 };
 const BUNK_Z = [1, 5, 9, 16, 20];
 BUNK_Z.forEach((z, i) => {
@@ -321,7 +323,7 @@ BUNK_Z.forEach((z, i) => {
 });
 const DOORS = [[5,9],[18,9],[19,9],[25,2],[32,6],[30,12],[30,15],[25,13],[25,14],[10,13],[5,17],[5,22],[10,24],[18,22],[19,19],[20,19],[21,22],[19,30],[20,30]];
 BUNK_Z.forEach(z => { DOORS.push([40, z + 1], [43, z + 1]); });
-DOORS.push([40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
+DOORS.push([24, 32], [40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
 const JOBS = ['G','K','P','W','S','O','Y','X','C','H','V','U','Lib','Pl','rest'];
 const RELAX = ['H', 'V', 'U', 'Lib', 'Pl'];
 const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', rest:'Pahinga' };
@@ -982,7 +984,7 @@ function buildRooms() {
   ball(.3, MAT.blanketC, 45.6, .18, 25.4).scale.set(1, .5, 1); ball(.3, MAT.blanketA, 46.4, .18, 26).scale.set(1, .5, 1);
   spot('U', 46, 25, 47.65, 25); spot('U', 45, 27, 44.6, 27.2); spot('U', 46, 27, 45.8, 28.8);
   decal('MUSIKA', 45.9, 29.5, .45, Math.PI / 2);
-  buildExtraRooms(); buildGuestBeds(); buildDorm();
+  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar();
   decal('GREENHOUSE', 6.5, 8.2, .8); decal('KUSINA', 6.5, 16.4, .7); decal('PANTRY', 5.5, 20.2, .6);
   decal('TUBIG', 5, 28.3, .7); decal('SOLAR', 14.5, 25.4, .7); decal('SALA', 18, 13.5, .9, 0, .18);
   decal('OXYGEN', 32.5, 3.4, .55); decal('HOBBY', 30.5, 11.4, .6); decal('CLINIC', 30.5, 18.5, .6);
@@ -1151,7 +1153,7 @@ let ISHA = null, MILLIE = null;
 let paused = 1, speed = 1;
 const SAVE_KEY = 'bunker-day7-save-v1';
 function fresh() {
-  const s = { day: 7, min: 360, res: { food: 240, meat: 90, water: 240, power: 95, o2: 100, feed: 90 }, ammo: 14, parts: 6, anti: 3, meds: 8, up: {}, door: { hp: 100, lvl: 0 }, said: {}, acts: {}, helped: [], raids: {}, extra: [], people: {}, flags: {}, done: {}, last: {}, task: null, timers: [], growth: .35, slots: {}, talked: {}, dayStart: null, summary: null };
+  const s = { day: 7, min: 360, res: { food: 240, meat: 90, water: 240, power: 95, o2: 100, feed: 90 }, ammo: 40, stock: 500, parts: 6, anti: 3, meds: 8, up: {}, door: { hp: 100, lvl: 0 }, said: {}, acts: {}, helped: [], raids: {}, extra: [], people: {}, flags: {}, done: {}, last: {}, task: null, timers: [], growth: .35, slots: {}, talked: {}, dayStart: null, summary: null };
   for (const d of CAST) s.people[d.id] = { job: d.player ? null : d.job, stress: d.player ? 15 : rand(8, 22) | 0, health: 100, sick: false, bl: rand(15, 45), bw: rand(10, 40), hu: 30, mood: null };
   return s;
 }
@@ -1181,7 +1183,8 @@ function routine(p, teleport = false) {
   const st = S.people[p.id]; if (!st || p.def.player || st.away) return;
   let goal;
   const nightNow = S.min >= 1290;
-  if (nightNow) goal = 'bed';
+  if (st.quar) goal = 'quar';
+  else if (nightNow) goal = 'bed';
   else if (st.sick) goal = 'clinic';
   else if (st.needGo) goal = 'need:' + st.needGo;
   else if (S.meal && S.min < S.meal.until) goal = 'meal';
@@ -1200,6 +1203,9 @@ function routine(p, teleport = false) {
     const [room, slot] = p.def.bed, b = SPOTS.beds[room][slot];
     const door = room === 'M' ? { x: 18.5 + slot, z: 3.6 } : SPOTS[room][0];
     target = door; after = () => { p.place(b.x, b.z, 0); p.setPose('sleep', b.y); };
+  } else if (goal === 'quar') {
+    const beds = st.qb ? SPOTS.bedQB : SPOTS.bedQA, b = takeSpot(beds, p) || beds[0];
+    target = { x: 25.5, z: st.qb ? 35 : 32.5 }; after = () => { p.place(b.x, b.z, st.qb ? -Math.PI / 2 : 0); p.setPose(st.turned ? 'stand' : 'sleep', st.turned ? 0 : b.y); };
   } else if (goal === 'clinic') {
     const b = takeSpot(SPOTS.bedC, p) || SPOTS.bedC[0];
     target = { x: 30.5, z: 16.5 }; after = () => { p.place(b.x, b.z + .05, 0); p.setPose('sleep', .62); };
@@ -1223,7 +1229,7 @@ function routineAll(tp) { npcs().forEach(id => P[id] && routine(P[id], tp)); }
 function hourTick(night = false) {
   const ids = people(), n = ids.reduce((a, id) => a + (defOf(id).kid ? .5 : 1), 0), W = {};
   // people still count for their job while walking to it or stepping out to the CR, at a lower rate
-  if (!night) ids.forEach(id => { const p = P[id], st = S.people[id]; if (p && st.job && st.job !== 'rest' && !st.sick && !st.away) W[st.job] = (W[st.job] || 0) + eff(id) * (p.atWork ? 1 : .6); });
+  if (!night) ids.forEach(id => { const p = P[id], st = S.people[id]; if (p && st.job && st.job !== 'rest' && !st.sick && !st.away && !st.quar) W[st.job] = (W[st.job] || 0) + eff(id) * (p.atWork ? 1 : .6); });
   const nf = night ? .5 : 1;   // asleep: half the food, water and air
   const brown = S.res.power <= 0 || !!S.flags.blackout, sun = !night && S.min >= 360 && S.min < 1080;
   addRes('food', (W.G || 0) * .95 * (S.up.green2 ? 1.3 : 1) * (brown ? .4 : 1) - n * .09 * nf * (W.K ? .85 : 1) * (W.P ? .9 : 1) - .1);
@@ -1245,7 +1251,9 @@ function hourTick(night = false) {
     if (S.res.o2 < 10) health(id, -3);
     if (S.res.food <= 0) health(id, -1.2);
     if (S.res.water <= 0) health(id, -2);
-    if (st.bit) { if (--st.bit <= 0) { st.bit = 0; st.turned = 1; st.sick = true; st.hid = 0; P[id] && routine(P[id]); S.flags.turnWho = id; queueEvent('turned'); } else if (st.hid) { if (st.bit < 6) health(id, -2); } else health(id, -1.2); }
+    if (st.quar > 0 && !st.turned && !st.bit) { if (--st.quar <= 0) { st.quar = -1; toast(`Tapos na ang quarantine ni ${N(id)}. Ikaw ang magdedesisyon.`, 'good'); } }
+    if (st.quar === -1 && !GEN['qd' + id] && !ev.includes('qd' + id)) { qDecide(id); queueEvent('qd' + id); }
+    if (st.bit) { if (--st.bit <= 0) { S.flags.turnBit = st.hid && !st.quar && Math.random() < .6 ? someone(x => x !== id && !defOf(x).kid && !S.people[x].bit) : null; if (S.flags.turnBit) setTimeout(() => bite(S.flags.turnBit), 0); st.bit = 0; st.turned = 1; st.sick = true; st.hid = 0; P[id] && routine(P[id], true); S.flags.turnWho = id; queueEvent(st.quar ? 'qTurned' : 'turned'); } else if (st.hid) { if (st.bit < 6) health(id, -2); } else health(id, -1.2); }
     if (st.turned) stressAll(.03);
     if (st.sick && !st.bit && !st.turned) { health(id, W.C ? 3 * W.C : -1.5); if (st.health >= 75) { st.sick = false; toast(`${defOf(id).name}: magaling na!`, 'good'); p && routine(p); } }
     else health(id, .3);
@@ -1282,7 +1290,7 @@ function advance(mins) {
 // ---------------------------------------------------------------- events
 const ev = [];   // queue
 function queueEvent(id) { if (!ev.includes(id)) ev.push(id); }
-const someone = (filter = () => true) => pick(npcs().filter(id => !S.people[id].sick && filter(id))) || 'nelson';
+const someone = (filter = () => true) => pick(npcs().filter(id => !S.people[id].sick && !S.people[id].quar && filter(id))) || 'nelson';
 const N = id => defOf(id).name;
 const EVENTS = {
   k1: { kick: 'Kabanata 1 · Airlock', loc: 'A', title: 'Sarado na',
@@ -1417,7 +1425,7 @@ function stockLine() {
   const n = people().reduce((a, id) => a + (defOf(id).kid ? .5 : 1), 0);
   return `Tubig: ~${Math.round(S.res.water * 3)} litro (${(S.res.water * 3 / (n * 3.5)).toFixed(1)} araw) · Pagkain: ${(S.res.food / (n * 3)).toFixed(1)} araw (bigas, de-lata, noodles, gulay, itlog) · Karne: ~${Math.round(S.res.meat * .5)} kg sa freezer · Patuka: ${Math.round(S.res.feed * .5)} kg`;
 }
-function defense() { let d = 0; npcs().forEach(id => { if (S.people[id].job === 'X' && P[id]?.atWork) d += eff(id); }); if (S.ammo > 0) d += 1; if (S.flags.drill === S.day) d += 1; d += (S.door?.lvl || 0) * .5; return d; }
+function defense() { let d = 0; npcs().forEach(id => { if (S.people[id].job === 'X' && P[id]?.atWork) d += eff(id); }); if (S.ammo > 0) d += 2; if (S.flags.drill === S.day) d += 1; d += (S.door?.lvl || 0) * .5; return d; }
 const raidNeed = () => 1.6 + Math.floor((S.day - 8) / 3) * .5;
 const guardNames = () => npcs().filter(id => S.people[id].job === 'X' && !S.people[id].sick && !S.people[id].away).map(N).join(' at ') || 'walang bantay';
 Object.assign(EVENTS, {
@@ -1555,8 +1563,9 @@ function setTask(room, kind, text) { S.task = { room, kind, text }; refreshTask(
 function pickKind(kind) {
   const pool = Object.entries(EVENTS).filter(([id, e]) => e.min && S.day >= e.min && (e.kind || (e.night ? 'night' : 'day')) === kind && !(e.once && S.done[id]) && (S.day - (S.last[id] ?? -9)) >= (e.cool || 0) && (!e.can || e.can()));
   if (!pool.length) return null;
-  let r = Math.random() * pool.reduce((a, [, e]) => a + (e.w || 1), 0);
-  for (const [id, e] of pool) { r -= e.w || 1; if (r <= 0) return id; }
+  const cnt = S.cnt ||= {}, wt = ([id, e]) => (e.w || 1) / (1 + (cnt[id] || 0) * 1.6) * Math.min(1, (S.day - (S.last[id] ?? -99)) / 8);
+  let r = Math.random() * pool.reduce((a, x) => a + wt(x), 0);
+  for (const x of pool) { r -= wt(x); if (r <= 0) { cnt[x[0]] = (cnt[x[0]] || 0) + 1; return x[0]; } }
   return pool[0][0];
 }
 function checkSlots() {
@@ -1589,9 +1598,9 @@ function showEvent(id) {
   if (e.loc) focusOn(roomCenter(e.loc));
   if (e.sound === 'knock') knock(); else if (e.sound === 'chime') chime(); else if (!e.good) beep(660, .15);
   openSheet(`<div class="kick">Araw ${S.day} · ${hhmm(S.min)} · ${e.kick}</div><h2 class="sh-title">${e.title}</h2><div class="sh-body">${e.body()}</div>
-    <div class="choices">${e.choices.map((c, i) => `<button class="choice${i ? '' : ' primary'}" data-i="${i}"><b>${c.t}</b><span>${c.sub}</span></button>`).join('')}</div>`, { noClose: true });
+    <div class="choices">${(e.ch = typeof e.choices === 'function' ? e.choices() : e.choices).map((c, i) => `<button class="choice${i ? '' : ' primary'}" data-i="${i}"><b>${c.t}</b><span>${c.sub}</span></button>`).join('')}</div>`, { noClose: true });
   $('#sheetBody').querySelectorAll('.choice').forEach(b => b.onclick = () => {
-    MOODCTX = e.title; const out = e.choices[+b.dataset.i].fx(); MOODCTX = null; delete GEN[id]; refreshWorld(); save();
+    MOODCTX = e.title; const out = e.ch[+b.dataset.i].fx(); MOODCTX = null; delete GEN[id]; refreshWorld(); save();
     if (out && out.raid) { startRaid(...out.raid); return; }
     if (id === 'k4') S.flags.chapterEnd = 1;
     if (id === 'k1') cam.yaw = 0;
@@ -1654,6 +1663,9 @@ const bar = (v, c) => `<div class="bar"><i style="width:${v}%;background:${c}"><
 function jobLabel(id) {
   const st = S.people[id], p = P[id];
   if (id === 'isha') return 'Ikaw ang lider';
+  if (st.turned && st.quar) return 'Zombie na, nakakulong sa Quarantine. Kailangan ng 2 antiviral.';
+  if (st.quar === -1) return 'Tapos na ang quarantine. Hinihintay ang desisyon mo.';
+  if (st.quar) return `Quarantine ${st.qb ? 'B (may sugat)' : 'A (walang sugat)'}${st.bit && !st.hid ? ' · may kagat!' : ''} · ${st.quar} oras pa`;
   if (st.turned) return 'Zombie na. Nakatali sa Clinic. Kailangan ng 2 antiviral.';
   if (st.bit && !st.hid) return `Nakagat! Quarantine sa Clinic · ${st.bit} oras bago maging zombie`;
   if (st.sick) return 'Nasa Clinic, nagpapagaling';
@@ -1667,7 +1679,7 @@ function personSheet(p) {
   const jobs = id === 'isha' ? '' : `<div class="sec">${d.kid ? 'Saan maglalaro' : 'Utusan'}</div><div class="jobs">${(d.kid ? KIDJOBS : JOBS).map(j => `<button class="job${st.job === j ? ' on' : ''}${d.spec === j ? ' spec' : ''}" data-j="${j}">${JOB_NAME[j]}</button>`).join('')}</div>`;
   openSheet(`<div class="kick">${d.role}</div><h2 class="sh-title">${id === 'isha' ? 'Ikaw (Isha)' : d.name}</h2>
     <div class="sh-body" id="pNow">${jobLabel(id)}</div>
-    <div class="stats"><div class="stat"><label>Kalusugan ${Math.round(st.health)}</label>${bar(st.health, 'var(--good)')}</div><div class="stat"><label>Stress ${Math.round(st.stress)}</label>${bar(st.stress, 'var(--mood)')}</div></div>${moodLine(id)}${cureHTML(id)}
+    <div class="stats"><div class="stat"><label>Kalusugan ${Math.round(st.health)}</label>${bar(st.health, 'var(--good)')}</div><div class="stat"><label>Stress ${Math.round(st.stress)}</label>${bar(st.stress, 'var(--mood)')}</div></div>${moodLine(id)}${cureHTML(id)}${quarHTML(id)}
     ${jobs}
     ${id === 'isha' ? '' : `<div class="sec">Kausapin</div><div class="chat" id="chat"></div>
     <div class="quick" id="quick"></div>
@@ -1678,6 +1690,8 @@ function personSheet(p) {
     toast(`${d.name} → ${JOB_NAME[st.job]}`); save();
   });
   if ($('#cureBtn')) $('#cureBtn').onclick = () => cure(id);
+  if ($('#qIn')) $('#qIn').onclick = () => { closeSheet(); qLetIn(id); };
+  if ($('#qOut')) $('#qOut').onclick = () => { closeSheet(); qSendAway(id); };
   if ($('#medBtn')) $('#medBtn').onclick = () => { if (!S.meds) return; S.meds--; health(id, 35); stress(id, -6); if (st.health >= 75) { st.sick = false; routine(p); } chime(); toast(`Uminom ng gamot si ${d.name}. Gumaan ang pakiramdam niya.`, 'good'); save(); personSheet(p); };
   if (id === 'isha') return;
   renderChat(id);
@@ -1979,12 +1993,12 @@ function endDay() {
     const horde = nightHorde(); if (horde) lines.push(horde);
     if (growthDay < .8 && S.growth >= .8) warn.push('Malapit nang anihin ang greenhouse.');
     S.day++; S.min = 360; S.dayStart = snapshotRes(); morningNeeds();
-    if (S.day >= 100) { save(); showEnding(); return; }
+    if (S.day >= (S.rescue ||= 375 + (Math.random() * 46 | 0))) { save(); showEnding(); return; }
     if (S.flags.ignored && !S.done.box && S.day >= 10) queueEvent('box');
     save(); saveDayStart();
     npcs().forEach(id => { const p = P[id]; releaseSpot(p); p.goal = null; const room = p.def.bed[0], sp = room === 'M' ? SPOTS.M[0] : SPOTS[room][0]; p.place(sp.x, sp.z, sp.yaw || 0); p.setPose('stand'); });
     ISHA.place(18.5, 3.7, Math.PI); ISHA.setPose('stand');
-    showDayCard(`ARAW ${S.day}`, `06:00 · ${100 - S.day} ARAW BAGO ANG CONVOY`, `<b>Kahapon</b><br>${lines.join('<br>')}${warn.length ? '<br><br><b>Bantayan</b><br>' + warn.join('<br>') : ''}<br><br><b>Misyon ngayon</b><br>${misHTML()}`, () => { routineAll(); });
+    showDayCard(`ARAW ${S.day}`, `06:00 · ${S.day < 100 && !S.flags.noConvoy ? `${100 - S.day} ARAW BAGO ANG CONVOY` : `${S.day - 6} ARAW SA ILALIM NG LUPA`}`, `<b>Kahapon</b><br>${lines.join('<br>')}${warn.length ? '<br><br><b>Bantayan</b><br>' + warn.join('<br>') : ''}<br><br><b>Misyon ngayon</b><br>${misHTML()}`, () => { routineAll(); });
   }, 1200);
 }
 function saveDayStart() { try { localStorage.setItem(SAVE_KEY + '-day', JSON.stringify(S)); } catch (e) { /* no retry point without storage */ } }
@@ -1998,11 +2012,12 @@ function gameOver() {
 function showEnding() {
   const ids = people(), hurt = ids.filter(id => S.people[id].health < 40).map(N), m = morale(), guests = GUESTS.filter(g => S.people[g.id]).map(g => g.name);
   const title = !hurt.length && m >= 60 ? 'KUMPLETO KAYO' : m < 40 ? 'BUHAY, PERO SUGATAN' : 'NAKALIGTAS KAYO';
-  $('#dcBig').textContent = 'ARAW 100'; $('#dcSub').textContent = 'DUMATING ANG CONVOY · ' + title;
+  $('#dcBig').textContent = `ARAW ${S.day}`; $('#dcSub').textContent = 'DUMATING ANG TULONG · ' + title;
   $('#dcSum').innerHTML = `${S.flags.radioReply ? 'Alam ng convoy kung nasaan kayo, dahil sumagot ka sa radyo noong Araw 11. Kumatok sila sa blast door nang alas-sais ng umaga.' : 'Walang nakaaalam na nandito kayo. Kinailangan ninyong tumakbo nang dalawang kilometro sa gitna ng mga zombie papunta sa highway para salubungin ang convoy.'}<br><br>
+    ${[S.flags.bridgeDone && 'Unang trak ang huminto sa pinto ninyo, gaya ng pangako ng kapitan sa tulay ng Bamban.', S.flags.migoOK && 'Magkahawak-kamay sina Nelson at Migo pag-akyat sa trak.', S.flags.migoLost && 'Sa bawat simbahan na nadaanan, tumitingin si Nelson sa bintana, hinahanap si Migo.', S.flags.jomarSaved && 'Sa gilid ng highway, may lalaking kumaway sa convoy. Si Jomar, buhay.'].filter(Boolean).join(' ')}<br><br>
     ${S.flags.vaccine ? 'Dala ng convoy ang bakuna ni Dr. Ramos, ang lunas na tinulungan ninyong mabuo. Sa unang pagkakataon, may pag-asa ang buong Luzon.' : 'Walang lunas pa, pero buhay kayo.'}<br><br>
     ${ids.length} katao at si Millie ang sumakay sa mga trak papuntang Baguio.${guests.length ? ` Kasama ang mga pinapasok ninyo: ${guests.join(', ')}.` : ''}<br><br>
-    ${hurt.length ? `Mahina pa sina ${hurt.join(', ')}, kaya sa unang trak sila, kasama ng mga medic.` : 'Lahat kayo, nakatayo sa sariling paa.'} ${m >= 60 ? 'Kumakanta pa ang mga bata habang umaandar ang trak.' : m < 40 ? 'Tahimik ang lahat sa biyahe. Matagal bago maghilom ang 93 na araw sa ilalim ng lupa.' : 'Pagod ang lahat, pero magkakasama.'}<br><br>Moral sa dulo: <b>${m}%</b>`;
+    ${hurt.length ? `Mahina pa sina ${hurt.join(', ')}, kaya sa unang trak sila, kasama ng mga medic.` : 'Lahat kayo, nakatayo sa sariling paa.'} ${m >= 60 ? 'Kumakanta pa ang mga bata habang umaandar ang trak.' : m < 40 ? 'Tahimik ang lahat sa biyahe. Matagal bago maghilom ang ${S.day - 7} na araw sa ilalim ng lupa.' : 'Pagod ang lahat, pero magkakasama.'}<br><br>Moral sa dulo: <b>${m}%</b>`;
   $('#dcGo').innerHTML = '<b>Maglaro ulit</b>'; $('#daycard').hidden = false; $('#fade').style.opacity = 0;
   $('#dcGo').onclick = () => { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(SAVE_KEY + '-day'); } catch (e) { /* nothing saved */ } location.reload(); };
 }
@@ -2302,7 +2317,7 @@ const NEWS = [
   d => `Relief operations sa Tarlac, naantala dahil sa kawan ng zombie sa MacArthur Highway.`,
   d => `Pulis: dumarami ang nanloloob sa mga bahay at bodega sa Capas. Manatili sa loob.`,
   d => `AFP: naaakit ang mga zombie sa ingay at amoy ng pagkain. Isara ang mga vent tuwing nagluluto.`,
-  d => `AFP: tuloy ang plano. Rescue convoy papuntang Baguio sa Araw 100. ${100 - d} araw pa.`,
+  d => d < 100 ? `AFP: tuloy ang plano. Rescue convoy papuntang Baguio sa Araw 100. ${100 - d} araw pa.` : `AFP: hinahanap pa rin ang mga grupong naiwan sa Tarlac. Wala pang petsa ang susunod na convoy.`,
   d => `May mga sundalong nag-aayos ng tulay sa MacArthur Highway para sa convoy.`,
   d => `Isang pamilya sa Mabalacat ang na-rescue matapos ang dalawang buwan sa ilalim ng bahay nila.`,
   d => `Clark: patuloy ang pananaliksik sa lunas sa Z-virus. Naghahanap ng mga boluntaryong may antiviral.`,
@@ -2333,7 +2348,7 @@ function journal() {
   busy(1.6, () => {
     advance(15); stress('isha', -6);
     const moods = npcs().filter(id => S.people[id].mood).map(id => `${N(id)} (${S.people[id].mood.k})`);
-    toast(`Journal, Araw ${S.day}: Moral ${morale()}%. ${moods.length ? 'Bantayan si ' + moods.join(', ') + '.' : 'Payapa ang lahat ngayon.'} ${100 - S.day} araw pa.`);
+    toast(`Journal, Araw ${S.day}: Moral ${morale()}%. ${moods.length ? 'Bantayan si ' + moods.join(', ') + '.' : 'Payapa ang lahat ngayon.'} ${S.day - 6} araw na sa ilalim ng lupa.`);
   }, 'sit');
 }
 function shower(s) {
@@ -2360,32 +2375,38 @@ function doorSheet() {
 function armorySheet() {
   const nx = DOOR_LV[S.door.lvl];
   openSheet(`<div class="kick">Armory · Bala ${S.ammo} · Piyesa ${S.parts} · Depensa ${defense().toFixed(1)}</div><h2 class="sh-title">Armory</h2>
-    <div class="sh-body">Lisensyadong shotgun ni Tatay Fred (${S.ammo} bala) · air rifle · 3 bolo · 3 riot shield<br>Pinto: ${Math.round(S.door.hp)}/${doorMax()} · Antas ${S.door.lvl}</div>
+    <div class="sh-body">Shotgun ni Tatay Fred · M16 rifle · M60 machine gun sa gun port · 3 bolo · 3 riot shield<br>Bala na hawak: <b>${S.ammo}</b> · Supply room: <b>${S.stock || 0}</b> bala<br>Pinto: ${Math.round(S.door.hp)}/${doorMax()} · Antas ${S.door.lvl}</div>
     <div class="choices">
-    <button class="choice${S.parts >= 1 ? ' primary' : ''}" id="aAmmo" ${S.parts >= 1 ? '' : 'disabled style="opacity:.5"'}><b>Mag-reload ng bala</b><span>1 piyesa → +3 bala (pulbura at lumang shell)</span></button>
+    <button class="choice${(S.stock || 0) > 0 ? ' primary' : ''}" id="aStock" ${(S.stock || 0) > 0 ? '' : 'disabled style="opacity:.5"'}><b>Kumuha ng bala sa supply room</b><span>+30 bala (natitira: ${S.stock || 0})</span></button>
+    <button class="choice" id="aAmmo" ${S.parts >= 1 ? '' : 'disabled style="opacity:.5"'}><b>Mag-reload ng bala</b><span>1 piyesa → +3 bala (pulbura at lumang shell)</span></button>
     ${nx ? `<button class="choice" id="aDoor" ${S.parts >= nx.c ? '' : 'disabled style="opacity:.5"'}><b>Patibayin ang pinto: ${nx.n}</b><span>Antas ${S.door.lvl + 1} · ${nx.c} piyesa · +75 tibay, mas mabagal masira</span></button>` : '<button class="choice" disabled style="opacity:.5"><b>Pinakamatibay na ang pinto</b></button>'}
     <button class="choice" id="aDrill" ${S.flags.drill === S.day ? 'disabled style="opacity:.5"' : ''}><b>Ensayo ng mga bantay</b><span>30 minuto · +1 depensa ngayong araw</span></button>
     <button class="choice" id="aClean" ${S.flags.clean === S.day ? 'disabled style="opacity:.5"' : ''}><b>Linisin ang shotgun</b><span>Mas malakas ang bawat putok ngayong araw</span></button></div>`);
+  $('#aStock').onclick = () => { const n = Math.min(30, S.stock || 0); if (!n) return; S.stock -= n; S.ammo += n; tick(); toast(`+${n} bala mula sa supply room`, 'good'); save(); armorySheet(); };
   $('#aAmmo').onclick = () => { if (S.parts < 1) return; S.parts--; S.ammo += 3; tick(); toast('+3 bala', 'good'); save(); armorySheet(); };
   if (nx) $('#aDoor').onclick = () => { if (S.parts < nx.c) return; S.parts -= nx.c; S.door.lvl++; S.door.hp = doorMax(); chime(); mis('door'); toast(`Napatibay ang pinto: ${nx.n}`, 'good'); save(); armorySheet(); };
   $('#aDrill').onclick = () => { closeSheet(); busy(2, () => { S.flags.drill = S.day; advance(30); toast('Nag-ensayo ang mga bantay. Mas handa kayo ngayong araw.', 'good'); }); };
   $('#aClean').onclick = () => { S.flags.clean = S.day; advance(15); toast('Malinis at may langis na ang shotgun.', 'good'); armorySheet(); };
 }
-const raidPower = (extra = 0) => 50 + S.day * 1.5 + extra;
+const DD = () => S.day <= 100 ? S.day : 100 + (S.day - 100) * .25;
+const raidPower = (extra = 0) => 50 + DD() * 1.5 + extra + (S.flags?.runner === 2 ? 12 : 0);
 function raidOK() { const n = (S.raids ||= {})[S.day] || 0; return S.day >= 7 && n < (S.day >= 30 ? 2 : 1); }
 function countRaid() { (S.raids ||= {})[S.day] = (S.raids[S.day] || 0) + 1; }
 function startRaid(power, who, z) {
-  const max = doorMax(), R = { m: power, m0: power, t: 0, dur: 20, cd: 0, over: false }, guard = defense();
+  const max = doorMax(), R = { m: power, m0: power, t: 0, dur: 20, cd: 0, mg: 0, gc: 0, over: false }, guard = defense();
   resetJoy(); beep(220, .5);
   openSheet(`<div class="kick">Araw ${S.day} · ${hhmm(S.min)} · Blast door</div><h2 class="sh-title">${who}!</h2>
     <div class="sh-body" id="rTxt">${z ? 'Umuungol sila at bumabangga sa pinto. Hindi sila napapagod. Patumbahin sila bago bumigay ang pinto.' : 'Kumakalampag sila sa pinto. Itaboy sila bago bumigay ang pinto.'}</div>
     <div class="sec">Pinto</div><div class="rbar"><i id="rDoor" style="background:var(--good)"></i></div>
     <div class="sec">Lakas nila</div><div class="rbar"><i id="rEnemy" style="background:var(--bad)"></i></div>
     <div class="sh-body" id="rInfo"></div>
-    <div class="raidbtns"><button class="fire" id="rShoot">BARIL<br><small>1 bala</small></button><button id="rHit">HAMPAS<br><small>bolo</small></button><button id="rFix">HARANG<br><small>ayusin</small></button></div>`, { noClose: true });
-  const upd = () => { $('#rDoor').style.width = Math.max(0, S.door.hp / max * 100) + '%'; $('#rEnemy').style.width = Math.max(0, R.m / R.m0 * 100) + '%'; $('#rInfo').textContent = `Bala: ${S.ammo} · Bantay: ${guardNames()} · ${Math.max(0, Math.ceil(R.dur - R.t))}s`; };
+    <div class="raidbtns"><button class="fire" id="rShoot">SHOTGUN<br><small>1 bala</small></button><button class="fire" id="rRifle">M16<br><small>2 bala</small></button><button class="mg" id="rMG">M60<br><small>8 bala · ratrat</small></button><button id="rHit">HAMPAS<br><small>bolo</small></button><button id="rFix">HARANG<br><small>ayusin</small></button><button id="rGrab">BALA<br><small>supply room</small></button></div>`, { noClose: true });
+  const upd = () => { $('#rDoor').style.width = Math.max(0, S.door.hp / max * 100) + '%'; $('#rEnemy').style.width = Math.max(0, R.m / R.m0 * 100) + '%'; $('#rInfo').textContent = `Bala: ${S.ammo} (supply ${S.stock || 0}) · Bantay: ${guardNames()} · ${Math.max(0, Math.ceil(R.dur - R.t))}s`; };
   const say = s => { $('#rTxt').textContent = s; };
   $('#rShoot').onpointerdown = e => { e.preventDefault(); if (R.over) return; if (S.ammo <= 0) return say('Ubos na ang bala! Hampas o harang na lang.'); S.ammo--; R.m -= 16 * (S.flags.clean === S.day ? 1.25 : 1); tone('square', 120, 40, .18, .6); tone('sawtooth', 900, 100, .08, .2); say(pick(z ? ['BANG! Bumagsak ang isang zombie, pero may pumalit agad.', 'Putok sa ulo! Isa na lang... hindi, lima pa.', 'BANG! Tumalsik ang zombie sa harap ng pinto.', 'Umuusok ang shotgun. Ang dami pa nila!'] : ['BANG! Napaatras ang isa sa kanila.', 'Putok sa gun port! Nagsisigawan sila.', 'BANG! Tumama sa crowbar ng isa.', 'Umuusok ang shotgun. Isa pa!'])); upd(); };
+  $('#rRifle').onpointerdown = e => { e.preventDefault(); if (R.over) return; if (S.ammo < 2) return say('Kulang ang bala! Kumuha sa supply room.'); S.ammo -= 2; R.m -= 24; tone('square', 160, 50, .12, .5); say(pick(z ? ['Tak-tak! Dalawang zombie ang bumagsak.', 'Sapul sa ulo ang M16.', 'Tak-tak-tak! Umatras ang nasa harap.'] : ['Tak-tak! Nagtakbuhan sila.', 'Sapul! May sumigaw sa labas.'])); upd(); };
+  $('#rMG').onpointerdown = e => { e.preventDefault(); if (R.over) return; if (R.mg > 0) return say('Mainit pa ang M60! Saglit lang.'); if (S.ammo < 8) return say('Kulang ang bala para sa M60! Kumuha sa supply room.'); S.ammo -= 8; R.mg = 2.5; R.m -= 60; for (let i = 0; i < 6; i++) setTimeout(() => tone('square', 90, 40, .08, .5), i * 70); say(pick(z ? ['RATATATAT! Bumagsak ang buong hanay ng zombie!', 'RATATATAT! Nagkalat sila sa harap ng pinto.', 'Umuusok ang M60. Halos wala nang nakatayo.'] : ['RATATATAT! Nagtakbuhan sila palayo!', 'RATATATAT! Walang naglakas-loob lumapit.'])); upd(); };
+  $('#rGrab').onpointerdown = e => { e.preventDefault(); if (R.over || R.gc > 0) return; const n = Math.min(15, S.stock || 0); if (!n) return say('Ubos na pati ang supply room!'); R.gc = 3; S.stock -= n; S.ammo += n; tone('triangle', 500, 300, .05, .3); say(`Tumakbo si AJ sa supply room: +${n} bala.`); upd(); };
   $('#rHit').onpointerdown = e => { e.preventDefault(); if (R.over) return; R.m -= 3.5; stress('isha', .3); tone('triangle', 300, 150, .06, .3); say(pick(z ? ['Hampas ng bolo sa ulong sumisilip sa siwang!', 'Itinulak ni Carlo ang pinto pabalik!', 'Hampas! May kamay na naputol sa siwang.'] : ['Hampas sa kamay na sumisilip sa siwang!', 'Itinulak ni Carlo ang pinto pabalik!', 'Hampas! Napamura sila.'])); upd(); };
   $('#rFix').onpointerdown = e => { e.preventDefault(); if (R.over || R.cd > 0) return; R.cd = 1.2; S.door.hp = Math.min(max, S.door.hp + 10); tone('square', 80, 60, .1, .3); say('Dinagdagan ninyo ng harang ang pinto.'); upd(); };
   let last = performance.now();
@@ -2416,9 +2437,9 @@ function startRaid(power, who, z) {
   };
   const loop = () => {
     if (R.over) return;
-    const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now; R.t += dt; R.cd -= dt;
+    const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now; R.t += dt; R.cd -= dt; R.mg -= dt; R.gc -= dt;
     R.m -= guard * 2.4 * dt;
-    S.door.hp -= (6 + S.day * .15) * (1 - S.door.lvl * .1) * dt;
+    S.door.hp -= (6 + DD() * .15) * (1 - S.door.lvl * .1) * dt;
     if (Math.random() < dt * 1.6) tone('square', 70, 50, .12, .4);
     upd();
     if (R.m <= 0) return end('win'); if (S.door.hp <= 0) return end('lose'); if (R.t >= R.dur) return end('retreat');
@@ -2449,8 +2470,8 @@ function cure(id) {
 }
 function nightHorde() {
   // every night the dead walk, and the door has to hold until morning
-  if (S.day < 8 || Math.random() > .4 + S.day / 250) return '';
-  const hit = Math.max(0, (18 + S.day * .45) * (1 - S.door.lvl * .1) - defense() * 3 + Math.random() * 15);
+  if (S.day < 8 || Math.random() > .4 + DD() / 250) return '';
+  const hit = Math.max(0, (18 + DD() * .45) * (1 - S.door.lvl * .1) - defense() * 3 + Math.random() * 15);
   S.door.hp -= hit;
   if (S.door.hp > 0) return `Gabi: may kawan ng zombie na bumangga sa pinto. <b>-${Math.round(hit)} sa pinto</b> (${Math.round(S.door.hp)}/${doorMax()}).`;
   S.door.hp = doorMax() * .2; const g = someone(id => !defOf(id).kid && !S.people[id].bit && !S.people[id].turned); bite(g); stressAll(10);
@@ -2458,7 +2479,7 @@ function nightHorde() {
 }
 Object.assign(EVENTS, {
   turned: { kick: 'Clinic', loc: 'C', title: 'May naging zombie', force: 1,
-    body: () => { const id = S.flags.turnWho; return `<p>Sumigaw si Angel mula sa Clinic. Kulay abo na ang balat ni <b>${N(id)}</b>, puti ang mga mata, at umuungol. Hindi na niya kayo kilala.</p><p>Sa tulong nina ${['carlo', 'aj', 'nelson', 'paolo', 'na', 'angel'].filter(x => x !== id && S.people[x] && !S.people[x].sick).slice(0, 2).map(N).join(' at ') || 'ng lahat'}, naitali ninyo siya sa kama. May lunas pa raw, sabi ni ${S.people.ramon ? 'Doc Ramon' : 'Angel'}: <b>dalawang antiviral</b>, at babalik siya.</p>`; },
+    body: () => { const id = S.flags.turnWho; return `<p>Sumigaw si Angel mula sa Clinic. Kulay abo na ang balat ni <b>${N(id)}</b>, puti ang mga mata, at umuungol. Hindi na niya kayo kilala.</p>${S.flags.turnBit ? `<p><b>Insidente:</b> may kagat pala siyang itinago. Bago siya naitali, nakagat niya si <b>${N(S.flags.turnBit)}</b>.</p>` : ''}<p>Sa tulong nina ${['carlo', 'aj', 'nelson', 'paolo', 'na', 'angel'].filter(x => x !== id && S.people[x] && !S.people[x].sick).slice(0, 2).map(N).join(' at ') || 'ng lahat'}, naitali ninyo siya sa kama. May lunas pa raw, sabi ni ${S.people.ramon ? 'Doc Ramon' : 'Angel'}: <b>dalawang antiviral</b>, at babalik siya.</p>`; },
     choices: [
       { t: 'Iturok ang dalawang antiviral', sub: 'Babalik siya. Kailangan ng 2.', fx: () => { const id = S.flags.turnWho; if ((S.anti || 0) < 2) return `<p>Isa lang ang meron kayo${S.anti ? '' : ', o wala pa'}. Kailangan ninyong maghanap pa. Nakatali muna si ${N(id)} sa Clinic.</p>`; cure(id); closeSheet(); return `<p>Isang oras na nanginig si ${N(id)}. Tapos, mahina: <i>"Isha...?"</i> Umiyak ang lahat sa Clinic.</p>`; } },
       { t: 'Itali muna sa Clinic', sub: 'Hindi siya makakatrabaho. Bigat sa lahat.', fx: () => { const id = S.flags.turnWho; stressAll(10); if (PAIRS[id]) setMood(PAIRS[id], 'lungkot', `zombie na si ${N(id)}`); return `<p>Ikinandado ninyo ang Clinic. Gabi-gabi, naririnig ng lahat ang ungol ni ${N(id)}. Maghanap ng antiviral sa ospital o police station.</p>`; } },
@@ -2482,10 +2503,188 @@ Object.assign(EVENTS, {
       { t: 'Patayin lahat ng ilaw at makina', sub: '-30 kuryente, -15 oxygen. Baka lumampas sila.', fx: () => { addRes('power', -30); addRes('o2', -15); stressAll(10); if (Math.random() < .55 + S.door.lvl * .05) return '<p>Anim na oras sa dilim at init. Walang huminga nang malakas. Pag-umaga, lumampas na ang kawan. Buhay kayong lahat.</p>'; return { raid: [raidPower(50), 'Naamoy pa rin nila kayo', 1] }; } },
     ] },
   zLab3: { kick: 'Radyo', loc: 'M', title: 'Ang lunas', force: 1, sound: 'chime', good: 1,
-    body: () => S.flags.labHelp ? `<p><i>"Isha! Gumana! Dahil sa dugo at antiviral na ibinigay ninyo, may bakuna na. Dadalhin ito ng convoy sa Araw 100. At may regalo ako sa inyo."</i></p><p>Kinaumagahan, sa harap ng blast door: isang cooler na may <b>${S.flags.labHelp >= 1 ? 4 : 2} antiviral</b> at sulat-kamay ni Dr. Ramos.</p>` : '<p><i>"...walang sapat na sample... hindi ko natapos ang lunas... sa lahat ng nakikinig, mag-ingat..."</i></p><p>Tahimik ang lahat. Kailangan nilang umabot sa Araw 100 nang walang lunas.</p>',
+    body: () => S.flags.labHelp ? `<p><i>"Isha! Gumana! Dahil sa dugo at antiviral na ibinigay ninyo, may bakuna na. Dadalhin ito ng susunod na convoy. At may regalo ako sa inyo."</i></p><p>Kinaumagahan, sa harap ng blast door: isang cooler na may <b>${S.flags.labHelp >= 1 ? 4 : 2} antiviral</b> at sulat-kamay ni Dr. Ramos.</p>` : '<p><i>"...walang sapat na sample... hindi ko natapos ang lunas... sa lahat ng nakikinig, mag-ingat..."</i></p><p>Tahimik ang lahat. Kailangan nilang magpatuloy nang walang lunas.</p>',
     choices: [{ t: 'Sige', sub: '', fx: () => { if (S.flags.labHelp) { S.anti = (S.anti || 0) + (S.flags.labHelp >= 1 ? 4 : 2); S.flags.vaccine = 1; stressAll(-15); chime(); } else stressAll(6); return ''; } }] },
 });
 Object.assign(CHAPTERS, { 14: { night: 'zLab1' }, 38: { morning: 'zLab2' }, 66: { k1: 'zHorde' }, 78: { morning: 'zLab3' } });
+
+Object.assign(EVENTS, {
+  qTurned: { kick: 'Quarantine', loc: 'Q', title: 'Sa loob ng Quarantine', force: 1,
+    pre: () => { const id = S.flags.turnWho, mates = people().filter(x => x !== id && S.people[x].quar && !S.people[x].turned && !!S.people[x].qb === !!S.people[id].qb), r = Math.random(); S.flags.qVictim = null;
+      if (mates.length && r < .45) S.flags.qVictim = pick(mates); else if (r < .2) S.flags.qVictim = S.people.angel && !S.people.angel.bit ? 'angel' : null;
+      if (S.flags.qVictim) bite(S.flags.qVictim); },
+    body: () => { const v = S.flags.qVictim; return `<p>Alarm sa Quarantine. Sa salamin: si <b>${N(S.flags.turnWho)}</b>, puti na ang mga mata, bumabangga sa pinto. May kagat pala siya na hindi niya sinabi.</p>${v ? (S.people[v]?.quar ? `<p><b>Insidente:</b> bago pa nakarating si Carlo, nasunggaban niya si <b>${N(v)}</b> na kasama niya sa Quarantine. <b>Nakagat si ${N(v)}.</b></p>` : `<p><b>Insidente:</b> nasa loob si Angel para kunin ang temperatura niya. Nasunggaban siya bago nakalabas. <b>Nakagat si Angel.</b></p>`) : '<p><b>Walang ibang nakagat.</b> Gumana ang Quarantine.</p>'}`; },
+    choices: [
+      { t: 'Iturok ang 2 antiviral sa siwang', sub: 'Babalik siya. Kailangan ng 2.', fx: () => { const id = S.flags.turnWho; if ((S.anti || 0) < 2) return '<p>Kulang ang antiviral. Nakakulong muna siya sa Quarantine.</p>'; cure(id); closeSheet(); return ''; } },
+      { t: 'Ilabas siya sa blast door', sub: 'Aalis siya sa bunker. Wala nang antiviral na gagamitin.', fx: () => { const id = S.flags.turnWho, d = defOf(id); delete S.people[id]; S.extra = (S.extra || []).filter(x => x.id !== id); if (P[id]) { P[id].root.visible = false; P[id].tag.remove(); delete P[id]; } doorAnim(1); setTimeout(() => doorAnim(0), 3000); stressAll(4); return `<p>Binuksan ni Carlo ang panlabas na pinto mula sa malayo. Lumabas si ${d?.name || 'siya'} at naglakad papunta sa dilim.</p>`; } },
+    ] },
+  zNoConvoy: { kick: 'Airlock', loc: 'A', title: 'Araw 100', force: 1,
+    body: () => '<p>Gising na ang lahat bago mag-alas-singko. Nakabihis na ang mga bata. Nakaimpake na ang mga bag sa Airlock.</p><p>Alas-sais. Alas-otso. Tanghali. Walang trak. Pagdating ng gabi, kumaluskos ang radyo: <i>"...na-ambush ang convoy sa Capas... maraming nasawi... walang bagong petsa... ulitin, walang bagong petsa..."</i></p><p>Isa-isang ibinaba ng lahat ang mga bag nila.</p>',
+    choices: [
+      { t: 'Tumayo sa harap ng lahat', sub: '"Hindi tayo susuko. Tuloy ang buhay dito."', fx: () => { S.flags.noConvoy = 1; stressAll(14); stress('isha', -6); return '<p>Walang pumalakpak. Pero isa-isa silang tumango. Kinabukasan, bumalik ang lahat sa trabaho.</p>'; } },
+      { t: 'Hayaang umiyak muna ang lahat', sub: 'Isang araw na pahinga. Mabigat, pero totoo.', fx: () => { S.flags.noConvoy = 1; stressAll(20); npcs().forEach(id => { if (!defOf(id).kid) S.people[id].job = 'rest'; }); routineAll(); return '<p>Walang nagtrabaho buong araw. Sa gabi, may nagsimulang kumanta sa Sala. Unti-unti, sumabay ang lahat.</p>'; } },
+    ] },
+  zSilence: { kind: 'night', kick: 'Master Suite', loc: 'M', title: 'Tahimik ang radyo', force: 1,
+    body: () => '<p>Apat na araw nang walang boses sa radyo. Kahit ang AFP. Kahit si Mang Lando. Puro static.</p><p>Tinanong ni Carly: <i>"Tita Isha, tayo na lang po ba ang natitira?"</i></p>',
+    choices: [
+      { t: '"Hindi. Maraming katulad natin, nagtatago lang."', sub: 'Pag-asa para sa mga bata.', fx: () => { stress('carly', -10); stress('ria', -10); return '<p>Tumango si Carly at niyakap si Millie. Gabi-gabi, si Angel na ang nakikinig sa radyo.</p>'; } },
+      { t: 'Ipaayos kay Papa Na ang antenna', sub: '2 piyesa. Baka sira lang ang radyo.', fx: () => { if (S.parts < 2) return '<p>Kulang ang piyesa. Static pa rin.</p>'; S.parts -= 2; stressAll(-8); return '<p>Pag-akyat ni Papa Na sa antenna shaft, nakita niyang kinagat ng daga ang kable. Pagkapalit: <i>"...Northern Luzon Command, may nakakarinig ba..."</i> Nagsigawan sa tuwa ang Sala.</p>'; } },
+    ] },
+  zRain: { kick: 'Pantry', loc: 'P', title: 'Tag-ulan', force: 1,
+    body: () => '<p>Dalawang linggo nang umuulan. Basa ang mga pader. May amag na sa Pantry at sa Library, at umuubo si Lola Mila.</p>',
+    choices: [
+      { t: 'Linisin lahat at patakbuhin ang dehumidifier', sub: '-15 kuryente, 1 piyesa.', fx: () => { addRes('power', -15); S.parts = Math.max(0, S.parts - 1); return '<p>Tatlong araw na nagkuskos ang lahat. Tuyo na ulit ang bunker.</p>'; } },
+      { t: 'Hayaan muna', sub: 'Baka may magkasakit.', fx: () => { someoneSick(2); addRes('food', -12); return '<p>Itinapon ninyo ang mga sakong may amag. Dalawa ang nilagnat.</p>'; } },
+    ] },
+  zXmas: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Pasko sa ilalim ng lupa', force: 1, good: 1,
+    body: () => '<p>Gumawa si Yssa ng parol mula sa lumang karton at Christmas lights na nakita ni AJ. Inayos ni Nanay Mila ang Sala. Nakaupo ang mga bata sa ilalim ng "Christmas tree": isang walis na binalot ng tinsel.</p>',
+    choices: [
+      { t: 'Noche Buena para sa lahat!', sub: '-20 pagkain, -12 karne. Sulit.', fx: () => { addRes('food', -20); addRes('meat', -12); stressAll(-25); npcs().forEach(id => clearMood(id)); chime(); return '<p>Hamon mula sa baboy ni AJ, spaghetti, at leche flan. Nagregalo ang bawat isa ng isang bagay na gawa nila. Ang regalo ni Angel sa iyo: isang drawing ninyong dalawa at si Millie, sa labas, sa ilalim ng araw.</p>'; } },
+      { t: 'Simbang gabi sa Sala', sub: 'Dasal at kanta. Walang gastos.', fx: () => { stressAll(-12); return '<p>Si Mama Jen ang nanguna. Sa dulo, sabay-sabay ninyong kinanta ang "Ang Pasko ay Sumapit".</p>'; } },
+    ] },
+  zNewYear: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Bagong Taon', force: 1, good: 1,
+    body: () => '<p>Hatinggabi. Walang paputok sa labas, puro ungol. Pero sa loob, nagkakalampagan ng kaldero ang mga bata at tumatalon para tumangkad.</p>',
+    choices: [
+      { t: 'Isulat ang pangako ng bawat isa', sub: 'Ilalagay sa isang garapon, bubuksan paglabas.', fx: () => { stressAll(-12); return '<p>Isinulat ng bawat isa ang gagawin nila paglabas. Itinago ni Angel ang garapon sa Master Suite. Ang isinulat mo, ikaw lang ang nakakaalam.</p>'; } },
+      { t: 'Labindalawang prutas mula sa greenhouse', sub: '-8 pagkain. Swerte raw.', fx: () => { addRes('food', -8); stressAll(-10); stress('su', -12); return '<p>Labindalawang klase ng prutas at gulay ang naipon ni Mama Su. Tuwang-tuwa siya.</p>'; } },
+    ] },
+  zBlight: { kick: 'Greenhouse', loc: 'G', title: 'May sakit ang mga halaman', force: 1,
+    body: () => '<p>Nangingitim ang mga dahon ng kamatis at pechay. Kumakalat ito sa buong greenhouse. Sabi ni Mama Su, kung hindi ito mapigilan, mawawala ang kalahati ng ani.</p>',
+    choices: [
+      { t: 'Bunutin ang lahat ng may sakit', sub: 'Mawawala ang ani ngayon, pero ligtas ang iba.', fx: () => { S.growth = Math.max(0, S.growth - .4); addRes('food', -10); stress('su', 10); return '<p>Umiiyak si Mama Su habang binubunot ang mga halaman. Pero tumigil ang pagkalat.</p>'; } },
+      { t: 'Subukang gamutin, 2 gamot', sub: 'Baka mailigtas lahat. Baka hindi.', fx: () => { if ((S.meds || 0) >= 2 && Math.random() < .6) { S.meds -= 2; stress('su', -10); return '<p>Gumana ang halo ni Angel na gamot at sabon. Unti-unting gumaling ang mga dahon.</p>'; } S.meds = Math.max(0, (S.meds || 0) - 2); S.growth = 0; addRes('food', -20); return '<p>Hindi gumana. Nawala ang buong ani. Magsisimula ulit si Mama Su sa mga binhing itinabi niya.</p>'; } },
+    ] },
+  zVow: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Kasal sa bunker', force: 1, good: 1,
+    body: () => '<p>Lumapit sina Carlo at Monica sa iyo, nahihiya. <i>"Isha, sampung taon na kami. Gusto naming ulitin ang kasal namin. Dito. Ngayon. Kasama kayong lahat."</i></p>',
+    choices: [{ t: 'Ikaw ang magkakasal sa kanila!', sub: 'Isang gabing hindi malilimutan.', fx: () => { addRes('food', -10); stressAll(-18); stress('carlo', -20); stress('monica', -20); chime(); return '<p>Si Carly ang flower girl, may hawak na dahon ng pechay. Si Butchukok ang ring bearer, gumagapang. Umiyak si Carlo, ang pinakamatapang sa inyo. Pagkatapos ng "I do", sumayaw kayo ni Angel.</p>'; } }] },
+  zHalfYear: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Kalahating taon', force: 1, good: 1,
+    body: () => `<p>${S.day - 6} araw. Kalahating taon sa ilalim ng lupa. Tumangkad na si Carly ng dalawang pulgada, sukat sa pader ng Sala. ${S.people.baby ? `Nakakaupo na si ${N('baby')}.` : ''}</p>`,
+    choices: [{ t: 'Gumawa ng "time capsule"', sub: 'Mga drawing, sulat at litrato.', fx: () => { stressAll(-10); return '<p>Inilagay ninyo sa kahon ang mga drawing ng mga bata, sulat ng bawat isa, at ang unang listahan ni Angel noong Araw 7.</p>'; } }] },
+  zOp: { kick: 'Radyo', loc: 'M', title: 'Operation Bagong Araw', force: 1, sound: 'chime',
+    body: () => '<p><i>"...lahat ng grupo sa Gitnang Luzon. Ito ang Operation Bagong Araw. Nililinis namin ang daan mula Baguio pababa, isang bayan kada linggo. Hindi namin alam kung kailan kami aabot sa inyo. Pero aabot kami. Magpakatatag kayo."</i></p>',
+    choices: [
+      { t: 'Iulat ang bilang ninyo', sub: 'Mailalagay kayo sa listahan.', fx: () => { S.flags.opList = 1; stressAll(-12); return `<p>"${people().length} katao at isang aso." Sagot: <i>"Nakalista na kayo. Hintayin ang senyas."</i></p>`; } },
+      { t: 'Makinig lang', sub: 'Baka marinig ng ibang grupo.', fx: () => { stressAll(-5); return '<p>Isinulat ni Angel ang lahat. Ngayon, may pag-asa na ulit.</p>'; } },
+    ] },
+  zHorde2: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Ang ikalawang kawan', sound: 'knock', force: 1,
+    body: () => '<p>Itinutulak ng Operation Bagong Araw ang mga zombie pababa mula Baguio. At ngayong gabi, dumaan sila sa inyo. Mas marami pa kaysa sa unang kawan.</p>',
+    choices: [
+      { t: 'Lahat sa gun port! M60, M16, shotgun!', sub: 'Pinakamalaking laban.', fx: () => ({ raid: [raidPower(90), 'Ang ikalawang kawan', 1] }) },
+      { t: 'Dilim at katahimikan', sub: '-35 kuryente, -20 oxygen. Baka lumampas sila.', fx: () => { addRes('power', -35); addRes('o2', -20); stressAll(12); if (Math.random() < .5 + S.door.lvl * .05) return '<p>Walong oras sa dilim. Lumampas ang kawan.</p>'; return { raid: [raidPower(65), 'Naamoy nila kayo', 1] }; } },
+    ] },
+  zOutbreak: { kick: 'Clinic', loc: 'C', title: 'Ubo sa buong bunker', force: 1,
+    body: () => '<p>Hindi Z-virus, sabi ni Angel. Pulmonya. Pero lima na ang may lagnat, at kulang ang Clinic para sa lahat.</p>',
+    choices: [
+      { t: 'Gawing Clinic ang Dormitoryo', sub: '4 gamot. Mabilis gumaling.', fx: () => { someoneSick(5); const m = Math.min(4, S.meds || 0); S.meds -= m; npcs().forEach(id => { if (S.people[id].sick && !S.people[id].bit && !S.people[id].turned) health(id, m * 8); }); return `<p>Ginamit ang ${m} gamot. Sa loob ng isang linggo, gumaling ang karamihan.</p>`; } },
+      { t: 'Tipirin ang gamot', sub: 'Mas matagal ang paggaling.', fx: () => { someoneSick(5); stress('angel', 15); return '<p>Si Angel ang nagbantay gabi-gabi. Pagod na pagod siya.</p>'; } },
+    ] },
+  zLando: { kick: 'Radyo', loc: 'M', title: 'Bumagsak ang bunker ni Mang Lando', force: 1, sound: 'chime',
+    body: () => `<p><i>"Isha... si Mang Lando ito. Nasira ang pinto namin kagabi. Lima na lang kami. Papunta kami diyan. Pakiusap."</i></p><p>${freeBed() ? 'May kama pa para sa kanila.' : 'Puno na ang bunker.'}</p>`,
+    choices: () => [
+      ...(freeBed() ? [{ t: 'Papasukin sila sa Quarantine', sub: 'Mas maraming bibig, mas maraming kamay.', fx: () => { const roles = NEWBIES.slice(0, 5); for (const [i, nm] of ['Mang Lando', 'Aling Fe', 'Kuya Boyet', 'Ate Liza', 'Totoy Lando'].entries()) { if (!freeBed()) break; const d = newbieDef(nm, roles[i % roles.length]); d.bitten = i === 3 && Math.random() < .4; admit(d, qFull() ? 0 : 1); } stressAll(-6); return '<p>Dumating sila bago mag-umaga, sugatan at gutom. Niyakap ni Carlo si Mang Lando sa Airlock.</p>'; } }] : []),
+      { t: 'Ituro ang daan papunta sa simbahan', sub: 'Hindi natin sila kaya.', fx: () => { setMood(pick(['carlo', 'angel']), 'lungkot', 'hindi napapasok si Mang Lando'); return '<p>Matagal na tahimik ang radyo pagkatapos.</p>'; } },
+    ] },
+  zFlyover: { kick: 'Airlock', loc: 'A', title: 'May eroplano!', force: 1,
+    body: () => '<p>Ugong sa itaas. Hindi zombie. Makina. Sa camera: isang helicopter ng Army, mababa, umiikot sa bayan.</p>',
+    choices: [
+      { t: 'Magsindi ng signal fire sa labas', sub: 'Makikita ka nila. Pati ng mga zombie.', fx: () => { S.flags.signal = 1; S.rescue = Math.max(366, (S.rescue || 400) - 15); return { raid: [raidPower(40), 'Naakit ang mga zombie sa apoy', 1] }; } },
+      { t: 'Magtago. Hindi pa natin alam kung sino sila', sub: 'Ligtas.', fx: () => '<p>Lumipad palayo ang helicopter. Baka babalik sila. Baka hindi.</p>' },
+    ] },
+  zDrop: { kick: 'Airlock', loc: 'A', title: 'May bumagsak na kahon', force: 1, good: 1,
+    body: () => `<p>Madaling-araw, may kumalabog sa itaas. Isang kahon na may parachute${S.flags.signal ? ', dahil nakita nila ang apoy ninyo' : ''}. Sa loob: pagkain, gamot, antiviral, at isang radyo ng militar na may sulat: <i>"Bunker ni Isha. Pindutin kapag handa."</i></p>`,
+    choices: [{ t: 'Kunin ang kahon', sub: '', fx: () => { addRes('food', 40); S.meds = (S.meds || 0) + 6; S.anti = (S.anti || 0) + 4; S.stock = (S.stock || 0) + 200; S.flags.milRadio = 1; stressAll(-15); chime(); return '<p>+40 pagkain, +6 gamot, +4 antiviral, +200 bala sa supply room. At ang radyo: isang direktang linya sa Operation Bagong Araw.</p>'; } }] },
+  zYear: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Isang taon', force: 1, good: 1,
+    body: () => `<p>Isang taon na mula nang isara ninyo ang blast door. ${people().length} kayo ngayon, at si Millie. Hindi pa rin alam kung kailan darating ang tulong.</p><p>Pero tumigil ang lahat at tumingin sa iyo, gaya noong Araw 7.</p>`,
+    choices: [{ t: '"Isang taon. Kaya pa natin ang isa pa."', sub: '', fx: () => { stressAll(-20); npcs().forEach(id => clearMood(id)); return '<p>Nagpalakpakan ang lahat. Sa radyo ng militar, may maikling mensahe: <i>"Malapit na kami."</i></p>'; } }] },
+});
+Object.assign(CHAPTERS, { 100: { morning: 'zNoConvoy' }, 104: { night: 'zSilence' }, 118: { morning: 'zRain' }, 130: { night: 'zXmas' }, 137: { night: 'zNewYear' }, 152: { morning: 'zBlight' }, 168: { night: 'zVow' }, 189: { night: 'zHalfYear' }, 205: { morning: 'zOp' }, 222: { k1: 'zHorde2' }, 241: { morning: 'zOutbreak' }, 262: { morning: 'zLando' }, 287: { afternoon: 'zFlyover' }, 302: { morning: 'zDrop' }, 371: { night: 'zYear' } });
+
+// ---------------------------------------------------------------- more story: each arc runs over several days and remembers your choice
+function migoDef() { const d = newbieDef('Migo', { role: 'Anak ni Nelson', job: 'W', spec: 'W', perk: 'parts' }); d.id = 'migo'; d.fem = false; d.h = 1.7; d.style = 'short'; d.bed = d.bed || ['Lib', 0]; d.thief = false; return d; }
+Object.assign(EVENTS, {
+  zMigo1: { kick: 'Master Suite', loc: 'M', title: 'Boses ni Migo', force: 1, sound: 'chime',
+    body: () => '<p>Hatinggabi. Bagong boses sa radyo, binata, pabulong: <i>"Papa? Papa, si Migo ito. Nasa lumang paaralan ako sa Capas, sa ikalawang palapag. May kasama akong tatlong bata. Hindi kami makababa. Puno ng zombie ang hagdan."</i></p><p>Nabitawan ni Nelson ang tasa niya. Ilang taon na silang hindi nag-uusap ng anak niya.</p>',
+    choices: [
+      { t: '"Kapit lang, Migo. Pupuntahan ka namin."', sub: 'Pangako. Kailangan mong tuparin.', fx: () => { S.flags.migo = 'promise'; stress('nelson', -20); return '<p>Umiyak si Nelson sa radyo. "Anak, pasensya na sa lahat." Ang sagot ni Migo: <i>"Papa, bilisan mo lang."</i></p>'; } },
+      { t: '"Magtago ka muna. Pag-iisipan namin."', sub: 'Hindi ka nangako. Masasaktan si Nelson.', fx: () => { S.flags.migo = 'wait'; setMood('nelson', 'lungkot', 'hindi agad nangako si Isha na ililigtas si Migo'); return '<p>Tumango si Nelson pero hindi siya natulog buong gabi. Nakaupo lang siya sa tabi ng radyo.</p>'; } },
+    ] },
+  zMigo2: { kick: 'Airlock', loc: 'A', title: 'Ang paaralan sa Capas', force: 1,
+    body: () => `<p>Labindalawang araw nang naghihintay si Migo. Mahina na ang boses niya sa radyo: <i>"Ubos na ang tubig namin, Papa."</i></p><p>${S.flags.migo === 'promise' ? 'Nangako ka sa kanya.' : 'Hindi ka nangako, pero nakatingin si Nelson sa iyo.'} Isang buong araw ang biyahe, at puno ng zombie ang paaralan.</p>`,
+    choices: [
+      { t: 'Ipadala sina Nelson, Carlo at AJ', sub: '4 bala, isang buong araw. Delikado.', fx: () => { S.flags.migoGo = 1; S.ammo = Math.max(0, S.ammo - 4); ['nelson', 'carlo', 'aj'].forEach(id => { if (S.people[id] && !S.people[id].sick) { S.people[id].away = 1; hideAway(id); } }); doorAnim(1); setTimeout(() => doorAnim(0), 3000); return '<p>Bago mag-umaga, lumabas ang tatlo. Huling narinig ninyo kay Carlo sa radyo: <i>"Nasa kanto na kami ng paaralan."</i> Tapos, static.</p>'; } },
+      { t: 'Ituro na lang sa radyo ang daan palabas', sub: 'Walang lalabas. Si Migo ang bahala.', fx: () => { S.flags.migoGo = 0; stress('nelson', 15); return '<p>Buong gabi mong itinuro kay Migo ang daan sa likod ng paaralan, hakbang-hakbang. Bago mag-umaga, naputol ang signal.</p>'; } },
+    ] },
+  zMigo3: { kick: 'Airlock', loc: 'A', title: 'Pagbalik mula Capas', force: 1, sound: 'knock',
+    body: () => { const ok = S.flags.migoGo ? Math.random() < .8 : Math.random() < .35; S.flags.migoOK = ok ? 1 : 0;
+      if (S.flags.migoGo) return ok ? '<p>Kumatok sila nang alas-tres ng hapon. Una si Carlo, may sugat sa noo. Si AJ, may batang buhat sa likod. Si Nelson, yakap si Migo.</p><p>Ang tatlong bata, dinala muna nila sa bunker ni Mang Lando. Si Migo, dito.</p>' : '<p>Gabi na nang kumatok sila. Tatlo lang sila. Hindi nagsasalita si Nelson.</p><p>"Wala na siya doon," sabi ni Carlo. "May sulat lang sa pader: <i>Papa, pumunta kami sa simbahan.</i>"</p>';
+      return ok ? '<p>Tatlong katok. Sa camera: si Migo, payat at puro putik, hawak ang kamay ng tatlong bata. <i>"Sinundan ko ang daan na itinuro ninyo."</i></p>' : '<p>Dalawang araw na walang signal mula kay Migo. Gabi-gabi, nakaupo si Nelson sa tabi ng radyo.</p>'; },
+    choices: [{ t: 'Sige', sub: '', fx: () => { ['nelson', 'carlo', 'aj'].forEach(id => { const st = S.people[id]; if (st?.away && !S.exp?.team.includes(id)) { st.away = 0; const p = P[id]; if (p) { p.root.visible = true; p.tag.style.display = ''; p.place(20, 32.4, Math.PI); routine(p); } } });
+      if (S.flags.migoOK) { const d = migoDef(); admit(d); TRAIT.migo = 'ang anak ni Nelson na matagal nawala'; PAIRS.migo = 'nelson'; OWN.migo = ['Salamat sa pagpunta para sa akin. Kay Papa, at sa inyo.', 'Hindi ko alam na kaya pa naming mag-usap ni Papa nang ganito.', 'Kabisado ko ang mga daan sa Capas. Sabihin mo lang kung kailangan ninyo ng gabay.']; stress('nelson', -40); clearMood('nelson'); stressAll(-8); return '<p>Kinagabihan, nakita ninyo sina Nelson at Migo sa Water Filtration, magkatabing nag-aayos ng tubo. Parang walang nangyaring away noon.</p>'; }
+      setMood('nelson', 'lungkot', 'hindi nila nahanap si Migo'); stressAll(6); S.flags.migoLost = 1; return '<p>Isinulat ni Nelson ang pangalan ni Migo sa pader ng Sala. "Hahanapin ko siya paglabas natin," sabi niya.</p>'; } }] },
+  zDado1: { kick: 'Clinic', loc: 'C', title: 'Ang lihim ni Mang Dado', force: 1,
+    body: () => S.people.dado ? '<p>Hindi makatingin si Mang Dado sa iyo. <i>"Isha, may hindi ako sinabi. Hindi lang ako mekaniko. Sa Clark lab ako nagtatrabaho. Ako ang nag-aayos ng mga freezer doon... noong araw na nagsimula ang lahat."</i></p><p><i>"May bodega pa ng antiviral sa basement ng lab. Alam ko ang code ng pinto."</i></p>' : '<p>May iniwang backpack sa airlock kagabi. Sa loob: isang ID ng Clark Research Lab, at mapa na may bilog sa basement. Sa likod, nakasulat: <i>"Antiviral. Code: 0917."</i></p>',
+    choices: () => [
+      { t: S.people?.dado ? 'Patawarin siya. Tulungan niya tayo.' : 'Itago ang mapa', sub: 'May bagong lugar na puwedeng puntahan.', fx: () => { S.flags.lab2 = 1; if (S.people.dado) stress('dado', -25); return `<p>${S.people.dado ? 'Umiyak si Mang Dado. "Hindi ko kayo bibiguin."' : 'Itinago ni Angel ang mapa sa ilalim ng mga gamot.'} Sa susunod na araw, puwede ninyong subukang pasukin ang lab.</p>`; } },
+      ...(S.people?.dado ? [{ t: 'Galit ka. Huwag na siyang pagkatiwalaan', sub: 'Mabigat sa loob, pero may lugar pa rin.', fx: () => { S.flags.lab2 = 1; setMood('dado', 'lungkot', 'hindi na siya pinagkakatiwalaan ni Isha'); setMood('aj', 'galit', 'si Mang Dado pala ay taga-Clark lab'); return '<p>Lumayo ang lahat kay Mang Dado sa hapunan. Pero ibinigay pa rin niya sa iyo ang code ng pinto.</p>'; } }] : []),
+    ] },
+  zDado2: { kick: 'Airlock', loc: 'A', title: 'Ang basement ng Clark lab', force: 1,
+    body: () => `<p>Malayo ang Clark, at doon nagsimula ang lahat. Puno ng zombie na naka-lab coat ang mga pasilyo. Pero kung makakarating sila sa basement, may bodega ng antiviral.</p><p>${S.people.dado ? 'Si Mang Dado mismo ang gustong manguna.' : 'Wala sa inyo ang nakakaalam ng loob ng lab.'}</p>`,
+    choices: () => [
+      { t: 'Pasukin ang lab', sub: `5 bala. ${S.people?.dado ? 'Mas ligtas kasama si Mang Dado.' : 'Napakadelikado.'}`, fx: () => { S.ammo = Math.max(0, S.ammo - 5); const ok = Math.random() < (S.people.dado ? .75 : .45); if (ok) { S.anti = (S.anti || 0) + 6; stressAll(-10); chime(); return `<p>Labindalawang oras bago sila nakabalik. Sa likod ni ${S.people.dado ? 'Mang Dado' : 'Carlo'}, isang cooler: <b>anim na antiviral</b>. Tahimik na nagpalakpakan ang lahat sa Sala.</p>`; } const h = someone(id => !defOf(id).kid); bite(h); S.anti = (S.anti || 0) + 2; return `<p>Nakuha nila ang dalawang antiviral bago sila naabutan ng mga zombie sa hagdan. <b>Nakagat si ${N(h)}</b> habang tumatakbo palabas.</p>`; } },
+      { t: 'Hindi. Masyadong malayo', sub: 'Walang mapapahamak ngayon.', fx: () => '<p>Itinago ni Angel ang code sa notebook niya. "Baka balang-araw," sabi niya.</p>' },
+    ] },
+  zAJ1: { kind: 'night', kick: 'Airlock', loc: 'A', title: 'Bukas ang airlock', force: 1,
+    body: () => '<p>Alas-dos ng madaling-araw, tumunog ang alarm ng airlock. Wala si AJ sa kama niya. Sa camera: si AJ, may bolo at backpack, naglalakad papunta sa dilim. May sulat sa kama niya: <i>"Kukuha ako ng gamot para kay Lola. Huwag n\'yo akong hanapin."</i></p>',
+    choices: [
+      { t: 'Tawagin siya sa megaphone', sub: 'Maririnig ng mga zombie.', fx: () => { S.flags.ajOut = 'call'; S.flags.rumor = S.day + 1; return '<p>"AJ! BUMALIK KA!" Huminto siya, lumingon... at tumakbo pa rin. Sa likod niya, may mga anino na sumusunod sa boses mo.</p>'; } },
+      { t: 'Ipasunod si Carlo', sub: 'Mas ligtas si AJ. Walang bantay sa pinto.', fx: () => { S.flags.ajOut = 'follow'; S.door.hp = Math.max(10, S.door.hp - 20); return '<p>Kinuha ni Carlo ang shotgun at sumunod. Mag-isa si Papa Na sa pinto buong gabi.</p>'; } },
+      { t: 'Hayaan siya. Nagdesisyon na siya', sub: 'Baka hindi na siya bumalik.', fx: () => { S.flags.ajOut = 'let'; setMood('mila', 'lungkot', 'umalis si AJ nang walang paalam'); return '<p>Isinara ninyo ulit ang airlock. Walang nakatulog.</p>'; } },
+    ] },
+  zAJ2: { kick: 'Airlock', loc: 'A', title: 'Bumalik si AJ', force: 1, sound: 'knock',
+    body: () => { const f = S.flags.ajOut; const bad = f === 'follow' ? Math.random() < .15 : f === 'call' ? Math.random() < .5 : Math.random() < .35; S.flags.ajBit = bad ? 1 : 0;
+      return `<p>Tanghali nang kumatok si AJ${f === 'follow' ? ', kasama si Carlo' : ''}. Hawak niya ang isang supot ng gamot mula sa botika sa bayan.</p>${bad ? '<p>Pero itinaas niya ang manggas niya. May kagat sa balikat. <i>"Pasensya na, Isha. Sulit naman, di ba?"</i></p>' : '<p><i>"Pasensya na, Isha. Pero kailangan ni Lola ito."</i> Walang galos. Swerte.</p>'}`; },
+    choices: [{ t: 'Sige', sub: '', fx: () => { S.meds = (S.meds || 0) + 4; health('mila', 20); if (S.flags.ajBit) bite('aj'); else stress('aj', -10); return '<p>+4 gamot. Niyakap ni Nanay Mila si AJ nang mahigpit, tapos pinalo sa braso.</p>'; } }] },
+  zRunner: { kick: 'Radyo', loc: 'M', title: 'Mabilis na sila', force: 1, sound: 'chime',
+    body: () => '<p><i>"...babala mula sa AFP: may bagong uri ng infected sa Tarlac. Tumatakbo. Umaakyat. Mas matagal mamatay..."</i></p><p>Kinabukasan, nakita ni Carlo sa camera: isang zombie na tumalon sa bubong ng kotse at umakyat sa poste.</p>',
+    choices: [
+      { t: 'Patibayin ang lahat ng vent at bintana', sub: '3 piyesa. Mas ligtas mula ngayon.', fx: () => { if (S.parts >= 3) { S.parts -= 3; S.flags.runner = 1; return '<p>Buong araw na nagwelding sina Papa Na at Nelson. Mas mahirap na silang makapasok.</p>'; } S.flags.runner = 2; return '<p>Kulang ang piyesa. Mas lalakas ang bawat sugod hanggang mapatibay ninyo ang pinto.</p>'; } },
+      { t: 'Mag-ensayo ang lahat ng kaya', sub: 'Pagod, pero handa.', fx: () => { S.flags.runner = 2; stressAll(6); S.flags.drill = S.day; return '<p>Natutong humawak ng bolo pati si Monica at si Abby.</p>'; } },
+    ] },
+  zTraitor: { kick: 'Clinic', loc: 'C', title: 'Nawawala ang antiviral', force: 1,
+    body: () => { const sus = (S.extra || []).filter(d => S.people[d.id] && !d.baby).map(d => d.id); S.flags.trWho = pick(sus.length ? sus : ['dado', 'kiko', 'abby'].filter(x => S.people[x])) || 'abby'; return `<p>Binilang ni Angel ang antiviral. Kulang ng isa. Walang pumasok sa Clinic kundi ang mga nagbabantay sa may sakit.</p><p>Nakita raw ni Carly si <b>${N(S.flags.trWho)}</b> na lumabas sa Clinic kagabi.</p>`; },
+    choices: [
+      { t: `Kausapin nang mag-isa`, sub: 'Mahinahon. Baka may dahilan.', fx: () => { const id = S.flags.trWho; S.anti = Math.max(0, (S.anti || 0)); stress(id, -6); return `<p>Matagal na tahimik si ${N(id)}. Tapos, ibinalik niya ang antiviral. <i>"Para sana sa kapatid ko sa labas. Nakagat siya. Pasensya na."</i></p>`; } },
+      { t: 'Harapin sa harap ng lahat', sub: 'Malinaw ang patakaran. Masakit.', fx: () => { const id = S.flags.trWho; if ((S.anti || 0) > 0) S.anti--; stressAll(5); setMood(id, 'galit', 'pinahiya siya sa harap ng lahat'); return `<p>Itinanggi ni ${N(id)} sa harap ng lahat. Hindi na nakita ang antiviral.</p>`; } },
+    ] },
+  zSchool: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Ang batang naka-uniporme', force: 1, sound: 'knock',
+    body: () => '<p>Mahinang katok, parang bata. Sa camera: isang batang babae na naka-uniporme ng paaralan, nakatalikod. Dahan-dahan siyang lumingon. Puti ang mga mata.</p><p>Napaupo si Monica sa sahig. <i>"Si Hannah iyan. Estudyante ko sa Grade 2."</i></p>',
+    choices: [
+      { t: 'Ipagdasal at hayaang umalis', sub: 'Walang sasaktan. Mabigat sa lahat.', fx: () => { stressAll(4); stress('monica', 10); stress('jen', -4); return '<p>Pinangunahan ni Mama Jen ang dasal sa intercom. Pagkatapos, naglakad palayo si Hannah. Hindi kumain si Monica buong araw.</p>'; } },
+      { t: 'Si Carlo na ang bahala, para matahimik siya', sub: '1 bala. Masakit, pero tapos na ang paghihirap niya.', fx: () => { if (S.ammo) S.ammo--; stress('carlo', 12); setMood('monica', 'lungkot', 'si Hannah, ang estudyante niya'); return '<p>Isang putok. Inilibing ni Carlo si Hannah sa ilalim ng puno ng mangga sa labas, kahit delikado.</p>'; } },
+    ] },
+  zDelay: { kick: 'Radyo', loc: 'M', title: 'Naantala ang convoy?', force: 1, sound: 'chime',
+    body: () => '<p><i>"...AFP Northern Luzon Command. Gumuho ang tulay sa Bamban. Kung hindi ito maaayos, maaantala ang convoy nang isang buwan. Kailangan namin ng tulong ng mga sibilyan na malapit..."</i></p><p>Tumayo si Nelson. "Malapit lang tayo sa Bamban."</p>',
+    choices: [
+      { t: 'Tutulong tayo sa tulay', sub: 'Sa Araw 82, magpapadala tayo ng tao.', fx: () => { S.flags.bridge = 'yes'; return '<p><i>"Natanggap. Sa Araw 82, sa paanan ng tulay. Salamat."</i></p>'; } },
+      { t: 'Hindi natin kaya', sub: 'Baka maantala ang convoy.', fx: () => { S.flags.bridge = 'no'; stressAll(8); return '<p>Tahimik ang Sala buong gabi. Isang buwan pa?</p>'; } },
+    ] },
+  zBridge: { kick: 'Airlock', loc: 'A', title: 'Ang tulay sa Bamban', force: 1,
+    body: () => S.flags.bridge === 'yes' ? '<p>Nag-aabang ang mga sundalo sa tulay. Kailangan nila ng mga kamay na marunong sa bakal at kable, habang binabantayan nila ang mga zombie.</p>' : '<p>Narinig ninyo sa radyo: <i>"...may grupong tumulong sa tulay sa Bamban. Tuloy ang convoy sa Araw 100."</i> Ibang bunker ang tumulong. Nakahinga kayo, pero may hiya rin.</p>',
+    choices: () => [
+      { t: 'Ipadala sina Papa Na at Nelson', sub: 'Isang araw. 3 piyesa.', fx: () => { if (S.flags.bridge !== 'yes') { stressAll(-4); return ''; } S.parts = Math.max(0, S.parts - 3); S.flags.bridgeDone = 1; stressAll(-10); S.ammo += 6; return '<p>Pagbalik nila, may dalang anim na bala at isang sulat mula sa kapitan: <i>"Hindi namin malilimutan ang bunker ni Isha. Kayo ang unang susunduin."</i></p>'; } },
+    ] },
+  zJomar: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Si Jomar, mag-isa', force: 1, sound: 'knock',
+    body: () => '<p>Isang katok lang. Sa camera: si Jomar, ang lider ng grupong sumugod sa inyo. Mag-isa na siya. Duguan ang braso niya, may kagat.</p><p><i>"Wala na ang grupo ko. Alam kong may antiviral kayo. AJ, pare... pakiusap."</i></p><p>Nakatitig si AJ sa monitor.</p>',
+    choices: [
+      { t: 'Bigyan ng antiviral sa airlock', sub: '1 antiviral. Kaaway mo siya dati.', fx: () => { if (!(S.anti || 0)) return '<p>Wala na kayong antiviral. Umupo si Jomar sa harap ng pinto at hindi na umalis. Kinaumagahan, wala na siya.</p>'; S.anti--; S.flags.jomarSaved = 1; stress('aj', -20); stressAll(-4); return '<p>Iniwan ni AJ ang antiviral sa airlock. Bago umalis, yumuko si Jomar sa camera. <i>"Hindi ko ito makakalimutan, Isha."</i></p>'; } },
+      { t: 'Hindi. Hindi pagkatapos ng lahat', sub: 'Itatago ninyo ang antiviral.', fx: () => { setMood('aj', 'lungkot', 'hinayaan nilang maging zombie si Jomar'); return '<p>Matagal na nakatayo si Jomar. Tapos, naglakad siya papunta sa dilim. Hindi na nagsalita si AJ buong gabi.</p>'; } },
+    ] },
+  zLook: { kind: 'night', kick: 'Master Suite', loc: 'M', title: 'Kayong dalawa', force: 1, good: 1,
+    body: () => { const done = [S.flags.migoOK && 'nailigtas ninyo si Migo', S.flags.vaccine && 'may lunas na dahil sa inyo', S.flags.jomarSaved && 'pinatawad mo si Jomar', S.flags.bridgeDone && 'naayos ninyo ang tulay', S.baby || S.people.baby ? `ipinanganak si ${N('baby')}` : null].filter(Boolean);
+      return `<p>Gising pa si Angel nang pumasok ka sa Master Suite. Nakahiga si Millie sa paanan ninyo.</p><p><i>"Bee, naaalala mo pa ba ang Araw 7? Takot na takot tayo noon."</i></p><p>${done.length ? `Isa-isa niyang binilang: ${done.join(', ')}.` : 'Hindi lahat ng nangyari ay maganda. Pero nandito pa rin kayo.'} <i>"Ang galing mo, Bee."</i></p>`; },
+    choices: [{ t: 'Yakapin siya', sub: '', fx: () => { stress('isha', -25); stress('angel', -25); clearMood('angel'); return '<p>Walang ungol sa labas ngayong gabi. Tahimik lang, kayong dalawa at si Millie.</p>'; } }] },
+});
+Object.assign(CHAPTERS, { 10: { night: 'zMigo1' }, 22: { morning: 'zMigo2' }, 23: { afternoon: 'zMigo3' }, 27: { afternoon: 'zDado1' }, 29: { morning: 'zDado2' }, 35: { night: 'zAJ1' }, 36: { afternoon: 'zAJ2' }, 44: { morning: 'zRunner' }, 52: { afternoon: 'zTraitor' }, 58: { k2: 'zSchool' }, 74: { morning: 'zDelay' }, 82: { morning: 'zBridge' }, 92: { k1: 'zJomar' }, 96: { night: 'zLook' } });
 
 Object.assign(EVENTS, {
   zVent: { kind: 'trouble', kick: 'Oxygen Control', loc: 'O', title: 'May gumagapang sa vent', min: 8, cool: 4, w: 2,
@@ -2606,14 +2805,14 @@ Object.assign(EVENTS, {
       { t: 'Lumaban hanggang dulo!', sub: 'Pinakamalakas na sugod sa lahat.', fx: () => ({ raid: [raidPower(80), 'Huling sugod'] }) },
       { t: 'Ibahagi ang kalahati', sub: '-40 pagkain, -15 karne.', fx: () => { addRes('food', -40); addRes('meat', -15); stressAll(-4); return '<p>Binuksan ninyo ang airlock at ibinigay ang kalahati. Tahimik silang naghati-hati sa labas. May ilang nagpasalamat pa.</p>'; } },
     ] },
-  mLast: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Huling gabi', force: 1, good: 1,
+  mLast: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Bisperas ng Araw 100', force: 1, good: 1,
     body: () => '<p>Bukas na. Walang makatulog. Nakaupo ang lahat sa sahig ng Sala, nakatingin sa mural ng araw sa pader.</p>',
-    choices: [{ t: 'Magkuwentuhan hanggang umaga', sub: 'Isang huling gabi bilang isang pamilya sa ilalim ng lupa.', fx: () => { stressAll(-15); npcs().forEach(id => clearMood(id)); return '<p>Isa-isa kayong nagkuwento ng pinakamahirap at pinakamasayang araw dito. Nakatulog ang mga bata sa kandungan ng mga matanda. Hawak mo ang kamay ni Angel hanggang mag-umaga.</p>'; } }] },
+    choices: [{ t: 'Magkuwentuhan hanggang umaga', sub: 'Bukas na raw ang convoy. Isang gabing puno ng pag-asa.', fx: () => { stressAll(-15); npcs().forEach(id => clearMood(id)); return '<p>Isa-isa kayong nagkuwento ng pinakamahirap at pinakamasayang araw dito. Nakatulog ang mga bata sa kandungan ng mga matanda. Hawak mo ang kamay ni Angel hanggang mag-umaga.</p>'; } }] },
 });
 
 // ---------------------------------------------------------------- at least five knocks a day
 const GEN = {}; let genN = 0;
-const KNAMES = ['Mang Ruben', 'Aling Cora', 'Jun-jun', 'Ate Lorna', 'Kuya Bong', 'Lola Pacing', 'Tonyo', 'Mang Isko', 'Nene', 'Ka Ising', 'Rodel', 'Ate Joy', 'Mang Celso', 'Aling Pining', 'Bitoy', 'Kuya Dennis', 'Ate Mylene', 'Mang Tasyo', 'Aling Baby', 'Totoy', 'Ate Weng', 'Mang Pido'];
+const KNAMES = ['Mang Arturo', 'Ate Rowena', 'Kuya Jayson', 'Lola Iska', 'Mang Berto', 'Aling Tessie', 'Jomel', 'Ate Princess', 'Mang Ambo', 'Kuya Rommel', 'Aling Nena', 'Paeng', 'Ate Grace', 'Mang Lito', 'Lolo Ponso', 'Kuya Erwin', 'Ate Shiela', 'Mang Caloy', 'Ineng', 'Kuya Marlon', 'Mang Ruben', 'Aling Cora', 'Jun-jun', 'Ate Lorna', 'Kuya Bong', 'Lola Pacing', 'Tonyo', 'Mang Isko', 'Nene', 'Ka Ising', 'Rodel', 'Ate Joy', 'Mang Celso', 'Aling Pining', 'Bitoy', 'Kuya Dennis', 'Ate Mylene', 'Mang Tasyo', 'Aling Baby', 'Totoy', 'Ate Weng', 'Mang Pido'];
 const TOWNS = ['Capas', 'Bamban', 'Mabalacat', 'Angeles', 'Concepcion', 'San Fernando', 'Porac', 'Botolan', 'Tarlac City', 'Magalang'];
 const LOOKS = ['puro dugo at putik ang damit', 'may hawak na itak na may dugo pa', 'nakapaa at may sugat sa talampakan', 'paos na sa kakatawag', 'nanginginig sa lamig', 'may hilang bisikleta na puno ng gamit', 'may pasang sako sa likod', 'halos hindi na makatayo sa pagod'];
 const SOFT = ['jen', 'angel', 'monica', 'mila', 'abby', 'rika'];
@@ -2633,17 +2832,20 @@ function nextKnock() {
   if (id === 'kRaid' && raidOK()) { countRaid(); return id; }
   return genKnock();
 }
+function freshName() { const used = S.usedNames ||= []; const n = pick(KNAMES.filter(k => !used.includes(k))) || pick(KNAMES); used.push(n); if (used.length > 30) used.shift(); return n; }
 function genKnock() {
-  const name = pick(KNAMES), town = pick(TOWNS), look = pick(LOOKS), id = 'gen' + (++genN);
+  const name = freshName(), town = pick(TOWNS), look = pick(LOOKS), id = 'gen' + (++genN);
   const types = [['beg', 3], ['trade', 2], ['news', 1.6], ['hurt', 1.2], ['con', .9], ['animal', .7], ['silent', .5], ['charge', .7], ['pray', .4]];
-  if (raidOK()) types.push(['raid', .8 + S.day / 50], ['horde', 1.4 + S.day / 30 + (S.flags.rumor === S.day ? 2.5 : 0)]);
+  if (raidOK()) types.push(['raid', .8 + DD() / 50], ['horde', 1.4 + DD() / 30 + (S.flags.rumor === S.day ? 2.5 : 0)]);
   if (S.helped?.length) types.push(['gift', 1.1]);
+  const recent = S.recentK ||= []; types.forEach(t => { const k = recent.filter(x => x === t[0]).length; if (k) t[1] /= 1 + k * 2; });
   let r = Math.random() * types.reduce((a, t) => a + t[1], 0), type = types[0][0];
   for (const [t, w] of types) { r -= w; if (r <= 0) { type = t; break; } }
+  recent.push(type); if (recent.length > 8) recent.shift();
   const E = { kind: 'knock', kick: 'Blast door', loc: 'A', sound: 'knock' };
   const refuseSad = who => { if (Math.random() < .6) setMood(pick(SOFT.filter(s => S.people[s])), 'lungkot', `hindi niya makalimutan ang mukha ni ${who} sa camera`); };
   if (type === 'beg') Object.assign(E, { title: `${name}, taga-${town}`,
-    body: () => `<p>Sa camera: si ${name}, ${look}. <i>"${pick(['Kahit tubig lang po.', 'Tatlong araw na kaming hindi kumakain.', 'May anak po akong naghihintay sa may tulay.', 'Kahit kaunting bigas lang po, babayaran ko paglabas natin.', 'Kinain na po ng mga zombie ang buong barangay namin.'])}"</i></p>`,
+    body: () => `<p>Sa camera: si ${name}, ${look}. <i>"${pick(['Kahit tubig lang po.', 'Tatlong araw na kaming hindi kumakain.', 'May anak po akong naghihintay sa may tulay.', 'Kahit kaunting bigas lang po, babayaran ko paglabas natin.', 'Kinain na po ng mga zombie ang buong barangay namin.', 'Nakatulog po ako sa puno kagabi para hindi maabot ng mga zombie.', 'Naiwan ko po ang asawa ko sa simbahan. Hindi ko na alam kung buhay pa siya.', 'Galing po ako sa evacuation center. Nilusob po kami kagabi.', 'Kahit gatas lang po para sa apo ko.', 'Hindi po ako hihingi ng marami. Kahit isang de-lata lang.'])}"</i></p>`,
     choices: [
       { t: 'Bigyan ng pagkain at tubig', sub: '-4 pagkain, -3 tubig', fx: () => { addRes('food', -4); addRes('water', -3); stressAll(-2); helped(name); if (pct('food') < 30) setMood(pick(['fred', 'nelson']), 'galit', 'namimigay ka raw kahit paubos na ang pagkain'); return `<p>Iniwan ninyo ang supot sa airlock. Yumuko si ${name} sa camera bago umalis.</p>`; } },
       { t: 'Kaunti lang', sub: '-2 pagkain', fx: () => { addRes('food', -2); helped(name); return `<p>Isang supot ng biskwit at isang bote ng tubig. "Salamat po," bulong ni ${name}.</p>`; } },
@@ -2797,7 +2999,7 @@ const KQUICK = ['Kumusta ka?', 'Anong nilalaro mo?', 'Magbiro ka nga', 'Takot ka
 // questions people ask back; Isha's answer is read against the question, not on its own
 const ASKS = {
   howru: ['Ikaw, kumusta ka talaga?', 'Ikaw, Isha? Okay ka lang ba?'], sleep: ['Nakatulog ka ba nang maayos?'], eat: ['Kumain ka na ba?'],
-  hope: ['Sa tingin mo, aabot tayo sa Araw 100?'], miss: ['Ikaw, ano ang pinakamamiss mo sa labas?'], plan: ['Ikaw, anong gagawin mo paglabas natin?'],
+  hope: ['Sa tingin mo, makakalabas pa tayo dito?'], miss: ['Ikaw, ano ang pinakamamiss mo sa labas?'], plan: ['Ikaw, anong gagawin mo paglabas natin?'],
 };
 const ANS = [['Okay lang ako', 'Pagod na ako', 'Takot din ako'], ['Oo naman', 'Hindi ako sigurado']];
 function renderQuick(id) {
@@ -2824,7 +3026,7 @@ function stateLine(id) {
   return out.length ? pick(out) : '';
 }
 function thinkLine(id) {
-  const opts = [`${100 - S.day} araw na lang. Binibilang ko gabi-gabi.`, 'Iniisip ko kung ano na ang itsura ng labas.', `Iniisip ko si ${N(other(id))}. Mukhang pagod na siya.`, 'Kung paano tayo magsisimula ulit paglabas.', 'Kung may natira pa sa bahay natin, o puro zombie na doon.', 'Kung may lunas na ba sa Clark.', `Iniisip ko kung sino ang kakatok mamaya. ${pick(['Sana walang masama.', 'Sana may balita.'])}`];
+  const opts = [`${leftTxt()}. Binibilang ko gabi-gabi.`, 'Iniisip ko kung ano na ang itsura ng labas.', `Iniisip ko si ${N(other(id))}. Mukhang pagod na siya.`, 'Kung paano tayo magsisimula ulit paglabas.', 'Kung may natira pa sa bahay natin, o puro zombie na doon.', 'Kung may lunas na ba sa Clark.', `Iniisip ko kung sino ang kakatok mamaya. ${pick(['Sana walang masama.', 'Sana may balita.'])}`];
   if (pct('food') < 35) opts.push('Paubos na ang pagkain. Kailangan nating magtipid.');
   if (S.door.hp < doorMax() * .5) opts.push('Sira na ang pinto. Kailangan nating ayusin bago may sumugod ulit.');
   if (S.ammo < 4) opts.push('Kaunti na lang ang bala. Natatakot ako sa susunod na sugod.');
@@ -2835,6 +3037,7 @@ const NEG = /\b(pagod|hindi|di|ayaw|takot|natatakot|malungkot|lungkot|gutom|sad|
 const DOING = { G: ['Nagdidilig ako ng pechay. Lumalaki na sila.', 'Nag-aani ako ng kamatis. Kaunti pa, pero meron.'], K: ['Nagluluto ako ng tanghalian. Sinigang, kung may sampalok pa.', 'Naghihiwa ng gulay. Kailangan tipid sa mantika.'], P: ['Binibilang ko ang de-lata. Kailangan alam natin ang bawat isa.', 'Inaayos ko ang rasyon para sa susunod na linggo.'], W: ['Nililinis ko ang filter. Ang dumi ng tubig ngayon.', 'Binabantayan ko ang mga tubo, baka may tagas.'], S: ['Tinitingnan ko ang baterya. Kailangang umabot hanggang gabi.', 'Inaayos ko ang wiring ng solar.'], O: ['Binabantayan ko ang oxygen. Normal ang basa ngayon.', 'Nililinis ko ang scrubber.'], Y: ['Pinapakain ko ang mga manok at baboy.', 'Naglilinis ng kulungan. Huwag kang lalapit, amoy na amoy.'], X: ['Nagbabantay ako sa pinto. Kanina pa may ungol sa labas.', 'Nililinis ko ang shotgun at binibilang ang bala.'], C: ['Inaayos ko ang mga gamot sa Clinic.', 'Binabantayan ko ang may sakit.'], H: ['Nagpapahinga lang sa Hobby Room. Kailangan ko ito.', 'Nagdo-drawing ako para hindi ako mag-isip ng zombie.'], V: ['Nanonood ng DVD. Gusto mo sumama?'], U: ['Tinuturuan ko ang mga bata ng bagong kanta.'], Lib: ['Nagbabasa. Kahit saglit, ibang mundo.'], rest: ['Nagpapahinga lang. Salamat at pinayagan mo ako.'] };
 const KDOING = ['Naglalaro po kami ng taguan!', 'Nagdo-drawing po ako ng araw. Hindi ko na po maalala ang itsura.', 'Kinakantahan po namin si Millie!', 'Nagtatayo po kami ng bahay sa ball pit.'];
 const ZFEAR = { low: ['Takot? Medyo. Pero mabagal sila, at matibay ang pinto natin.', 'Basta magkakasama tayo at sarado ang pinto, kaya natin sila.'], mid: ['Oo. Tuwing gabi, naririnig ko ang ungol nila sa itaas.', 'Takot ako, pero mas takot akong may makagat sa atin.'], high: ['Takot na takot, Isha. Napapanaginipan ko sila gabi-gabi.', 'Hindi ako makatulog. Paano kung bumigay ang pinto habang tulog tayo?'] };
+const leftTxt = () => S.day < 100 && !S.flags.noConvoy ? `${100 - S.day} araw na lang daw bago ang convoy` : `walang nakakaalam kung kailan darating ang tulong. ${S.day - 6} araw na tayo dito`;
 const kidify = s => s.replace(/\bIsha\b/g, 'Tita Isha');
 function reply(id, text) {
   const st = S.people[id], d = defOf(id), t = text.toLowerCase().trim(), kid = !!d.kid, mood = st.stress > 65 ? 'high' : st.stress > 35 ? 'mid' : 'low';
@@ -2897,8 +3100,8 @@ function reply(id, text) {
     return uniq(id, () => pick(['Wala naman. Sabihin mo lang kung saan ako kailangan.', 'Mas maraming kamay sana sa ' + (JOB_NAME[st.job] || 'trabaho') + '.', 'Bala siguro. Para sigurado.']));
   }
   if (/salamat|thank/.test(t)) return uniq(id, () => pick(kid ? ['Walang anuman po!', 'Hehe, love you Tita Isha!', 'Opo! Salamat din po!'] : ['Wala iyon. Pamilya tayo.', 'Ikaw ang dapat pasalamatan, Isha.', 'Salamat din sa pagdala sa amin dito.']));
-  if (/kaya|laban|lakas/.test(t)) { if (!kid && Math.random() < .5) S.ask[id] = 'hope'; return uniq(id, () => out(kid ? pick(['Kaya po natin! *nag-flex*', 'Opo! Kasi nandito si Tita Isha!']) : mood === 'high' ? pick(['Sana nga. Sana nga, Isha.', 'Pinipilit ko. Pero natatakot ako.']) : pick([`Kaya natin. ${100 - S.day} araw na lang bago ang convoy.`, 'Oo naman. Magkakasama tayo.']) + (S.ask[id] ? ' ' + pick(ASKS.hope) : ''))); }
-  if (/convoy|rescue|araw 100|ilang araw|kailan tayo/.test(t)) return uniq(id, () => out(`${100 - S.day} araw pa bago ang convoy. ${pick(['Binibilang ko gabi-gabi.', 'Mahaba pa, pero mas maikli na kaysa kahapon.', 'Sana walang aberya sa daan.'])}`));
+  if (/kaya|laban|lakas/.test(t)) { if (!kid && Math.random() < .5) S.ask[id] = 'hope'; return uniq(id, () => out(kid ? pick(['Kaya po natin! *nag-flex*', 'Opo! Kasi nandito si Tita Isha!']) : mood === 'high' ? pick(['Sana nga. Sana nga, Isha.', 'Pinipilit ko. Pero natatakot ako.']) : pick([`Kaya natin. ${leftTxt()}.`, 'Oo naman. Magkakasama tayo.']) + (S.ask[id] ? ' ' + pick(ASKS.hope) : ''))); }
+  if (/convoy|rescue|araw 100|ilang araw|kailan tayo/.test(t)) return uniq(id, () => out(`${cap1(leftTxt())}. ${pick(['Binibilang ko gabi-gabi.', 'Isang araw lang muna, Isha.', 'Basta magkakasama tayo.'])}`));
   if (/pinto|blast door|door/.test(t)) return uniq(id, () => out(`Ang pinto? ${Math.round(S.door.hp)} sa ${doorMax()} ang tibay. ${S.door.hp < doorMax() * .5 ? 'Kailangan nang ayusin bago gumabi.' : 'Matibay pa. Basta may bantay.'}`));
   if (/tulog|antok|pahinga/.test(t)) { if (!kid) S.ask[id] = 'sleep'; return uniq(id, () => out(kid ? 'Inaantok na po ako... *humikab*' : `${mood === 'high' ? 'Hindi ako makatulog nang maayos. Ang ungol nila sa itaas.' : 'Nakatulog naman ako, kahit papaano.'} ${pick(ASKS.sleep)}`)); }
   if (/kumusta|musta|kamusta|okay ka|ok ka|ayos ka|how are you/.test(t)) return uniq(id, () => {
@@ -2969,9 +3172,35 @@ function newbieDef(name, t) {
   const fem = /^(Aling|Ate|Lola|Nene)/.test(name), i = GBEDS();
   return { id: 'nb' + Date.now().toString(36) + i, name, role: t.role, spec: t.spec, job: t.job, h: fem ? 1.56 : 1.68, skin: pick(NB_SKIN), shirt: pick(NB_SHIRT), pants: '#2f2c28', hair: '#1f1712', style: fem ? pick(['long', 'bun', 'pony']) : 'short', bed: freeBed(), fem, perk: t.perk, thief: Math.random() < .15 };
 }
-function admit(def) {
+const qFull = (b = 0) => people().filter(id => S.people[id].quar && !!S.people[id].qb === !!b).length >= (b ? 2 : 4);
+function quarHTML(id) {
+  const st = S.people[id]; if (!st?.quar || st.turned) return '';
+  const early = st.quar > 0;
+  return `<div class="sec">Quarantine · ikaw ang magdedesisyon</div><div class="choices"><button class="choice${early ? '' : ' primary'}" id="qIn"><b>Papasukin sa bunker</b><span>${early ? `Maaga pa: ${st.quar} oras pa. Baka may kagat na hindi pa lumalabas.` : 'Tapos na ang 30 oras. Walang lagnat.'}</span></button><button class="choice" id="qOut"><b>Paalisin</b><span>May baon siyang pagkain at tubig.</span></button></div>`;
+}
+function qLetIn(id) {
+  const st = S.people[id], d = defOf(id); st.quar = 0; delete GEN['qd' + id];
+  P[id] && routine(P[id]); stress('angel', -3); toast(`Pumasok na si ${d.name} sa bunker.`, 'good'); save();
+}
+function qSendAway(id) {
+  const d = defOf(id); addRes('food', -4); addRes('water', -3); delete GEN['qd' + id];
+  delete S.people[id]; S.extra = (S.extra || []).filter(x => x.id !== id); if (P[id]) { P[id].root.visible = false; P[id].tag.remove(); delete P[id]; }
+  doorAnim(1); setTimeout(() => doorAnim(0), 3000);
+  if (Math.random() < .5) setMood(pick(SOFT.filter(x => S.people[x])) || 'angel', 'lungkot', `pinaalis si ${d.name} sa Quarantine`);
+  toast(`Pinaalis si ${d.name}. Binigyan ng baon.`); save();
+}
+function qDecide(id) {
+  const d = defOf(id), st = S.people[id], hint = d.thief && Math.random() < .6 ? `Napansin ni Carlo sa camera: paulit-ulit na tinitingnan ni ${d.name} ang mga kahon ng pagkain sa labas ng salamin.` : pick([`Magalang si ${d.name} kay Angel. Tinulungan pa niyang maglinis ng Quarantine.`, `Tahimik si ${d.name}. Halos hindi nagsasalita, pero kinakain ang lahat ng ibinibigay.`, `Nagkuwento si ${d.name} kina Carly sa salamin. Natatawa ang mga bata.`, `Sabi ni ${d.name}, handa siyang magtrabaho kahit saan.`]);
+  GEN['qd' + id] = { kind: 'knock', kick: 'Quarantine', loc: 'Q', title: `Tapos na ang quarantine ni ${d.name}`,
+    body: () => `<p>30 oras na si <b>${d.name}</b> (${d.role}) sa Quarantine. <b>Walang lagnat, walang kagat</b>, sabi ni Angel. Kalusugan: ${Math.round(st.health)}.</p><p>${hint}</p><p>Papasukin mo ba siya sa bunker?</p>`,
+    choices: [
+      { t: `Papasukin si ${d.name}`, sub: `Magtatrabaho siya sa ${ROOMS[d.job]?.n || 'bunker'}.`, fx: () => { qLetIn(id); return `<p>Binuksan ni Angel ang pinto ng Quarantine. "Maligayang pagdating," sabi mo. Ngumiti si ${d.name}.</p>`; } },
+      { t: 'Hindi. Paalisin siya', sub: 'May baon siyang pagkain at tubig.', fx: () => { qSendAway(id); return `<p>Binigyan ninyo si ${d.name} ng baon at mapa papunta sa simbahan. Tumango siya at lumabas sa blast door.</p>`; } },
+    ] };
+}
+function admit(def, quar) {
   (S.extra ||= []).push(def); if (!defOf(def.id)) GUESTS.push(def); if (def.fem) FEMALE.add(def.id);
-  S.people[def.id] = { job: def.job, stress: 50, health: 70, sick: false, bl: 30, bw: 30, hu: 80, mood: null };
+  S.people[def.id] = { job: def.job, stress: 50, health: 70, sick: false, bl: 30, bw: 30, hu: 80, mood: null, quar: quar ? 30 : 0, qb: quar === 2 ? 1 : 0 };
   spawn(def, 20, 32.4); routine(P[def.id]); doorAnim(1); setTimeout(() => doorAnim(0), 3500);
   mis('admit');
   OWN[def.id] = [`Salamat sa pagpapasok sa akin. Hindi ko makakalimutan.`, `Sa labas, mas malala pa sa nakikita ninyo sa camera.`, def.role === 'Guro' ? 'Ang talino ng mga bata dito.' : `Gagawin ko ang lahat para makatulong bilang ${def.role.toLowerCase()}.`];
@@ -2979,14 +3208,14 @@ function admit(def) {
   if (def.perk === 'parts') S.parts += 2; if (def.perk === 'ammo') S.ammo += 4; if (def.perk === 'seeds') S.growth = Math.min(1, S.growth + .25);
   if (def.perk === 'door') S.door.hp = doorMax(); if (def.perk === 'meds') { people().forEach(id => health(id, 8)); S.anti = (S.anti || 0) + 1; S.meds = (S.meds || 0) + 3; }
   if (def.bitten) { S.people[def.id].bit = 14 + (Math.random() * 12 | 0); S.people[def.id].hid = 1;
-    if (S.people.angel && !S.people.angel.sick && Math.random() < .5) { S.people[def.id].hid = 0; S.people[def.id].sick = true; routine(P[def.id]); setTimeout(() => toast(`Nakita ni Angel: may kagat si ${def.name} sa likod! Naka-quarantine siya sa Clinic.`, 'bad'), 1200); } }
+    if ((quar === 2 || !quar) && S.people.angel && !S.people.angel.sick && Math.random() < (quar === 2 ? .6 : .5)) { S.people[def.id].hid = 0; S.people[def.id].sick = true; routine(P[def.id]); setTimeout(() => toast(`Nakita ni Angel: may kagat si ${def.name} sa likod! Naka-quarantine siya sa Clinic.`, 'bad'), 1200); } }
 }
 function genEnter() {
-  const bit = Math.random() < .22, name = pick(KNAMES), t = pick(NEWBIES), look = bit && Math.random() < .65 ? pick(['may benda sa braso na ayaw niyang ipakita', 'pawis na pawis at namumutla', 'may punit na manggas na may bahid ng dugo', 'nanginginig kahit hindi malamig']) : pick(LOOKS), full = !freeBed(), id = 'gen' + (++genN);
+  const bit = Math.random() < .22, name = freshName(), t = pick(NEWBIES), look = bit && Math.random() < .65 ? pick(['may benda sa braso na ayaw niyang ipakita', 'pawis na pawis at namumutla', 'may punit na manggas na may bahid ng dugo', 'nanginginig kahit hindi malamig']) : pick(LOOKS), wound = /sugat|benda|dugo/.test(look), full = !freeBed(), id = 'gen' + (++genN);
   GEN[id] = { kind: 'knock', kick: 'Blast door', loc: 'A', sound: 'knock', title: `Gustong pumasok: ${name}`,
-    body: () => `<p>Sa camera: si ${name}, ${look}. <i>"Pakiusap, papasukin ninyo ako. ${t.say} Hindi ako pabigat."</i></p><p>${full ? 'Puno na ang Library at ang Dormitoryo. Wala nang mahihigaan.' : `Matutulog siya sa ${freeBed()[0] === 'Lib' ? 'kutson sa Library' : 'bunk bed sa Dormitoryo'}. ${people().length + 1} na kayo kapag pumasok siya.`}</p>`,
+    body: () => `<p>Sa camera: si ${name}, ${look}. <i>"Pakiusap, papasukin ninyo ako. ${t.say} Hindi ako pabigat."</i></p><p>${full ? 'Puno na ang Library at ang Dormitoryo. Wala nang mahihigaan.' : `${qFull(wound) ? `<b>Puno ang Quarantine ${wound ? 'B' : 'A'}</b>. Kailangan munang may lumabas o pumasok sa bunker.` : `May kama sa Quarantine. Kapag pinapasok mo siya sa bunker, sa ${freeBed()[0] === 'Lib' ? 'kutson sa Library' : 'bunk bed sa Dormitoryo'} siya matutulog.`}`}</p>`,
     choices: [
-      ...(full ? [] : [{ t: `Papasukin si ${name}`, sub: `${t.role}. Isa pang bibig, pero may ambag.`, fx: () => { const d = newbieDef(name, t); d.bitten = bit; admit(d); stress('aj', 4); stress('angel', -4); return `<p>Dumiretso si <b>${name}</b> sa decon shower, tapos sa Clinic para masuri ni Angel. Kinabukasan, nasa ${ROOMS[t.job].n} na siya.</p>`; } }]),
+      ...(full || qFull(wound) ? [] : [{ t: `Papasukin sa Quarantine ${wound ? 'B (may sugat)' : 'A (walang sugat)'}`, sub: `${t.role}. Doon ka magdedesisyon kung sasama siya sa inyo.`, fx: () => { const d = newbieDef(name, t); d.bitten = bit; admit(d, wound ? 2 : 1); stress('angel', -4); return `<p>Pumasok si <b>${name}</b> sa decon shower, tapos diretso sa Quarantine ${wound ? 'B, ang kwarto para sa may sugat. Babantayan siya ni Angel nang mas mabuti' : 'A, sa tabi ng Airlock'}. Pagkatapos ng 30 oras, ikaw ang magdedesisyon kung papasukin siya.</p>`; } }]),
       { t: 'Isang gabi lang sa airlock', sub: '-4 pagkain. Aalis siya bukas.', fx: () => { addRes('food', -4); helped(name); stressAll(-2); return `<p>Natulog si ${name} sa airlock na may kumot at mainit na sabaw. Umalis siya bago mag-umaga, nag-iwan ng sulat ng pasasalamat.</p>`; } },
       { t: 'Huwag papasukin', sub: 'Ligtas, pero may malulungkot.', fx: () => { setMood(pick(SOFT.filter(s => S.people[s])), 'lungkot', `hindi pinapasok si ${name}`); return `<p>"Sige po," mahina niyang sabi. Matagal siyang nakaupo sa harap ng pinto bago umalis.</p>`; } },
     ] };
@@ -3086,6 +3315,18 @@ function buildDorm() {
   decal('DORMITORYO', 52, 27, .55);
   SPOTS.Dorm = [{ x: 52.5, z: 29.5, yaw: 0, taken: null }];
 }
+function buildQuar() {
+  // Quarantine: four cots behind a glass wall, next to the airlock, for anyone new
+  // A (front, by the airlock door): no wounds. B (back, behind a second glass wall): anyone with a wound
+  SPOTS.bedQA = []; SPOTS.bedQB = [];
+  const glassQ = std({ color: '#9fc4cf', roughness: .9, transparent: true, opacity: .5, side: THREE.DoubleSide });
+  for (const x of [26.1, 26.95, 27.8, 28.6]) { box(.06, .32, .06, MAT.darkSteel, x - .3, 0, 31.6); box(.06, .32, .06, MAT.darkSteel, x + .3, 0, 33.3); rbox(.66, .1, 1.8, MAT.linen, x, .32, 32.45, 0, .03); rbox(.62, .05, 1, MAT.blanketA, x, .42, 32.8, 0, .02); SPOTS.bedQA.push({ x, z: 32.3, y: .45, taken: null }); }
+  for (const z of [34.55, 35.45]) { rbox(1.8, .1, .66, MAT.linen, 27.6, .32, z, 0, .03); rbox(1, .05, .62, MAT.blanketC, 28, .42, z, 0, .02); SPOTS.bedQB.push({ x: 26.9, z, y: .45, taken: null }); }
+  box(.02, 1.9, 2.8, glassQ, 25.55, .1, 32.5);
+  box(3.2, 1.9, .02, glassQ, 27.4, .1, 34.02); box(.02, 1.9, 1.9, glassQ, 25.85, .1, 35);
+  decal('QUARANTINE A', 27.3, 31.75, .3); decal('B · MAY SUGAT', 27.6, 35.8, .26);
+  SPOTS.Q = [{ x: 25.5, z: 32.5, yaw: 0, taken: null }];
+}
 function buildGuestBeds() {
   SPOTS.beds.Lib = [[3.6, 32], [4.6, 32], [3.6, 34], [4.6, 34], [8.6, 32], [8.6, 34]].map(([x, z]) => { rbox(.75, .1, 1.8, MAT.linen, x, 0, z, 0, .04); rbox(.7, .05, 1.1, MAT.blanketB, x, .1, z + .3, 0, .02); return { x, y: .2, z: z - .05 }; });
 }
@@ -3115,7 +3356,7 @@ function expSheet() {
 }
 function teamSheet(L) {
   const pick3 = [];
-  const avail = npcs().filter(id => !defOf(id).kid && !S.people[id].sick && !S.people[id].away);
+  const avail = npcs().filter(id => !defOf(id).kid && !S.people[id].sick && !S.people[id].away && !S.people[id].quar);
   const draw = () => {
     const n = pick3.length, risk = L.risk * 1.25 * (n === 1 ? 1.3 : n === 2 ? 1 : .75);
     openSheet(`<div class="kick">${L.n} · ${L.hrs} oras</div><h2 class="sh-title">Sino ang sasama?</h2>
@@ -3364,7 +3605,7 @@ function newGame() {
   cam.mode = 'follow'; cam.yaw = Math.PI; cam.target.set(20, 0, 31); refreshWorld(); refreshTask();
   $('#intro').hidden = true; $('#fade').style.opacity = 0;
   setTimeout(() => { doorAnim(0); clunk(); }, 1400);
-  setTimeout(() => showDayCard('ARAW 7', '06:00 · SARADO NA ANG PINTO', 'Sa labas, naglalakad ang mga zombie sa bawat kalye. Patay ang kuryente sa buong probinsya, at ang mga buhay pa, nanloloob ng kahit ano. Ayon sa AFP, may rescue convoy papuntang Baguio sa <b>Araw 100</b>. Sa gabi, mas marami ang zombie, at naaamoy nila ang buhay. Kailangan ninyong umabot. Sa loob, kayong lahat: ikaw, si Angel, si Millie, at ang buong pamilya.<br><br>Bantayan ang <b>pagkain, tubig, kuryente at oxygen</b>. Utusan ang bawat isa, o gawin mo mismo.', () => queueEvent('k1')), 3200);
+  setTimeout(() => showDayCard('ARAW 7', '06:00 · SARADO NA ANG PINTO', 'Sa labas, naglalakad ang mga zombie sa bawat kalye. Patay ang kuryente sa buong probinsya, at ang mga buhay pa, nanloloob ng kahit ano. Ayon sa AFP, may rescue convoy papuntang Baguio sa <b>Araw 100</b>, kung matutuloy. Walang nakakaalam kung gaano katagal kayo dito. Sa gabi, mas marami ang zombie, at naaamoy nila ang buhay. Kailangan ninyong umabot. Sa loob, kayong lahat: ikaw, si Angel, si Millie, at ang buong pamilya.<br><br>Bantayan ang <b>pagkain, tubig, kuryente at oxygen</b>. Utusan ang bawat isa, o gawin mo mismo.', () => queueEvent('k1')), 3200);
 }
 function continueGame(saved) {
   S = saved; S.res.meat ??= 60; S.res.feed ??= 70; S.ammo ??= 12; S.parts ??= 6; S.up ||= {}; S.door ||= { hp: 100, lvl: S.up.door2 ? 1 : 0 }; S.said ||= {}; S.acts ||= {}; S.helped ||= []; S.raids ||= {}; S.extra ||= [];
@@ -3394,6 +3635,7 @@ async function boot(hotData) {
   let saved = hotData?.save || loadSave();
   for (const d of saved?.extra || []) if (!defOf(d.id)) GUESTS.push(d);
   if (saved && saved.meds === undefined) { saved.meds = 8; saved.anti = Math.max(saved.anti || 0, 3); }   // saves from before medicines
+  if (saved && saved.stock === undefined) { saved.stock = 500; saved.ammo = Math.max(saved.ammo || 0, 40); }   // saves from before the ammo room
   if (saved && Object.keys(saved.people || {}).some(id => !defOf(id))) saved = null;   // save from before the real family names
   const ch = $('#introChoices');
   ch.innerHTML = (saved ? `<button class="choice primary" id="bCont"><b>Ituloy · Araw ${saved.day}</b><span>${hhmm(saved.min)} · babalik ka sa bunker</span></button>` : '') +
