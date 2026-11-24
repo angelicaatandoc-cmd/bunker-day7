@@ -1683,6 +1683,7 @@ function runQueue() {
 }
 function showEvent(id) {
   const e = EVENTS[id] || GEN[id]; if (!e) return;
+  if (e.can && !e.can()) return;   // a chapter whose people are not here is skipped
   e.pre && e.pre();
   if (!GEN[id]) { S.last[id] = S.day; S.done[id] = 1; }
   resetJoy();
@@ -2134,7 +2135,7 @@ function showEnding() {
   const title = !hurt.length && m >= 60 ? 'KUMPLETO KAYO' : m < 40 ? 'BUHAY, PERO SUGATAN' : 'NAKALIGTAS KAYO';
   $('#dcBig').textContent = `ARAW ${S.day}`; $('#dcSub').textContent = 'DUMATING ANG TULONG · ' + title;
   $('#dcSum').innerHTML = `${S.flags.radioReply ? 'Alam ng convoy kung nasaan kayo, dahil sumagot ka sa radyo noong Araw 11. Kumatok sila sa blast door nang alas-sais ng umaga.' : 'Walang nakaaalam na nandito kayo. Kinailangan ninyong tumakbo nang dalawang kilometro sa gitna ng mga zombie papunta sa highway para salubungin ang convoy.'}<br><br>
-    ${[S.flags.bridgeDone && 'Unang trak ang huminto sa pinto ninyo, gaya ng pangako ng kapitan sa tulay ng Bamban.', S.flags.migoOK && 'Magkahawak-kamay sina Nelson at Migo pag-akyat sa trak.', S.flags.migoLost && 'Sa bawat simbahan na nadaanan, tumitingin si Nelson sa bintana, hinahanap si Migo.', S.flags.jomarSaved && 'Sa gilid ng highway, may lalaking kumaway sa convoy. Si Jomar, buhay.'].filter(Boolean).join(' ')}<br><br>
+    ${[S.flags.bridgeDone && 'Unang trak ang huminto sa pinto ninyo, gaya ng pangako ng kapitan sa tulay ng Bamban.', S.flags.migoOK && 'Magkahawak-kamay sina Nelson at Migo pag-akyat sa trak.', S.flags.migoLost && 'Sa bawat simbahan na nadaanan, tumitingin si Nelson sa bintana, hinahanap si Migo.', S.flags.jomarSaved && 'Sa gilid ng highway, may lalaking kumaway sa convoy. Si Jomar, buhay.', S.flags.proposed && 'Sa trak, nakasandal si Angel sa balikat mo, suot pa rin ang singsing na gawa sa kutsara.', S.flags.fredSun && 'Si Tatay Fred, nakatingin sa araw sa bintana ng trak. Hindi na siya umiiyak. Nakangiti na lang.', S.flags.marcoReal && 'Magkatabi sina Abby at Marco sa ikalawang trak.'].filter(Boolean).join(' ')}<br><br>
     ${S.flags.vaccine ? 'Dala ng convoy ang bakuna ni Dr. Ramos, ang lunas na tinulungan ninyong mabuo. Sa unang pagkakataon, may pag-asa ang buong Luzon.' : 'Walang lunas pa, pero buhay kayo.'}<br><br>
     ${ids.length} katao at si Millie ang sumakay sa mga trak papuntang Baguio.${guests.length ? ` Kasama ang mga pinapasok ninyo: ${guests.join(', ')}.` : ''}<br><br>
     ${hurt.length ? `Mahina pa sina ${hurt.join(', ')}, kaya sa unang trak sila, kasama ng mga medic.` : 'Lahat kayo, nakatayo sa sariling paa.'} ${m >= 60 ? 'Kumakanta pa ang mga bata habang umaandar ang trak.' : m < 40 ? 'Tahimik ang lahat sa biyahe. Matagal bago maghilom ang ${S.day - 7} na araw sa ilalim ng lupa.' : 'Pagod ang lahat, pero magkakasama.'}<br><br>Moral sa dulo: <b>${m}%</b>`;
@@ -2990,6 +2991,105 @@ Object.assign(EVENTS, {
     ] },
 });
 Object.assign(CHAPTERS, { 12: { night: 'tShadow1' }, 15: { night: 'tShadow2' }, 17: { afternoon: 'tShadow3' }, 19: { morning: 'tShadow4' }, 48: { k1: 'tBreach' }, 112: { night: 'tSpy1' }, 115: { night: 'tSpy2' }, 196: { night: 'tDark' } });
+// ---------------------------------------------------------------- the second half of the year: the family's own stories, one after another until day 365
+const has = id => !!S.people[id] && !S.people[id].turned;
+Object.assign(EVENTS, {
+  yAbby1: { kick: 'Café', loc: 'Cf', title: 'Kinikilig si Abby', force: 1, good: 1,
+    body: () => `<p>Tatlong gabi nang nakikinig si Abby sa radyo nang matagal. May boses ng lalaki sa kabila, si <b>Marco</b>, mula sa bunker ni Mang Lando. Nagkukuwentuhan sila tungkol sa mga pelikula hanggang madaling-araw.</p><p><i>"Isha, huwag mong sabihin kay Mama, ha?"</i> Namumula si Abby.</p>`,
+    choices: [
+      { t: 'Suportahan si Abby', sub: 'Pahiramin siya ng radyo tuwing gabi.', fx: () => { S.flags.abby = 'yes'; stress('abby', -20); S.flags.tease = 'May bagong kanta si Abby na kinakanta tuwing umaga.'; return '<p>Niyakap ka ni Abby nang mahigpit. Kinagabihan, narinig ninyong tumatawa siya sa radyo.</p>'; } },
+      { t: 'Mag-ingat, Abby', sub: 'Baka hindi siya ang sinasabi niya.', fx: () => { S.flags.abby = 'careful'; stress('abby', 6); return '<p>"Alam ko, Isha," sabi niya. Pero tuloy pa rin ang kuwentuhan nila gabi-gabi, mas tahimik lang.</p>'; } },
+    ] },
+  yFred1: { kick: 'Ospital', loc: 'Hs', title: 'Mabagal na si Tatay Fred', force: 1, can: () => has('fred'),
+    body: () => '<p>Napansin ni Nanay Mila: hinihingal si Tatay Fred kahit naglalakad lang papuntang Pantry. Sinuri siya ni Angel. Mahina ang puso niya. <i>"Matanda na ako, anak. Huwag n\'yo akong alalahanin."</i></p>',
+    choices: [
+      { t: 'Pahinga at gamot araw-araw', sub: '3 gamot. Wala muna siya sa Pantry.', fx: () => { S.meds = Math.max(0, (S.meds || 0) - 3); S.flags.fredCare = 1; if (S.people.fred) { S.people.fred.job = 'rest'; routine(P.fred); } stress('mila', -10); return '<p>Si Nanay Mila mismo ang nagbabantay sa kanya. Nagrereklamo si Tatay Fred na "pinapataba" raw siya.</p>'; } },
+      { t: 'Hayaan siyang magtrabaho', sub: 'Iyon ang gusto niya.', fx: () => { S.flags.fredCare = 0; setMood('mila', 'lungkot', 'ayaw magpahinga ni Tatay Fred'); return '<p>"Ang taong walang ginagawa, mas mabilis tumanda," sabi niya, at bumalik sa Pantry.</p>'; } },
+    ] },
+  yCarly: { kick: 'Kids Zone', loc: 'Kz', title: 'Kaarawan ni Carly', force: 1, good: 1, can: () => has('carly'),
+    body: () => '<p>Walong taon na si Carly ngayon. Ang hiling niya noong isang linggo: <i>"Gusto ko po makita ang araw."</i> Hindi pa ninyo siya mapalabas. Pero baka may ibang paraan.</p>',
+    choices: [
+      { t: 'Gumawa ng "araw" sa Kids Zone', sub: 'Si Papa Na sa ilaw, si Yssa sa pintura.', fx: () => { addRes('power', -8); stressAll(-12); stress('carly', -25); return '<p>Pinatay ang lahat ng ilaw. Tapos, dahan-dahang lumiwanag ang isang malaking bilog na dilaw sa kisame ng Kids Zone, at kumanta ang lahat ng "Happy Birthday". Umiyak si Carly sa tuwa.</p>'; } },
+      { t: 'Party sa Kainan', sub: '-10 pagkain. Spaghetti at cake.', fx: () => { addRes('food', -10); stressAll(-10); stress('carly', -18); return '<p>Spaghetti, pansit, at cake na gawa sa biskwit. Si Butchukok ang unang dumukot sa icing.</p>'; } },
+    ] },
+  yRia: { kick: 'Library', loc: 'Lib', title: 'Marunong nang magbasa si Ria', force: 1, good: 1, can: () => has('ria'),
+    body: () => '<p>Hinila ni Ria ang kamay mo papunta sa Library. May hawak siyang lumang libro. Dahan-dahan, binasa niya nang malakas ang unang pahina, salita por salita. Nasa likod si Monica, umiiyak.</p>',
+    choices: [{ t: 'Palakpakan si Ria', sub: '', fx: () => { stressAll(-10); stress('ria', -20); stress('monica', -15); stress('rika', -15); return '<p>Ang unang librong natapos niya sa ilalim ng lupa: "Si Pagong at si Matsing". Gusto na raw niyang basahin ang lahat ng libro sa Library.</p>'; } }] },
+  yMural: { kick: 'Parke', loc: 'Pk', title: 'Ang mural ni Yssa', force: 1, can: () => has('yssa'),
+    body: () => '<p>Gusto ni Yssa na ipinta ang buong pader ng Parke: ang dagat sa Zambales, ang bundok, ang mga bahay ninyo bago ang lahat. <i>"Para hindi makalimutan ng mga bata kung ano ang hinihintay natin."</i> Pero kulang ang pintura.</p>',
+    choices: [
+      { t: 'Gamitin ang pintura ng pinto at bakal', sub: '2 piyesa. Maganda, pero walang pang-ayos sa pinto.', fx: () => { if (S.parts < 2) return '<p>Kulang ang piyesa. Gumamit si Yssa ng uling at kape. Iba ang ganda, pero maganda pa rin.</p>'; S.parts -= 2; stressAll(-14); S.flags.mural = 1; return '<p>Dalawang linggo ang trabaho. Ngayon, tuwing umaga, nakaupo si Tatay Fred sa bangko sa harap ng mural, nakatingin sa dagat.</p>'; } },
+      { t: 'Mga drawing ng bata na lang', sub: 'Walang gastos.', fx: () => { stressAll(-8); KID.forEach(k => S.people[k] && stress(k, -12)); return '<p>Isinabit ang 40 drawing ng mga bata sa pader ng Parke. Ang paborito ng lahat: si Millie na may korona.</p>'; } },
+    ] },
+  yFight: { kick: 'Armory', loc: 'X', title: 'Suntukan sa Armory', force: 1, can: () => has('aj') && has('carlo'),
+    body: () => '<p>Sigawan mula sa Armory. Nagsusuntukan sina AJ at Carlo. Gusto ni AJ na siya na ang pangunahing bantay. <i>"Matanda ka na, Kuya! Ako na!"</i> Dumudugo ang labi ni Carlo.</p>',
+    choices: [
+      { t: 'Hatiin ang bantay: si AJ sa gabi', sub: 'Pareho silang may silbi.', fx: () => { stress('aj', -10); stress('carlo', -5); return '<p>Nagkamay sila, ayaw pang tumingin sa isa\'t isa. Pero kinagabihan, dinalhan ni Carlo si AJ ng kape sa pwesto niya.</p>'; } },
+      { t: 'Si Carlo pa rin ang lider ng bantay', sub: 'Magagalit si AJ.', fx: () => { setMood('aj', 'galit', 'hindi siya pinagkatiwalaan sa bantay'); stress('carlo', -10); return '<p>Lumabas si AJ nang walang sinasabi. Buong araw siyang nasa Gym, nagbubuhat.</p>'; } },
+    ] },
+  yAbby2: { kick: 'Radyo', loc: 'M', title: 'Si Marco', force: 1,
+    body: () => S.flags.abby === 'careful' && Math.random() < .5 ? '<p>Hindi na sumagot si Marco sa radyo nang tatlong gabi. Tapos, isang mensahe mula kay Mang Lando: <i>"Walang Marco dito. Hindi namin kilala kung sino ang kausap ni Abby."</i></p><p>Nanlamig ang lahat. Sino ang nakakaalam ng lahat ng ikinuwento ni Abby tungkol sa bunker ninyo?</p>' : '<p>Kumatok si Marco sa blast door kahapon, kasama si Mang Lando, may dalang bulaklak na gawa sa papel. Totoo siya. Mabait. At nakatitig lang kay Abby na parang wala nang ibang tao sa mundo.</p>',
+    choices: () => S.flags.abby === 'careful' && !S.flags.marcoReal ? [
+      { t: 'Patibayin ang pinto, ihanda ang M60', sub: 'Baka sila ang susunod na susugod.', fx: () => { S.flags.rumor = S.day + 1; setMood('abby', 'lungkot', 'hindi pala totoo si Marco'); S.flags.tease = 'May nakikinig sa radyo ninyo. Mag-ingat sa gabi.'; return '<p>Buong gabi, gising ang lahat ng bantay. Si Abby, nasa sulok ng Kapilya, hindi nagsasalita.</p>'; } },
+    ] : [
+      { t: 'Imbitahan si Marco sa hapunan', sub: 'Isang gabi lang, sa Kainan.', fx: () => { S.flags.marcoReal = 1; stressAll(-8); stress('abby', -25); return '<p>Kinilatis siya ni Mama Jen nang buong hapunan. Sa dulo, ngumiti si Mama Jen: "Pwede na." Nagtawanan ang buong Kainan.</p>'; } },
+    ] },
+  yFred2: { kick: 'Parke', loc: 'Pk', title: 'Ang hiling ni Tatay Fred', force: 1, can: () => has('fred'),
+    body: () => `<p>Hinawakan ni Tatay Fred ang kamay mo. <i>"Isha, isa lang ang hiling ko bago ako mamatay. Makita ulit ang pagsikat ng araw. Kahit isang beses lang."</i></p><p>${S.flags.fredCare ? 'Mas malakas na siya ngayon, dahil sa pahinga at gamot.' : 'Mahina pa rin ang puso niya.'}</p>`,
+    choices: [
+      { t: 'Iakyat siya sa labas, bago mag-umaga', sub: 'Sina Carlo at AJ, sakay ng truck. Delikado.', fx: () => { const ok = Math.random() < (S.flags.fredCare ? .8 : .55); S.flags.fredSun = ok ? 1 : 0; if (ok) { stressAll(-15); stress('fred', -40); stress('mila', -30); return '<p>Alas-singko ng umaga, sa ibabaw ng truck, sa gitna ng tahimik na kalye. Unang liwanag sa loob ng isang taon. Umiyak si Tatay Fred na parang bata. <i>"Salamat, anak. Kumpleto na ako."</i></p>'; } const v = pick(['carlo', 'aj'].filter(has)) || 'carlo'; bite(v); stressAll(10); return `<p>Nakita nila ang araw nang ilang segundo bago dumating ang mga zombie. Nakabalik silang lahat, pero <b>nakagat si ${N(v)}</b>.</p>`; } },
+      { t: 'Ipakita ang araw sa mural', sub: 'Ligtas. Hindi pareho, pero puno ng pagmamahal.', fx: () => { stress('fred', -15); stressAll(-6); return `<p>${S.flags.mural ? 'Umupo kayo sa harap ng mural ni Yssa habang pinatay ni Papa Na ang ilaw at dahan-dahang pinailaw ang araw sa pintura.' : 'Gumawa si Papa Na ng "araw" gamit ang lampara at dilaw na tela.'} Tumango si Tatay Fred. "Sapat na ito," sabi niya, kahit halatang hindi.</p>`; } },
+    ] },
+  yLights: { kind: 'trouble', kick: 'Greenhouse', loc: 'G', title: 'Namamatay ang grow lights', force: 1,
+    body: () => '<p>Isa-isang pumupundi ang mga grow light sa Greenhouse. Isang taon nang nakabukas nang walang tigil. Sabi ni Papa Na, sa loob ng dalawang linggo, wala nang ilaw ang mga tanim.</p>',
+    choices: [
+      { t: 'Ekspedisyon sa hardware store', sub: 'Kailangan ng piyesa. 3 piyesa ngayon, o mas marami ang mawawala.', fx: () => { if (S.parts >= 3) { S.parts -= 3; return '<p>Pinalitan ni Papa Na ang mga pundido gamit ang lahat ng natitirang piyesa. Gumaganda ulit ang mga tanim.</p>'; } S.growth = Math.max(0, S.growth - .5); addRes('food', -15); S.flags.tease = 'Kailangan ng piyesa para sa Greenhouse. Magpadala ng ekspedisyon sa hardware store.'; return '<p>Kulang ang piyesa. Nalanta ang kalahati ng Greenhouse. Kailangan ninyong maghanap sa labas.</p>'; } },
+      { t: 'Ilipat ang tanim sa ilaw ng Parke', sub: 'Mas maliit na ani, pero buhay.', fx: () => { S.growth = Math.max(0, S.growth - .2); stress('su', 8); return '<p>Inilipat nina Mama Su at Rika ang mga paso sa ilalim ng mga lamp post ng Parke. Parang palengke ng halaman ang Bayan ngayon.</p>'; } },
+    ] },
+  yPropose: { kind: 'night', kick: 'Parke', loc: 'Pk', title: 'Sa ilalim ng mga bituin', force: 1, good: 1, can: () => has('angel'),
+    body: () => '<p>Gabi. Ikaw at si Angel lang sa Parke, nakahiga sa damo, sa ilalim ng projector ng mga bituin ni Papa Na. Nakapatong si Millie sa tiyan ni Angel.</p><p><i>"Bee,"</i> sabi ni Angel, <i>"kung hindi tayo makalabas dito, okay lang sa akin. Basta ikaw ang kasama ko."</i></p><p>Sa bulsa mo, ang singsing na ginawa ni Yssa mula sa lumang kutsara.</p>',
+    choices: [
+      { t: 'Lumuhod at mag-propose', sub: '"Pakasalan mo ako, Bee."', fx: () => { S.flags.proposed = 1; stress('isha', -30); stress('angel', -30); stressAll(-10); chime(); S.flags.tease = 'May kasalang ihahanda ang buong bunker.'; return '<p>Natahimik si Angel. Tapos, tumawa siya habang umiiyak. <i>"Oo. Oo, Bee. Oo."</i> Tumahol si Millie. Sa likod ng mga puno, may naririnig kayong palakpakan: buong pamilya pala ang nakasilip.</p>'; } },
+      { t: 'Yakapin lang siya', sub: 'Sa labas mo na lang itatanong.', fx: () => { stress('isha', -15); stress('angel', -15); return '<p>Hinawakan mo ang kamay niya hanggang makatulog siya. Nasa bulsa mo pa rin ang singsing. Sa tamang panahon.</p>'; } },
+    ] },
+  yWedding: { kind: 'night', kick: 'Kapilya', loc: 'Ch', title: 'Ang kasal', force: 1, good: 1, can: () => !!S.flags.proposed,
+    body: () => '<p>Puno ang Kapilya. Si Mama Jen ang nagkasal, hawak ang lumang Bibliya. Si Carly at Ria ang flower girls, may hawak na dahon ng pechay. Si Millie ang ring bearer, may lasong nakatali sa leeg.</p><p>Si Angel, nakasuot ng puting kurtina na tinahi ni Aling Rosa, at umiiyak na bago pa magsimula.</p>',
+    choices: [{ t: '"I do."', sub: '', fx: () => { addRes('food', -15); addRes('meat', -10); stressAll(-30); npcs().forEach(id => clearMood(id)); chime(); return '<p>Nagpalakpakan ang lahat. Sa Kainan, lechon kawali, pansit, at cake na tatlong patong. Sumayaw kayo ni Angel sa gitna ng Parke, at sumunod ang buong pamilya. Ang pinakamasayang gabi sa ilalim ng lupa.</p>'; } }] },
+  yPriest: { kick: 'Radyo', loc: 'M', title: 'Misa sa radyo', force: 1, good: 1,
+    body: () => '<p>Bagong frequency: isang paring nagmimisa mula sa isang simbahan sa Baguio, para sa lahat ng nakatago sa ilalim ng lupa. <i>"Hindi kayo nakalimutan."</i></p>',
+    choices: [{ t: 'Pakinggan ng buong pamilya sa Kapilya', sub: '', fx: () => { stressAll(-12); stress('jen', -20); return '<p>Nagsiksikan ang lahat sa Kapilya. Sa dulo ng misa, binasa ng pari ang mga pangalan ng mga bunker na nakikinig. Kasama ang inyo.</p>'; } }] },
+  yScout: { kick: 'Airlock', loc: 'A', title: 'Ang daan papunta sa highway', force: 1,
+    body: () => '<p>Sabi ng Operation Bagong Araw, kailangan nilang malaman kung malinis ang daan mula sa inyo papunta sa MacArthur Highway. May magboboluntaryo ba?</p><p>Tumayo agad si AJ. <i>"Ako na."</i></p>',
+    choices: [
+      { t: 'Ipadala si AJ sakay ng truck', sub: 'Mapapabilis ang pagsundo. Delikado.', fx: () => { const ok = Math.random() < .65; if (ok) { S.flags.scout = 1; stressAll(-6); stress('aj', -20); return '<p>Bumalik si AJ bago gumabi, may dalang mapa na puno ng marka. <i>"Malinis ang kalahati ng daan."</i> Tinapik siya ni Carlo sa balikat. Proud.</p>'; } bite(has('aj') ? 'aj' : adultPick()); stressAll(10); return '<p>Bumalik ang truck, may dugo sa pinto. Nakagat si AJ sa braso habang tumatakas. Pero nakuha niya ang mapa.</p>'; } },
+      { t: 'Hindi. Maghihintay tayo', sub: 'Ligtas.', fx: () => { setMood('aj', 'galit', 'hindi siya pinayagang lumabas'); return '<p>"Hanggang kailan, Isha?" sigaw ni AJ, bago lumabas ng kwarto.</p>'; } },
+    ] },
+  yCount: { kick: 'Radyo', loc: 'M', title: 'May petsa na', force: 1, sound: 'chime', good: 1,
+    body: () => `<p><i>"Bunker ni Isha. Operation Bagong Araw. Malapit na kami${S.flags.scout ? ', salamat sa mapa ni AJ' : ''}. Kung walang aberya, susunduin namin kayo sa ika-365 araw."</i></p><p>${365 - S.day} araw na lang. Sa unang pagkakataon, may petsa na.</p>`,
+    choices: [{ t: 'Isulat ang countdown sa pader', sub: '', fx: () => { stressAll(-15); return `<p>Isinulat ni Carly sa pader ng Kainan: <b>"${365 - S.day} ARAW NA LANG!"</b> Araw-araw, binubura niya at pinapalitan.</p>`; } }] },
+  yDoubt: { kind: 'night', kick: 'Master Suite', loc: 'M', title: 'Natatakot si Angel', force: 1, can: () => has('angel'),
+    body: () => '<p>Gising si Angel nang hatinggabi, nakatingin sa kisame. <i>"Bee, paano kung paglabas natin, wala na ang lahat? Ang bahay natin, ang mga kaibigan natin... Dito, alam ko kung ano ang mangyayari bukas."</i></p>',
+    choices: [
+      { t: '"Magsisimula tayo ulit. Magkasama."', sub: '', fx: () => { stress('angel', -20); stress('isha', -10); return '<p>Niyakap mo siya. Pinag-usapan ninyo ang bahay na itatayo ninyo: malaking bintana, hardin, at higaan ni Millie sa ilalim ng araw. Nakatulog siyang nakangiti.</p>'; } },
+      { t: '"Natatakot din ako."', sub: 'Totoo, at sapat na iyon.', fx: () => { stress('angel', -12); stress('isha', -12); return '<p>Matagal kayong tahimik, magkahawak-kamay. Minsan, ang pinakamagandang sagot ay ang hindi magkunwari.</p>'; } },
+    ] },
+  yGifts: { kick: 'Kainan', loc: 'Kn', title: 'Ang regalo ng lahat', force: 1, good: 1,
+    body: () => '<p>Pagpasok mo sa Kainan, nakatayo ang buong pamilya, may hawak na malaking libro. Ginawa nila ito nang lihim nang isang buwan: isang scrapbook ng isang taon sa bunker. Mga drawing, sulat, litrato mula sa lumang camera, at ang unang listahan ni Angel noong Araw 7.</p><p>Sa unang pahina: <i>"Para kay Isha, na nagdala sa amin hanggang dito."</i></p>',
+    choices: [{ t: 'Basahin isa-isa', sub: '', fx: () => { stress('isha', -35); stressAll(-12); return '<p>Hindi mo natapos basahin. Umiiyak ka na sa ikatlong pahina. Umiiyak na rin ang lahat.</p>'; } }] },
+  yLast: { kind: 'knock', kick: 'Blast door', loc: 'A', title: 'Ang huling kawan', sound: 'knock', force: 1,
+    body: () => '<p>Itinutulak ng Operation Bagong Araw ang huling mga zombie palabas ng Tarlac. At dumadaan silang lahat sa inyo. Libo-libo.</p><p>Ilang araw na lang bago ang pagsundo. Kailangan ninyong makaabot.</p>',
+    choices: [
+      { t: 'Lahat sa pinto! Huling laban!', sub: 'Pinakamalakas na sugod sa buong taon.', fx: () => ({ raid: [raidPower(110), 'Ang huling kawan', 1] }) },
+      { t: 'Dilim, katahimikan, at dasal', sub: '-40 kuryente, -25 oxygen.', fx: () => { addRes('power', -40); addRes('o2', -25); stressAll(15); if (Math.random() < .5 + S.door.lvl * .06) return '<p>Isang buong gabi ng dilim at ungol. Hawak ng bawat isa ang kamay ng katabi. Pagsikat ng araw sa itaas, lumampas na sila.</p>'; return { raid: [raidPower(80), 'Naamoy pa rin nila kayo', 1] }; } },
+    ] },
+  yJar: { kind: 'night', kick: 'Master Suite', loc: 'M', title: 'Ang garapon ng mga pangako', force: 1, good: 1,
+    body: () => '<p>Inilabas ni Angel ang garapong pinagsulatan ninyo ng mga pangako noong Bagong Taon. Isa-isang binasa sa Kainan. <i>"Kakain ng lechon nang walang rasyon." "Maliligo sa dagat." "Yayakapin si Lola."</i></p><p>Ang huling papel ay sa iyo.</p>',
+    choices: [{ t: 'Basahin nang malakas', sub: '', fx: () => { stressAll(-12); return '<p>"Iuuwi ko silang lahat." Iyon lang ang nakasulat. Tumayo ang buong pamilya at pumalakpak nang matagal.</p>'; } }] },
+  yPack: { kick: 'Dormitoryo', loc: 'Dorm', title: 'Nag-iimpake na ang lahat', force: 1, good: 1,
+    body: () => '<p>Nag-iimpake ang buong bunker. Ano ang dadalhin? Kaunti lang ang kasya sa trak. Si Carly, ayaw iwan ang drawing ni Millie na may korona. Si Tatay Fred, ang garapon ng buto ni Mama Su. Si Butchukok, lahat ng bola sa ball pit.</p>',
+    choices: [{ t: 'Isang maliit na bag lang bawat isa', sub: 'Ang iba, iiwan para sa susunod na pamilya.', fx: () => { stressAll(-6); return '<p>Nag-iwan kayo ng sulat sa ilalim ng altar, katabi ng sulat ng pamilya ni Luna: <i>"Para sa susunod na makakapasok dito. Alagaan ninyo ang isa\'t isa."</i></p>'; } }] },
+});
+Object.assign(CHAPTERS, { 108: { night: 'yAbby1' }, 124: { morning: 'yFred1' }, 144: { afternoon: 'yCarly' }, 160: { afternoon: 'yRia' }, 175: { morning: 'yMural' }, 182: { afternoon: 'yFight' }, 214: { night: 'yAbby2' }, 232: { morning: 'yFred2' }, 256: { morning: 'yLights' }, 270: { night: 'yPropose' }, 276: { night: 'yWedding' }, 293: { morning: 'yPriest' }, 318: { morning: 'yScout' }, 330: { morning: 'yCount' }, 340: { night: 'yDoubt' }, 350: { afternoon: 'yGifts' }, 356: { k1: 'yLast' }, 360: { night: 'yJar' }, 362: { afternoon: 'yPack' } });
 Object.assign(CHAPTERS, { 8: { morning: 'zTown' }, 61: { morning: 'zPhase2' }, 151: { morning: 'zPhase3' }, 251: { morning: 'zPhase4' } });
 Object.assign(EVENTS, {
   zTown: { kick: 'Ang Bayan', loc: 'Pk', title: 'Ang Bayan', force: 1, good: 1,
