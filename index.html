@@ -176,7 +176,7 @@ body.intro .hud,body.intro #labels{display:none!important}
 <div id="fx"></div>
 
 <header class="hud" id="top">
-  <div class="daybox"><span>Araw</span><b id="dayNum">7</b></div>
+  <div class="daybox"><span>Araw</span><b id="dayNum">7</b><span>/365</span></div>
   <div class="clockbox"><b id="clock">06:00</b><span id="phase">Umaga</span></div>
   <div class="spacer"></div>
   <button class="chip" id="btnSpeed" aria-label="Bilis ng oras">1×</button>
@@ -203,7 +203,7 @@ body.intro .hud,body.intro #labels{display:none!important}
 
 <section class="over" id="intro">
   <h1 class="title">BUNKER<em>DAY 7</em></h1>
-  <p class="lede">Tatlong linggo na mula nang lumabas ang Z-virus sa isang lab sa Clark. Isang kagat lang, at sa loob ng dalawang araw, nagiging zombie ang tao. Bumagsak na ang Pampanga, Tarlac at Bulacan, at mas marami na ang patay na naglalakad kaysa sa buhay. Ayon sa AFP, may rescue convoy sa Araw 100. Pero walang nakakaalam kung matutuloy ito, o kung gaano katagal kayo dito: isang taon, o higit pa. Anim na araw kayong naghanda sa bahay. Ngayong umaga, sarado na ang blast door. Ikaw si Isha: ikaw ang mag-uutos, at lahat ng kasama mo ay may ambag. Bawat araw, mas mahirap.</p>
+  <p class="lede">Tatlong linggo na mula nang lumabas ang Z-virus sa isang lab sa Clark. Isang kagat lang, at sa loob ng dalawang araw, nagiging zombie ang tao. Bumagsak na ang Pampanga, Tarlac at Bulacan, at mas marami na ang patay na naglalakad kaysa sa buhay. Ayon sa AFP, may rescue convoy sa Araw 100. Pero walang nakakaalam kung matutuloy ito. Baka isang buong taon kayo dito. Anim na araw kayong naghanda sa bahay. Ngayong umaga, sarado na ang blast door. Ikaw si Isha: ikaw ang mag-uutos, at lahat ng kasama mo ay may ambag. Bawat araw, mas mahirap.</p>
   <div class="choices" id="introChoices"><button class="choice primary" disabled><b>Naglo-load ang bunker…</b></button></div>
   <p class="small" id="introNote">Pinakamaganda sa iPhone, naka-patayo. Sa laptop: WASD para maglakad, E para kumilos.</p>
 </section>
@@ -313,6 +313,19 @@ const ROOMS = {
   Lib:{n:'Library', x:1,z:30,w:9,h:5, floor:'wood', light:'#ffdcae', job:true, verb:'Magbasa'},
   Pl:{n:'Playroom', x:44,z:31,w:4,h:5, floor:'wood', light:'#ffe0b5', job:true, verb:'Makipaglaro sa mga bata'},
   Dorm:{n:'Dormitoryo', x:49,z:24,w:10,h:12, floor:'wood', light:'#ffdcae'},
+  // Ang Bayan: a town under the ground, so nobody has to miss the outside
+  Pk:{n:'Parke', x:60,z:16,w:14,h:14, floor:'grass', light:'#fff6d8', job:true, verb:'Mamasyal sa parke'},
+  Pw:{n:'Swimming Pool', x:60,z:9,w:14,h:6, floor:'tile', light:'#d8f4ff'},
+  Ct:{n:'Basketball Court', x:60,z:1,w:14,h:7, floor:'court', light:'#fff0d6'},
+  Gy:{n:'Gym', x:75,z:1,w:9,h:6, floor:'metal', light:'#e8f0ff'},
+  Ch:{n:'Kapilya', x:75,z:8,w:9,h:6, floor:'wood', light:'#ffe2b0'},
+  Cf:{n:'Café', x:75,z:15,w:9,h:6, floor:'wood', light:'#ffd29a'},
+  Sp:{n:'Salon at Spa', x:75,z:22,w:9,h:5, floor:'tile', light:'#ffe6f0'},
+  Ar:{n:'Arcade', x:75,z:28,w:9,h:8, floor:'metal', light:'#d6b8ff', job:true, verb:'Maglaro sa arcade'},
+  Mk:{n:'Mini-Mart', x:60,z:31,w:14,h:5, floor:'tile', light:'#fff4dc'},
+  Kn:{n:'Kainan', x:85,z:1,w:14,h:12, floor:'wood', light:'#ffe0b0'},
+  Cn:{n:'Cinema', x:85,z:14,w:14,h:9, floor:'wood', light:'#c9a8ff'},
+  Kz:{n:'Kids Zone', x:85,z:24,w:14,h:12, floor:'epoxy', light:'#fff0c8', job:true, verb:'Makipaglaro sa mga bata'},
   A:{n:'Airlock', x:16,z:31,w:8,h:3, floor:'metal', light:'#ffe9c8'},
   Q:{n:'Quarantine', x:25,z:31,w:4,h:5, floor:'tile', light:'#e4f7ff'},
 };
@@ -323,12 +336,12 @@ BUNK_Z.forEach((z, i) => {
 });
 const DOORS = [[5,9],[18,9],[19,9],[25,2],[32,6],[30,12],[30,15],[25,13],[25,14],[10,13],[5,17],[5,22],[10,24],[18,22],[19,19],[20,19],[21,22],[19,30],[20,30]];
 BUNK_Z.forEach(z => { DOORS.push([40, z + 1], [43, z + 1]); });
-DOORS.push([24, 32], [40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
+DOORS.push([84, 10], [84, 17], [84, 25], [84, 31], [91, 13], [91, 23], [59, 29], [64, 15], [64, 8], [74, 6], [74, 11], [74, 18], [74, 24], [74, 29], [66, 30], [24, 32], [40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
 const JOBS = ['G','K','P','W','S','O','Y','X','C','H','V','U','Lib','Pl','rest'];
-const RELAX = ['H', 'V', 'U', 'Lib', 'Pl'];
-const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', rest:'Pahinga' };
+const RELAX = ['H', 'V', 'U', 'Lib', 'Pl', 'Pk', 'Ar', 'Kz'];
+const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', Pk:'Parke', Ar:'Arcade', Kz:'Kids Zone', rest:'Pahinga' };
 
-const GW = 60, GH = 37;
+const GW = 100, GH = 37;
 const cell = new Uint8Array(GW * GH);        // 0 bato, 1 sahig, 2 pader, 4 blast door
 const roomOf = new Array(GW * GH).fill(null);
 const blocked = new Uint8Array(GW * GH);
@@ -515,7 +528,7 @@ MAT.trim = std({ color: '#ddd7cb', roughness: .45 }); MAT.trim.envMapIntensity =
 Object.assign(MAT.wall, { bumpMap: TEX.concrete, bumpScale: 1.2 }); Object.assign(MAT.wood, { bumpMap: TEX.wood, bumpScale: .8 });
 Object.assign(MAT.tile, { bumpMap: TEX.tile, bumpScale: 1.2 }); Object.assign(MAT.concrete, { bumpMap: TEX.concreteFloor, bumpScale: .6 });
 Object.assign(MAT.metal, { bumpMap: TEX.metal, bumpScale: 1.5 }); Object.assign(MAT.walnut, { bumpMap: TEX.walnut, bumpScale: .5 }); Object.assign(MAT.epoxy, { bumpMap: TEX.epoxy, bumpScale: .3 });
-const FLOORMAT = { wood: MAT.wood, tile: MAT.tile, epoxy: MAT.epoxy, concrete: MAT.concrete, metal: MAT.metal };
+const FLOORMAT = { wood: MAT.wood, tile: MAT.tile, epoxy: MAT.epoxy, concrete: MAT.concrete, metal: MAT.metal, grass: std({ color: '#6c9c47', roughness: 1 }), court: std({ color: '#c98a52', roughness: .55 }) };
 
 // cutaway: walls between the camera and Isha open up so she never disappears behind them
 const CUT = { uPlayer: { value: new THREE.Vector3() }, uCam: { value: new THREE.Vector3() }, uOn: { value: 1 } };
@@ -881,10 +894,10 @@ function buildRooms() {
   for (let k = 0; k < 2; k++) { box(.06, 1.05, .07, MAT.black, 11.15, .6, 31.7 + k * .45); box(.07, .25, .09, MAT.walnut, 11.15, .5, 31.7 + k * .45); }   // the licensed shotgun and an air rifle
   for (let k = 0; k < 3; k++) { box(.04, .55, .07, MAT.steel, 11.15, .9, 32.7 + k * .25); box(.05, .14, .06, MAT.walnut, 11.15, .76, 32.7 + k * .25); }   // bolos
   for (let k = 0; k < 3; k++) { const sh = box(.55, .9, .05, std({ color: '#2a3036', roughness: .3, metalness: .4 }), 12.2 + k * .55, 0, 33.75); sh.rotation.x = -.15; }
-  for (let k = 0; k < 3; k++) box(.45, .3, .3, MAT.olive, 14.4, k * .3, 31.4);
+  for (let k = 0; k < 3; k++) box(.45, .3, .3, MAT.olive, 14.4, k * .3, 33.4);
   box(1.2, .05, .6, MAT.darkSteel, 13, .85, 31.4); box(.06, .85, .5, MAT.darkSteel, 12.45, 0, 31.4); box(.06, .85, .5, MAT.darkSteel, 13.55, 0, 31.4);
   box(.3, .08, .2, std({ color: '#d45a1f', roughness: .5 }), 13.1, .9, 31.4); box(.5, .7, .12, MAT.olive, 14.5, 1.2, 33.85);
-  block(11, 31, 11, 33); block(12, 31, 13, 31); block(14, 31, 14, 31); block(12, 33, 13, 33);
+  block(11, 31, 11, 33); block(12, 31, 13, 31); block(14, 33, 14, 33); block(12, 33, 13, 33);
   spot('X', 18, 32, 20, 34.5, 'guard'); spot('X', 21, 32, 20, 34.5, 'guard'); spot('X', 13, 32, 13, 31.4);
   decal('ARMORY', 13, 32.5, .4);
   box(.06, 2.2, .06, MAT.steel, 23.2, 0, 31.4); ball(.12, MAT.steel, 23.2, 2.15, 31.6); box(.9, .03, .9, MAT.metal, 23.2, 0, 31.6); block(23, 31, 23, 31);
@@ -984,7 +997,7 @@ function buildRooms() {
   ball(.3, MAT.blanketC, 45.6, .18, 25.4).scale.set(1, .5, 1); ball(.3, MAT.blanketA, 46.4, .18, 26).scale.set(1, .5, 1);
   spot('U', 46, 25, 47.65, 25); spot('U', 45, 27, 44.6, 27.2); spot('U', 46, 27, 45.8, 28.8);
   decal('MUSIKA', 45.9, 29.5, .45, Math.PI / 2);
-  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar();
+  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar(); buildTown(); buildBig();
   decal('GREENHOUSE', 6.5, 8.2, .8); decal('KUSINA', 6.5, 16.4, .7); decal('PANTRY', 5.5, 20.2, .6);
   decal('TUBIG', 5, 28.3, .7); decal('SOLAR', 14.5, 25.4, .7); decal('SALA', 18, 13.5, .9, 0, .18);
   decal('OXYGEN', 32.5, 3.4, .55); decal('HOBBY', 30.5, 11.4, .6); decal('CLINIC', 30.5, 18.5, .6);
@@ -2015,13 +2028,14 @@ function endDay() {
     npcs().forEach(id => { const st = S.people[id]; if (st.bit && !st.hid) warn.push(`<b>${N(id)}: nakagat, ${st.bit} oras na lang.</b> Bigyan ng antiviral (meron kayong ${S.anti || 0}).`); if (st.turned) warn.push(`${N(id)}: zombie na, nakatali sa Clinic. Kailangan ng 2 antiviral.`); });
     const horde = nightHorde(); if (horde) lines.push(horde);
     if (growthDay < .8 && S.growth >= .8) warn.push('Malapit nang anihin ang greenhouse.');
+    if (S.flags.tease) { warn.unshift(`<i>${S.flags.tease}</i>`); S.flags.tease = null; }
     S.day++; S.min = 360; S.dayStart = snapshotRes(); morningNeeds();
-    if (S.day >= (S.rescue ||= 375 + (Math.random() * 46 | 0))) { save(); showEnding(); return; }
+    if (S.day >= 365) { save(); showEnding(); return; }
     if (S.flags.ignored && !S.done.box && S.day >= 10) queueEvent('box');
     save(); saveDayStart();
     npcs().forEach(id => { const p = P[id]; releaseSpot(p); p.goal = null; const room = p.def.bed[0], sp = room === 'M' ? SPOTS.M[0] : SPOTS[room][0]; p.place(sp.x, sp.z, sp.yaw || 0); p.setPose('stand'); });
     ISHA.place(18.5, 3.7, Math.PI); ISHA.setPose('stand');
-    showDayCard(`ARAW ${S.day}`, `06:00 · ${S.day < 100 && !S.flags.noConvoy ? `${100 - S.day} ARAW BAGO ANG CONVOY` : `${S.day - 6} ARAW SA ILALIM NG LUPA`}`, `<b>Kahapon</b><br>${lines.join('<br>')}${warn.length ? '<br><br><b>Bantayan</b><br>' + warn.join('<br>') : ''}<br><br><b>Misyon ngayon</b><br>${misHTML()}`, () => { routineAll(); });
+    showDayCard(`ARAW ${S.day}`, `06:00 · ${S.day < 100 && !S.flags.noConvoy ? `${100 - S.day} ARAW BAGO ANG CONVOY` : `${S.day - 6} ARAW SA ILALIM NG LUPA`} · SA LABAS: ${PH_TXT[PH()].toUpperCase()}`, `<b>Kahapon</b><br>${lines.join('<br>')}${warn.length ? '<br><br><b>Bantayan</b><br>' + warn.join('<br>') : ''}<br><br><b>Misyon ngayon</b><br>${misHTML()}`, () => { routineAll(); });
   }, 1200);
 }
 function saveDayStart() { try { localStorage.setItem(SAVE_KEY + '-day', JSON.stringify(S)); } catch (e) { /* no retry point without storage */ } }
@@ -2054,7 +2068,7 @@ function doorAnim(open) { FX.doorTarget = open ? -1.7 : 0; }
 
 // ================================================================ v5: needs, rooms, items, moods, chat, knocks, raids, activities, saves
 const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
-const KIDJOBS = ['Pl', 'U', 'H', 'V', 'Lib', 'rest'];
+const KIDJOBS = ['Kz', 'Pl', 'Pk', 'Ar', 'U', 'H', 'V', 'Lib', 'rest'];
 
 // ---------------------------------------------------------------- library + playroom furniture, toilets
 function buildExtraRooms() {
@@ -2218,8 +2232,9 @@ function nearItem() {
 function busy(dur, done, pose = 'work') { doing = { t: 0, dur, done, x: ISHA.x, z: ISHA.z }; ISHA.setPose(pose); }
 function sitAt(x, z, yaw, msg) { ISHA.place(x, z, yaw); ISHA.setPose('sit'); if (msg) toast(msg); }
 const TVSEAT = { L: { x: 14, z: 17.85, yaw: Math.PI }, M: { x: 15, z: 6.6, yaw: Math.PI }, V: { x: 33.6, z: 33.5, yaw: -Math.PI / 2 } };
-const TVPOS = { L: { x: 14, z: 15.3 }, V: { x: 30.2, z: 33.5 }, M: { x: 15, z: 3.3 } };
+const TVPOS = { L: { x: 14, z: 15.3 }, V: { x: 30.2, z: 33.5 }, M: { x: 15, z: 3.3 }, Cn: { x: 98.7, z: 18.5 } };
 function setupItems() {
+  townItems();
   item(14, 16.6, 'Manood ng TV', () => tvSheet('L'), { r: 1.5 });
   item(15, 5.4, 'Manood ng TV', () => tvSheet('M'), { r: 1.5 });
   item(32, 33.5, 'Manood sa Sinehan', () => tvSheet('V'), { r: 1.6 });
@@ -2334,6 +2349,11 @@ function fridgeSheet() {
   $('#fWater').onclick = () => { closeSheet(); addRes('water', -.2); stress('isha', -1); toast('Uminom ka ng malamig na tubig.'); };
   $('#fCoffee').onclick = () => { closeSheet(); stress('isha', -4); advance(10); toast('Mainit na kape. Mas gising ka na.'); };
 }
+const NEWS_PH = [[],
+  [d => `DOH: kumakalat pa ang Z-virus sa Pampanga at Tarlac. Manatili sa loob.`, d => `May mga evacuation center pang bukas sa Baguio.`, d => `Pulis: may checkpoint pa sa MacArthur Highway.`],
+  [d => `AFP: bumagsak na ang Maynila. Wala nang kuryente sa buong Luzon.`, d => `Nilusob ng mga zombie ang evacuation center sa Angeles. Kakaunti ang nakaligtas.`, d => `Babala: dumarami ang grupong nanloloob. Pati sa mga bunker.`],
+  [d => `AFP: may bagong uri ng zombie. Tumatakbo, umaakyat, nagtutulungan.`, d => `Sunog sa Clark. Nakikita ang usok hanggang Tarlac.`, d => `Huling broadcast mula sa Maynila: "Kung may nakakarinig, huwag kayong lalabas."`],
+  [d => `...static... ...static...`, d => `Isang boses lang sa radyo: "May tao pa ba diyan?"`, d => `AFP: tuloy ang Operation Bagong Araw. Isa-isang bayan. Huwag susuko.`]];
 const NEWS = [
   d => `DOH: ang kagat ay nagiging zombie sa loob ng 36 oras. Ang antiviral lang ang nakakapigil.`,
   d => `Babala: mas aktibo ang mga zombie sa gabi. Patayin ang ilaw, huwag mag-ingay.`,
@@ -2346,6 +2366,7 @@ const NEWS = [
   d => `Clark: patuloy ang pananaliksik sa lunas sa Z-virus. Naghahanap ng mga boluntaryong may antiviral.`,
   d => `Kulang ang gamot sa mga evacuation center. Nananawagan ang DOH ng donasyon.`,
 ];
+const newsLine = d => (Math.random() < .6 ? pick(NEWS_PH[PH()]) : pick(NEWS))(d);
 function radioSheet() {
   busy(1.2, () => { advance(10); const n = pick(NEWS)(S.day); toast('Radyo: ' + n); stress('isha', -2); });
 }
@@ -2411,7 +2432,9 @@ function armorySheet() {
   $('#aDrill').onclick = () => { closeSheet(); busy(2, () => { S.flags.drill = S.day; advance(30); toast('Nag-ensayo ang mga bantay. Mas handa kayo ngayong araw.', 'good'); }); };
   $('#aClean').onclick = () => { S.flags.clean = S.day; advance(15); toast('Malinis at may langis na ang shotgun.', 'good'); armorySheet(); };
 }
-const DD = () => S.day <= 100 ? S.day : 100 + (S.day - 100) * .25;
+const DD = () => S.day <= 100 ? S.day : 100 + (S.day - 100) * .6;
+const PH = () => !S ? 1 : S.day < 61 ? 1 : S.day < 151 ? 2 : S.day < 251 ? 3 : 4;
+const PH_TXT = ['', 'Kumakalat pa ang Z-virus', 'Bumagsak na ang mga bayan', 'Tumatakbo na ang mga zombie', 'Halos wala nang buhay sa labas'];
 const raidPower = (extra = 0) => 50 + DD() * 1.5 + extra + (S.flags?.runner === 2 ? 12 : 0);
 function raidOK() { const n = (S.raids ||= {})[S.day] || 0; return S.day >= 7 && n < (S.day >= 30 ? 2 : 1); }
 function countRaid() { (S.raids ||= {})[S.day] = (S.raids[S.day] || 0) + 1; }
@@ -2493,7 +2516,7 @@ function cure(id) {
 }
 function nightHorde() {
   // every night the dead walk, and the door has to hold until morning
-  if (S.day < 8 || Math.random() > .4 + DD() / 250) return '';
+  if (S.day < 8 || Math.random() > .35 + PH() * .08 + DD() / 250) return '';
   const hit = Math.max(0, (18 + DD() * .45) * (1 - S.door.lvl * .1) - defense() * 3 + Math.random() * 15);
   S.door.hp -= hit;
   if (S.door.hp > 0) return `Gabi: may kawan ng zombie na bumangga sa pinto. <b>-${Math.round(hit)} sa pinto</b> (${Math.round(S.door.hp)}/${doorMax()}).`;
@@ -2610,17 +2633,120 @@ Object.assign(EVENTS, {
   zFlyover: { kick: 'Airlock', loc: 'A', title: 'May eroplano!', force: 1,
     body: () => '<p>Ugong sa itaas. Hindi zombie. Makina. Sa camera: isang helicopter ng Army, mababa, umiikot sa bayan.</p>',
     choices: [
-      { t: 'Magsindi ng signal fire sa labas', sub: 'Makikita ka nila. Pati ng mga zombie.', fx: () => { S.flags.signal = 1; S.rescue = Math.max(366, (S.rescue || 400) - 15); return { raid: [raidPower(40), 'Naakit ang mga zombie sa apoy', 1] }; } },
+      { t: 'Magsindi ng signal fire sa labas', sub: 'Makikita ka nila. Pati ng mga zombie.', fx: () => { S.flags.signal = 1; return { raid: [raidPower(40), 'Naakit ang mga zombie sa apoy', 1] }; } },
       { t: 'Magtago. Hindi pa natin alam kung sino sila', sub: 'Ligtas.', fx: () => '<p>Lumipad palayo ang helicopter. Baka babalik sila. Baka hindi.</p>' },
     ] },
   zDrop: { kick: 'Airlock', loc: 'A', title: 'May bumagsak na kahon', force: 1, good: 1,
     body: () => `<p>Madaling-araw, may kumalabog sa itaas. Isang kahon na may parachute${S.flags.signal ? ', dahil nakita nila ang apoy ninyo' : ''}. Sa loob: pagkain, gamot, antiviral, at isang radyo ng militar na may sulat: <i>"Bunker ni Isha. Pindutin kapag handa."</i></p>`,
     choices: [{ t: 'Kunin ang kahon', sub: '', fx: () => { addRes('food', 40); S.meds = (S.meds || 0) + 6; S.anti = (S.anti || 0) + 4; S.stock = (S.stock || 0) + 200; S.flags.milRadio = 1; stressAll(-15); chime(); return '<p>+40 pagkain, +6 gamot, +4 antiviral, +200 bala sa supply room. At ang radyo: isang direktang linya sa Operation Bagong Araw.</p>'; } }] },
-  zYear: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Isang taon', force: 1, good: 1,
-    body: () => `<p>Isang taon na mula nang isara ninyo ang blast door. ${people().length} kayo ngayon, at si Millie. Hindi pa rin alam kung kailan darating ang tulong.</p><p>Pero tumigil ang lahat at tumingin sa iyo, gaya noong Araw 7.</p>`,
-    choices: [{ t: '"Isang taon. Kaya pa natin ang isa pa."', sub: '', fx: () => { stressAll(-20); npcs().forEach(id => clearMood(id)); return '<p>Nagpalakpakan ang lahat. Sa radyo ng militar, may maikling mensahe: <i>"Malapit na kami."</i></p>'; } }] },
+  zYear: { kind: 'night', kick: 'Sala', loc: 'L', title: 'Bukas, isang taon na', force: 1, good: 1,
+    body: () => `<p>Bukas, isang taon na mula nang isara ninyo ang blast door. ${people().length} kayo ngayon, at si Millie.</p><p>Kumaluskos ang radyo${S.flags.milRadio ? ' ng militar' : ''}: <i>"Bunker ni Isha. Ito ang Operation Bagong Araw. Malinis na ang daan papunta sa inyo. Bukas ng umaga, susunduin namin kayo."</i></p><p>Tumigil ang lahat at tumingin sa iyo, gaya noong Araw 7.</p>`,
+    choices: [{ t: '"Uuwi na tayo."', sub: '', fx: () => { stressAll(-25); npcs().forEach(id => clearMood(id)); return '<p>Walang nakatulog. Nag-impake ang lahat, umiiyak at tumatawa. Huling gabi sa bunker.</p>'; } }] },
 });
-Object.assign(CHAPTERS, { 100: { morning: 'zNoConvoy' }, 104: { night: 'zSilence' }, 118: { morning: 'zRain' }, 130: { night: 'zXmas' }, 137: { night: 'zNewYear' }, 152: { morning: 'zBlight' }, 168: { night: 'zVow' }, 189: { night: 'zHalfYear' }, 205: { morning: 'zOp' }, 222: { k1: 'zHorde2' }, 241: { morning: 'zOutbreak' }, 262: { morning: 'zLando' }, 287: { afternoon: 'zFlyover' }, 302: { morning: 'zDrop' }, 371: { night: 'zYear' } });
+Object.assign(EVENTS, {
+  zPhase2: { kick: 'Radyo', loc: 'M', title: 'Bumagsak ang Maynila', force: 1, sound: 'chime',
+    body: () => '<p><i>"...ito na ang huling broadcast mula sa Camp Aguinaldo. Bumagsak na ang Maynila. Kung may nakakarinig, manatili sa inyong lugar..."</i></p><p>Mula ngayon, mas marami ang zombie sa labas, at mas kaunti ang makikita sa mga ekspedisyon.</p>',
+    choices: [{ t: 'Patibayin ang loob ng lahat', sub: 'Family meeting sa Parke.', fx: () => { stressAll(6); return '<p>Nagtipon kayo sa Parke ng Bayan. "May sarili tayong bayan dito," sabi mo. "Hindi tayo susuko."</p>'; } }] },
+  zPhase3: { kick: 'Blast door', loc: 'A', title: 'Hindi na sila mabagal', force: 1,
+    body: () => '<p>Sa camera, isang zombie ang tumakbo, hindi naglakad, at tumalon sa bubong ng kotse. Tapos isa pa. At isa pa. Nagtutulungan sila para buhatin ang isa papunta sa vent.</p><p>Mas mahirap na ang bawat sugod at ekspedisyon mula ngayon.</p>',
+    choices: [{ t: 'Doblehin ang bantay', sub: 'Pagod para sa lahat.', fx: () => { stressAll(8); S.flags.drill = S.day; return '<p>Dalawa na ang bantay sa pinto gabi-gabi.</p>'; } }] },
+  zPhase4: { kick: 'Radyo', loc: 'M', title: 'Wala nang sumasagot', force: 1, sound: 'chime',
+    body: () => '<p>Isang linggo nang puro static ang lahat ng frequency. Ang huling boses na narinig ninyo: <i>"...kung may buhay pa sa Gitnang Luzon, kayo na lang ang pag-asa..."</i></p><p>Halos wala nang buhay sa labas. Pinakadelikado na ang lahat mula ngayon.</p>',
+    choices: [{ t: 'Ipagpatuloy ang buhay sa Bayan', sub: 'Para sa mga bata.', fx: () => { stressAll(10); return '<p>Gumawa ng banner si Yssa para sa Parke: <b>"BUHAY PA KAMI."</b></p>'; } }] },
+  eMillie: { kick: 'Bayan', loc: 'Pk', title: 'Nawawala si Millie', min: 8, once: 1, w: 4,
+    body: () => '<p>Hindi mo makita si Millie. Wala sa Master Suite, wala sa Sala. Hinahanap na siya ng buong pamilya, at umiiyak na si Ria.</p>',
+    choices: [{ t: 'Hanapin sa buong Bayan', sub: '', fx: () => { stressAll(-4); return `<p>Nakita siya ni ${N(pick(KID.filter(k => S.people[k])) || 'aj')} sa Swimming Pool, basang-basa, may hawak na lumang bola. Mukhang siya ang pinakamasaya sa lahat.</p>`; } }] },
+  eSteps: { kick: 'Parke', loc: 'Pk', title: 'Unang hakbang', min: 10, once: 1, w: 4, good: 1, can: () => !!S.people.butchukok,
+    body: () => '<p>Sa damuhan ng Parke, bumitaw si Butchukok sa kamay ni Monica. Isang hakbang. Dalawa. Tatlo. Diretso sa yakap ni Carlo.</p>',
+    choices: [{ t: 'Palakpakan!', sub: '', fx: () => { stressAll(-10); stress('monica', -15); stress('carlo', -15); return '<p>Nagpalakpakan ang lahat. Sabi ni Tatay Fred, "Sa damo pa natuto, kahit nasa ilalim ng lupa."</p>'; } }] },
+  eLetter: { kick: 'Kapilya', loc: 'Ch', title: 'Sulat sa ilalim ng altar', min: 12, once: 1, w: 3,
+    body: () => '<p>Habang naglilinis si Mama Jen sa Kapilya, may nakita siyang sobre sa ilalim ng altar: <i>"Sa mga makakapasok sa bunker na ito. Itinayo namin ito para sa pamilya namin, pero hindi kami nakaabot. Alagaan ninyo ang isa\'t isa."</i></p>',
+    choices: [{ t: 'Ipagdasal ang pamilyang gumawa ng bunker', sub: '', fx: () => { stressAll(-6); stress('jen', -10); return '<p>Isinabit ni Mama Jen ang sulat sa pader ng Kapilya. Tuwing Linggo, binabasa ito ng mga bata.</p>'; } }] },
+  ePool: { kind: 'trouble', kick: 'Swimming Pool', loc: 'Pw', title: 'Tumatagas ang pool', min: 14, once: 1, w: 3,
+    body: () => '<p>Bumababa ang tubig sa pool. May bitak sa ilalim. Sabi ni Nelson, puwede itong ayusin, o puwedeng ilipat ang tubig sa mga tangke bilang reserba.</p>',
+    choices: [
+      { t: 'Ayusin ang pool', sub: '2 piyesa. Tuloy ang pool party.', fx: () => { if (S.parts < 2) return '<p>Kulang ang piyesa. Sarado muna ang pool.</p>'; S.parts -= 2; return '<p>Dalawang araw na trabaho ni Nelson. Bukas na ulit ang pool.</p>'; } },
+      { t: 'Ilipat ang tubig sa mga tangke', sub: '+60 tubig. Walang pool nang matagal.', fx: () => { addRes('water', 60); setMood(pick(KID.filter(k => S.people[k])) || 'aj', 'lungkot', 'wala nang pool'); return '<p>Na-filter ni Nelson ang tubig ng pool. Malaking reserba para sa tag-tuyot.</p>'; } },
+    ] },
+  eFuse: { kind: 'trouble', kick: 'Arcade', loc: 'Ar', title: 'Pumutok ang fuse sa Arcade', min: 12, once: 1, w: 3,
+    body: () => '<p>Biglang nagdilim ang Arcade at may amoy-sunog. Sabay-sabay nilaro ng mga bata ang lahat ng makina.</p>',
+    choices: [
+      { t: 'Ayusin, 1 piyesa', sub: 'Babalik ang saya.', fx: () => { if (S.parts < 1) return '<p>Walang piyesa. Sarado muna ang Arcade.</p>'; S.parts--; return '<p>Pinalitan ni Papa Na ang fuse at naglagay ng karatula: "ISA-ISA LANG!"</p>'; } },
+      { t: 'Patayin ang Arcade nang isang linggo', sub: 'Tipid sa kuryente.', fx: () => { addRes('power', 10); KID.forEach(k => S.people[k] && stress(k, 8)); return '<p>Nagreklamo ang mga bata buong araw.</p>'; } },
+    ] },
+  eBeans: { kind: 'trouble', kick: 'Café', loc: 'Cf', title: 'Paubos na ang kape', min: 20, once: 1, w: 3,
+    body: () => '<p>Isang lata na lang ng kape ang natitira sa Café. Sabi ni Abby, kung walang kape, magkakagulo.</p>',
+    choices: [
+      { t: 'Rasyon: isang tasa bawat matanda', sub: 'Tatagal pa nang isang buwan.', fx: () => { stressAll(3); return '<p>Isinulat ni Abby ang mga pangalan sa pader. Bawal ang pangalawang tasa.</p>'; } },
+      { t: 'Magtanim ng kape sa greenhouse', sub: 'Mabagal, pero pang-matagalan.', fx: () => { S.growth = Math.max(0, S.growth - .1); stress('su', -6); return '<p>May mga butil pa ng kape na hindi pa naiihaw. Itinanim ni Mama Su sa sulok ng greenhouse.</p>'; } },
+    ] },
+  eTree: { kick: 'Parke', loc: 'Pk', title: 'Namunga ang calamansi', min: 25, once: 1, w: 3, good: 1,
+    body: () => '<p>Sa ilalim ng grow lights ng Parke, namunga ang maliit na puno ng calamansi na itinanim ni Mama Su noong Araw 8.</p>',
+    choices: [{ t: 'Calamansi juice para sa lahat!', sub: '', fx: () => { stressAll(-8); people().forEach(id => health(id, 4)); return '<p>Pinakamasarap na juice sa buong buhay ninyo, sabi ng lahat.</p>'; } }] },
+  eGym: { kind: 'trouble', kick: 'Gym', loc: 'Gy', title: 'Napilay sa gym', min: 15, once: 1, w: 3, pre: () => { S.flags.gymWho = someone(id => !defOf(id).kid); },
+    body: () => `<p>Sobrang bigat ang binuhat ni ${N(S.flags.gymWho)}. Napilay ang likod niya.</p>`,
+    choices: [{ t: 'Pahinga sa Clinic', sub: 'Isang araw na wala siya.', fx: () => { const id = S.flags.gymWho; S.people[id].sick = true; health(id, -20); routine(P[id]); return `<p>Nilagyan ni Angel ng yelo ang likod ni ${N(id)}. "Isa-isang plate lang next time," sabi niya.</p>`; } }] },
+});
+// ---------------------------------------------------------------- thrillers: mysteries with twists, told over several days
+function lunaDef() { return { id: 'luna', name: 'Luna', role: '12 taong gulang, anak ng gumawa ng bunker', spec: null, job: 'Kz', kid: true, h: 1.38, skin: '#c99a72', shirt: '#7a9e7e', pants: '#3a3f4a', hair: '#1b130f', style: 'long', bed: freeBed() || ['Lib', 0] }; }
+Object.assign(EVENTS, {
+  tShadow1: { kind: 'night', kick: 'Parke', loc: 'Pk', title: 'May anino sa Parke', force: 1,
+    body: () => '<p>Alas-tres ng madaling-araw. Ginising ka ni Carlo, pabulong: <i>"Isha, tingnan mo ang camera ng Parke."</i></p><p>Sa grainy na video: isang maliit na anino, mabilis na tumakbo mula sa Mini-Mart papunta sa vent sa likod ng fountain. Kinaumagahan, nawawala ang dalawang de-lata at isang tsokolate.</p><p>Sarado ang blast door. Walang pumasok. Kaya sino iyon?</p>',
+    choices: [
+      { t: 'Maglagay ng bitag sa vent', sub: 'Mahuhuli ang kung sino man.', fx: () => { S.flags.shadow = 'trap'; S.flags.tease = 'May bitag sa vent sa Parke. Ano ang mahuhuli nito?'; return '<p>Naglagay si AJ ng lambat at kampanilya sa vent. "Kung zombie iyan, Isha, hindi tayo ligtas kahit dito."</p>'; } },
+      { t: 'Mag-iwan ng pagkain at bantayan', sub: 'Baka hindi ito kalaban.', fx: () => { S.flags.shadow = 'food'; S.flags.tease = 'May iniwang pagkain sa tabi ng vent. Kukunin kaya?'; addRes('food', -2); return '<p>Nag-iwan si Monica ng tinapay at gatas sa tabi ng vent. Nagbantay si Carlo buong gabi.</p>'; } },
+    ] },
+  tShadow2: { kind: 'night', kick: 'Kapilya', loc: 'Ch', title: 'Mga bakas sa salamin', force: 1,
+    body: () => `<p>${S.flags.shadow === 'food' ? 'Kinain ang tinapay. Naiwan ang baso ng gatas, malinis, nakatayo nang maayos sa sahig.' : 'Tumunog ang kampanilya ng bitag bandang alas-dos. Pagdating ni AJ: punit ang lambat, at may kaunting dugo.'}</p><p>Kinaumagahan, may maliliit na bakas ng kamay sa salamin ng Kapilya. Kamay ng bata.</p><p>Tapos, sinabi ni Ria habang kumakain: <i>"May kaibigan po ako sa loob ng pader. Sabi niya, huwag ko raw sasabihin."</i></p>`,
+    choices: [
+      { t: 'Kausapin si Ria nang mahinahon', sub: 'Alamin ang lahat.', fx: () => { S.flags.shadow2 = 'ria'; S.flags.tease = 'Bukas daw ulit dadalaw ang "kaibigan" ni Ria.'; return '<p>"Luna po ang pangalan niya. Mabait po siya. Takot po siya sa inyo." Nanlamig ang batok mo.</p>'; } },
+      { t: 'Isara ang lahat ng vent', sub: 'Ligtas muna ang lahat.', fx: () => { S.flags.shadow2 = 'seal'; addRes('o2', -12); S.flags.tease = 'Sarado ang mga vent. Pero may umiiyak sa loob ng pader kagabi.'; return '<p>Tinakpan nina Paolo at Nelson ang mga vent. Bumaba ang oxygen. Kinagabihan, may narinig si Rika: iyak, sa loob ng pader.</p>'; } },
+    ] },
+  tShadow3: { kick: 'Kids Zone', loc: 'Kz', title: 'Nawawala si Ria!', force: 1,
+    body: () => '<p>Tanghali. Sigaw ni Rika ang umalingawngaw sa buong Bayan: <b>wala si Ria.</b> Wala sa Kids Zone, wala sa kwarto. Bukas ang grille ng vent sa likod ng slide.</p><p>Umiiyak si Paolo. Tahol nang tahol si Millie sa vent.</p>',
+    choices: [
+      { t: 'Ikaw mismo ang papasok sa vent', sub: 'Masikip at madilim. Walang makakasama sa iyo.', fx: () => { S.flags.shadow3 = 'isha'; stress('isha', 15); return '<p>Gumapang ka sa dilim, flashlight sa bibig. Tatlumpung metro. Limampu. Tapos: ilaw ng kandila, at boses ni Ria, tumatawa.</p>'; } },
+      { t: 'Sundan si Millie', sub: 'Alam ng ilong niya.', fx: () => { S.flags.shadow3 = 'millie'; return '<p>Tumakbo si Millie sa pasilyo ng Bayan, lampas sa Arcade, papunta sa isang pintong hindi ninyo napansin sa likod ng Mini-Mart. Bukas ito.</p>'; } },
+    ] },
+  tShadow4: { kick: 'Lihim na kwarto', loc: 'Mk', title: 'Si Luna', force: 1,
+    body: () => `<p>Isang maliit na kwarto, puno ng drawing sa pader. Doon si Ria, nakaupo, kumakain ng tsokolate kasama ang isang payat na batang babae, mga labindalawang taon.</p><p><i>"Ako po si Luna. Kami po ang gumawa ng bunker na ito. Lumabas sina Mama at Papa para kumuha ng gamot noong unang araw. Hindi na po sila bumalik."</i></p><p>${S.flags.shadow === 'trap' ? 'May sugat ang braso niya, galing sa bitag ni AJ. Hindi kagat.' : 'Nasa tabi niya ang baso ng gatas na iniwan ni Monica.'} Mag-isa siya rito nang tatlong linggo bago kayo dumating.</p><p>Ito pala ang pamilyang sumulat sa ilalim ng altar.</p>`,
+    choices: [
+      { t: '"Hindi ka na mag-iisa, Luna."', sub: 'Magiging bahagi siya ng pamilya.', fx: () => { const d = lunaDef(); (S.extra ||= []).push(d); if (!defOf('luna')) GUESTS.push(d); if (!KID.includes('luna')) KID.push('luna'); S.people.luna = { job: 'Kz', stress: 40, health: S.flags.shadow === 'trap' ? 70 : 85, sick: false, bl: 20, bw: 20, hu: 60, mood: null }; spawn(d, 68, 33); routine(P.luna); TRAIT.luna = 'ang batang nag-iisa sa bunker bago tayo dumating'; OWN.luna = ['Alam ko po lahat ng daanan sa loob ng pader.', 'Salamat po at hindi ninyo ako pinaalis.', 'Si Ria po ang una kong kaibigan dito.']; S.parts += 4; S.anti = (S.anti || 0) + 2; stressAll(-12); chime(); return '<p>Niyakap ni Rika si Luna nang mahigpit. Pagkatapos, ipinakita ni Luna ang itinago ng pamilya niya: <b>4 na piyesa at 2 antiviral</b>, at mapa ng lahat ng lihim na daanan ng bunker.</p>'; } },
+    ] },
+  tBreach: { kind: 'knock', kick: 'Mini-Mart', loc: 'Mk', title: 'Pumasok sila sa loob!', force: 1, sound: 'knock',
+    body: () => `<p>Hindi sa blast door. Sa likod ng Mini-Mart. ${S.people.luna ? 'Ang lihim na service tunnel na itinuro ni Luna,' : 'Isang lumang service tunnel na hindi ninyo alam,'} gumuho ang harang. Sumisigaw si Abby mula sa Mini-Mart: <b>"MAY ZOMBIE SA LOOB!"</b></p><p>Nasa Parke ang mga bata. Nasa pagitan nila at ng mga zombie: ikaw.</p>`,
+    choices: [
+      { t: 'Itago ang mga bata sa Kids Zone at lumaban!', sub: 'Laban sa loob mismo ng Bayan.', fx: () => { KID.forEach(k => S.people[k] && stress(k, 15)); return { raid: [raidPower(30), 'Mga zombie sa loob ng Bayan', 1] }; } },
+      { t: 'Isara ang pinto ng Mini-Mart at harangan', sub: 'Mawawala ang Mini-Mart nang ilang araw. 3 piyesa.', fx: () => { if (S.parts < 3) return { raid: [raidPower(35), 'Walang piyesa, kailangang lumaban', 1] }; S.parts -= 3; addRes('food', -15); stressAll(10); return '<p>Hinarangan ninyo ng mga istante ang pinto. Buong gabi, kalmot at ungol sa kabila. Kinaumagahan, si Carlo at AJ ang naglinis. Tinakpan ng kongkreto ang tunnel.</p>'; } },
+    ] },
+  tSpy1: { kind: 'night', kick: 'Airlock', loc: 'A', title: 'Ilaw sa camera', force: 1,
+    body: () => '<p>Sa recording ng camera sa labas, alas-dos ng madaling-araw: may ilaw na kumikislap mula sa loob ng Airlock. Tatlong maikli, tatlong mahaba. Tapos, sa malayo, may sumagot na ilaw.</p><p>May tao sa loob ng bunker na nagsesenyas sa labas.</p>',
+    choices: [
+      { t: 'Ilihim muna. Magbantay nang tahimik', sub: 'Mahuhuli mo siya sa akto.', fx: () => { S.flags.spy = 'watch'; S.flags.tease = 'May traydor sa loob ng bunker. Mamayang gabi, nakatago ka sa Airlock.'; return '<p>Ikaw at si Angel lang ang nakakaalam. Mamayang gabi, magtatago kayo sa dilim ng Airlock.</p>'; } },
+      { t: 'Sabihin sa lahat sa almusal', sub: 'Matatakot ang traydor. Baka magtago.', fx: () => { S.flags.spy = 'tell'; stressAll(10); S.flags.tease = 'Alam na ng lahat na may traydor. Nagtitinginan sila sa isa\'t isa.'; return '<p>Tumahimik ang buong Kainan. Nagtinginan ang lahat. Walang umamin.</p>'; } },
+    ] },
+  tSpy2: { kind: 'night', kick: 'Airlock', loc: 'A', title: 'Ang traydor', force: 1,
+    body: () => { const ext = (S.extra || []).filter(d => S.people[d.id] && !d.kid && !d.baby).map(d => d.id); S.flags.spyWho = pick(ext) || null;
+      const who = S.flags.spyWho ? N(S.flags.spyWho) : 'isang estranghero'; return S.flags.spy === 'watch' ? `<p>Alas-dos. Bumukas nang dahan-dahan ang pinto ng Airlock. Flashlight. At si <b>${who}</b>, nagsesenyas sa camera.</p><p>Nang buksan mo ang ilaw, napaatras siya. <i>"Hindi! Kapatid ko sila! Si Jomar ang may hawak sa kanila. Pag hindi ko binuksan ang pinto sa Biyernes, papatayin nila ang kapatid ko."</i></p>` : `<p>Hindi na naulit ang senyas. Pero kaninang umaga, may sulat sa ilalim ng blast door: <i>"Alam namin kung ilan kayo. Sa Biyernes."</i></p>`; },
+    choices: () => S.flags.spyWho && S.flags.spy === 'watch' ? [
+      { t: 'Tulungan siyang iligtas ang kapatid niya', sub: 'Bitag para kay Jomar. Delikado.', fx: () => { S.flags.spyEnd = 'help'; return { raid: [raidPower(45), 'Bitag para sa grupo ni Jomar'] }; } },
+      { t: 'Paalisin siya sa bunker', sub: 'Ligtas tayo. Pero ang kapatid niya...', fx: () => { const id = S.flags.spyWho; delete S.people[id]; S.extra = S.extra.filter(x => x.id !== id); if (P[id]) { P[id].root.visible = false; P[id].tag.remove(); delete P[id]; } stressAll(6); return '<p>Lumabas siya sa blast door nang madaling-araw. Hindi na siya lumingon.</p>'; } },
+    ] : [{ t: 'Maghanda para sa Biyernes', sub: 'Patibayin ang pinto, ihanda ang M60.', fx: () => { S.flags.rumor = S.day + 2; S.flags.tease = 'Sa Biyernes daw susugod ang grupo ni Jomar.'; return '<p>Buong linggo, nagwelding at nag-ensayo ang lahat.</p>'; } }] },
+  tDark: { kind: 'night', kick: 'Bayan', loc: 'Pk', title: 'Brownout sa Bayan', force: 1,
+    body: () => '<p>Hatinggabi. Biglang nawalan ng kuryente ang buong Bayan. Pula ang emergency lights. Sa intercom, boses ni Carlo, hinihingal: <i>"Isha, may gumagalaw sa pool. Sa ilalim ng tubig."</i></p>',
+    choices: [
+      { t: 'Pumunta ka mismo, dala ang M16', sub: '2 bala.', fx: () => { S.ammo = Math.max(0, S.ammo - 2); const z = Math.random() < .6; return z ? '<p>Sa ilalim ng pool, sa drain: isang zombie na naipasok ng baha mula sa tubo. Dalawang putok. Tahimik ulit. Kinabukasan, naglagay si Nelson ng rehas sa lahat ng drain.</p>' : '<p>Sa ilalim ng tubig: ang bola ni Butchukok, umiikot sa drain. Natawa ka nang malakas sa dilim, at narinig mong natawa rin si Carlo sa intercom.</p>'; } },
+      { t: 'Isara ang pinto ng pool hanggang umaga', sub: 'Walang lalapit.', fx: () => { stressAll(5); return '<p>Walang nakatulog. Kinaumagahan, wala na ang kung ano man iyon. May gasgas lang sa tiles.</p>'; } },
+    ] },
+});
+Object.assign(CHAPTERS, { 12: { night: 'tShadow1' }, 15: { night: 'tShadow2' }, 17: { afternoon: 'tShadow3' }, 19: { morning: 'tShadow4' }, 48: { k1: 'tBreach' }, 112: { night: 'tSpy1' }, 115: { night: 'tSpy2' }, 196: { night: 'tDark' } });
+Object.assign(CHAPTERS, { 8: { morning: 'zTown' }, 61: { morning: 'zPhase2' }, 151: { morning: 'zPhase3' }, 251: { morning: 'zPhase4' } });
+Object.assign(EVENTS, {
+  zTown: { kick: 'Ang Bayan', loc: 'Pk', title: 'Ang Bayan', force: 1, good: 1,
+    body: () => '<p>Sa dulo ng Dormitoryo, may pintong hindi pa nabubuksan ng iba. Binuksan mo ito.</p><p>Isang buong bayan sa ilalim ng lupa: parke na may damo at puno, fountain, swimming pool, basketball court, gym, kapilya, café, salon, arcade, mini-mart, isang malaking Kainan na kasya ang lahat, Cinema, at Kids Zone na may slide. Napanganga ang lahat.</p><p><i>"Hindi na natin kailangang lumabas,"</i> bulong ni Angel.</p>',
+    choices: [{ t: 'Ipasyal ang lahat', sub: 'Puwede na kayong mag-activity dito.', fx: () => { stressAll(-15); return '<p>Tumakbo ang mga bata sa damuhan. Si Tatay Fred, umupo sa bangko sa tabi ng fountain at pumikit. Mula ngayon, dito na ang mga activity: liga, pool party, misa, kapehan, spa, arcade, piknik at tiangge.</p>'; } }] },
+});
+Object.assign(CHAPTERS, { 100: { morning: 'zNoConvoy' }, 104: { night: 'zSilence' }, 118: { morning: 'zRain' }, 130: { night: 'zXmas' }, 137: { night: 'zNewYear' }, 152: { morning: 'zBlight' }, 168: { night: 'zVow' }, 189: { night: 'zHalfYear' }, 205: { morning: 'zOp' }, 222: { k1: 'zHorde2' }, 241: { morning: 'zOutbreak' }, 262: { morning: 'zLando' }, 287: { afternoon: 'zFlyover' }, 302: { morning: 'zDrop' }, 364: { night: 'zYear' } });
 
 // ---------------------------------------------------------------- more story: each arc runs over several days and remembers your choice
 function migoDef() { const d = newbieDef('Migo', { role: 'Anak ni Nelson', job: 'W', spec: 'W', perk: 'parts' }); d.id = 'migo'; d.fem = false; d.h = 1.7; d.style = 'short'; d.bed = d.bed || ['Lib', 0]; d.thief = false; return d; }
@@ -2859,7 +2985,7 @@ function freshName() { const used = S.usedNames ||= []; const n = pick(KNAMES.fi
 function genKnock() {
   const name = freshName(), town = pick(TOWNS), look = pick(LOOKS), id = 'gen' + (++genN);
   const types = [['beg', 3], ['trade', 2], ['news', 1.6], ['hurt', 1.2], ['con', .9], ['animal', .7], ['silent', .5], ['charge', .7], ['pray', .4]];
-  if (raidOK()) types.push(['raid', .8 + DD() / 50], ['horde', 1.4 + DD() / 30 + (S.flags.rumor === S.day ? 2.5 : 0)]);
+  if (raidOK()) types.push(['raid', .8 + DD() / 50], ['horde', 1.4 + PH() * .6 + DD() / 30 + (S.flags.rumor === S.day ? 2.5 : 0)]);
   if (S.helped?.length) types.push(['gift', 1.1]);
   const recent = S.recentK ||= []; types.forEach(t => { const k = recent.filter(x => x === t[0]).length; if (k) t[1] /= 1 + k * 2; });
   let r = Math.random() * types.reduce((a, t) => a + t[1], 0), type = types[0][0];
@@ -2950,18 +3076,29 @@ function newsTip(tip) {
 
 // ---------------------------------------------------------------- activities everyone joins
 const ACTS = [
-  { id: 'marathon', n: 'Movie marathon', room: 'V', tv: 'V', dur: 180, from: 780, cost: { power: 3 }, sub: 'Tatlong pelikula sa Sinehan, may popcorn.', fx: () => { stressAll(-16); addRes('food', -2); return `Tatlong pelikula, dalawang mangkok ng popcorn. ${N(pick(npcs()))} ang unang nakatulog. ${pick(['Si Abby ang umiyak sa drama.', 'Napasigaw si AJ sa horror.', 'Pinaulit ni Carly ang cartoons nang dalawang beses.'])}`; } },
+  { id: 'marathon', n: 'Movie marathon', room: 'Cn', tv: 'Cn', dur: 180, from: 780, cost: { power: 3 }, sub: 'Tatlong pelikula sa Sinehan, may popcorn.', fx: () => { stressAll(-16); addRes('food', -2); return `Tatlong pelikula, dalawang mangkok ng popcorn. ${N(pick(npcs()))} ang unang nakatulog. ${pick(['Si Abby ang umiyak sa drama.', 'Napasigaw si AJ sa horror.', 'Pinaulit ni Carly ang cartoons nang dalawang beses.'])}`; } },
   { id: 'karaoke', n: 'Karaoke night', room: 'L', tv: 'L', dur: 90, from: 960, cost: { power: 3 }, sub: 'Kantahan sa Sala. Maingay pero masaya.', fx: () => { stressAll(-13); const w = pick(people()); return `Pinakamataas ang score ni ${w === 'isha' ? 'ikaw' : N(w)}: 98! ${pick(['Si Tatay Fred, kumanta ng lumang kundiman.', 'Nag-duet sina Paolo at Rika.', 'Sumayaw si Butchukok sa kandungan ni Monica.'])}`; } },
   { id: 'bingo', n: 'Bingo', room: 'L', dur: 60, from: 600, cost: { food: 1 }, sub: 'Premyo: biskwit at kendi.', fx: () => { stressAll(-10); const w = pick(people()); return `BINGO! Nanalo si ${w === 'isha' ? 'ikaw' : N(w)} ng isang supot ng biskwit. ${pick(['Sigaw nang sigaw si Nanay Mila kahit isa na lang ang kulang.', 'Inakusahan ni Papa Na na nandaraya si Abby.', 'Si Ria ang tagabunot ng numero.'])}`; } },
   { id: 'henyo', n: 'Hulaan ang salita', room: 'L', dur: 60, from: 600, sub: 'Paramihan ng mahuhulaan, dalawang team.', fx: () => { stressAll(-10); return `${pick(['Team Nanay Mila', 'Team Carlo', 'Team Yssa'])} ang nanalo. Ang pinakamahirap hulaan: "${pick(['blast door', 'sinigang', 'oxygen scrubber', 'si Millie', 'zombie'])}".`; } },
   { id: 'cards', n: 'Card games at sungka', room: 'H', dur: 90, from: 600, sub: 'Tong-its, pusoy, at sungka sa Hobby Room.', fx: () => { stressAll(-10); return `Kampeon sa tong-its si ${N(pick(npcs().filter(id => !defOf(id).kid)))}. Sa sungka, walang tumalo kay Tatay Fred.`; } },
   { id: 'pingpong', n: 'Ping pong tournament', room: 'H', dur: 90, from: 600, sub: 'Isa-isang laban hanggang may kampeon.', fx: () => { stressAll(-9); people().forEach(id => health(id, 2)); return `Kampeon si ${N(pick(npcs().filter(id => !defOf(id).kid)))}! May tropeo pang gawa ni Yssa mula sa lata.`; } },
   { id: 'talent', n: 'Talent show', room: 'L', dur: 90, from: 900, sub: 'Kanta, sayaw, magic tricks.', fx: () => { stressAll(-14); return `${pick(['Sumayaw sina Carly at Bea.', 'Nag-magic trick si Papa Na gamit ang barya.', 'Tumula si Yssa tungkol sa bunker.'])} ${pick(['Standing ovation para kay Ria at sa xylophone niya.', 'Napaiyak si Mama Jen sa kanta ni Angel.', 'Si Millie ang pinakamaraming palakpak.'])}`; } },
-  { id: 'party', n: 'Party ng mga bata', room: 'Pl', dur: 60, from: 600, cost: { food: 2 }, sub: 'Laro, lobo, at spaghetti para sa mga bata.', fx: () => { KID.forEach(k => S.people[k] && stress(k, -20)); stressAll(-6); return 'Musical chairs, pabitin, at spaghetti. Pagod na pagod ang mga bata, at ang mga matatanda rin.'; } },
+  { id: 'party', n: 'Party ng mga bata', room: 'Kz', dur: 60, from: 600, cost: { food: 2 }, sub: 'Laro, lobo, at spaghetti para sa mga bata.', fx: () => { KID.forEach(k => S.people[k] && stress(k, -20)); stressAll(-6); return 'Musical chairs, pabitin, at spaghetti. Pagod na pagod ang mga bata, at ang mga matatanda rin.'; } },
   { id: 'zumba', n: 'Sabayang ehersisyo', room: 'L', dur: 45, from: 360, to: 720, sub: 'Zumba sa Sala, pampalakas ng katawan.', fx: () => { stressAll(-6); people().forEach(id => health(id, 5)); return `Pawis ang lahat. ${pick(['Si Nanay Mila ang pinakamagaling sumayaw.', 'Natumba si Nelson pero tawa nang tawa.', 'Si Monica ang instructor.'])}`; } },
   { id: 'kwentuhan', n: 'Kwentuhan at dasal', room: 'L', dur: 60, from: 1140, sub: 'Bago matulog, sama-sama sa Sala.', fx: () => { stressAll(-9); npcs().forEach(id => { if (S.people[id].mood?.k === 'lungkot' && Math.random() < .6) clearMood(id); }); return `Nagkuwento si ${N(pick(npcs().filter(id => !defOf(id).kid)))} tungkol sa ${pick(['bagyong Yoling', 'unang trabaho niya', 'kasal nila', 'unang Pasko sa probinsya'])}. Nagdasal kayo bago matulog.`; } },
+  { id: 'basket', n: 'Liga sa basketball court', room: 'Ct', dur: 75, from: 600, sub: 'Team Isha kontra Team Carlo. May cheering squad ang mga bata.', fx: () => { stressAll(-12); people().forEach(id => health(id, 3)); return vary('basket', [`Panalo ang Team ${pick(['Isha', 'Carlo'])}, 21-19! Buzzer beater ni ${N(pick(npcs().filter(id => !defOf(id).kid)))}.`, 'Na-foul si Nelson at nag-reklamo nang sampung minuto. Tawa nang tawa ang lahat.', 'Si Tatay Fred ang referee. Kampi raw siya sa lahat.', `Tumira si ${N(pick(npcs().filter(id => !defOf(id).kid)))} mula sa gitna ng court. Pasok! Nagsigawan ang buong Bayan.`, 'Nag-cheer ang mga bata gamit ang kaldero. Mas maingay pa sila sa laro.']); } },
+  { id: 'pool', n: 'Pool party', room: 'Pw', dur: 90, from: 660, to: 1080, sub: 'Langoy, laro, at halo-halo sa gilid ng pool.', fx: () => { stressAll(-15); KID.forEach(k => S.people[k] && stress(k, -10)); return vary('pool', ['Unang talon si AJ, cannonball. Basa ang lahat ng nasa gilid.', 'Nag-marco polo ang mga bata hanggang mangulubot ang mga daliri nila.', 'Lumutang sina Angel at Isha sa gitna, magkahawak-kamay.', 'Tinuruan ni Carlo si Carly lumangoy. Nakalangoy siya nang mag-isa!', 'May halo-halo si Nanay Mila sa gilid ng pool. Ubos sa loob ng limang minuto.']); } },
+  { id: 'gym', n: 'Workout sa gym', room: 'Gy', dur: 45, from: 360, to: 720, sub: 'Treadmill, weights at stretching.', fx: () => { stressAll(-6); people().forEach(id => health(id, 6)); return vary('gym', ['Si Monica ang coach. Walang nakaligtas sa burpees.', 'Nagpasikat si AJ sa weights. Bukas, siya ang pinaka-pilay.', 'Naglakad si Lola Mila sa treadmill nang 20 minuto. Proud ang lahat.', 'Yoga sa sahig ng gym. Nakatulog si Papa Na sa gitna.']); } },
+  { id: 'misa', n: 'Misa sa Kapilya', room: 'Ch', dur: 60, from: 420, sub: 'Si Mama Jen ang mangunguna. Dasal para sa lahat.', fx: () => { stressAll(-11); npcs().forEach(id => { if (S.people[id].mood?.k === 'lungkot' && Math.random() < .7) clearMood(id); }); return vary('misa', ['Kinanta ninyo ang "Pananagutan". Umiyak si Nanay Mila.', `Nagbasa si ${N(pick(npcs().filter(id => !defOf(id).kid)))} ng Bibliya. Tahimik ang lahat.`, 'Nagsindi ng kandila ang bawat isa para sa mga naiwan sa labas.', 'Nagdasal ang mga bata para sa mga zombie na "sana gumaling sila".']); } },
+  { id: 'kape', n: 'Kapehan at kuwentuhan', room: 'Cf', dur: 60, from: 420, to: 1140, cost: { food: 1 }, sub: 'Kape, tsokolate at pandesal sa Café.', fx: () => { stressAll(-9); return vary('kape', [`Nagkuwento si ${N(pick(npcs().filter(id => !defOf(id).kid)))} tungkol sa first love niya. Kilig ang lahat.`, 'Barista si Abby ngayong araw. Puro bula ang kape.', 'Tsokolate para sa mga bata, may marshmallow pa.', 'Nag-usap kayo tungkol sa unang kakainin paglabas. Nanalo ang lechon.']); } },
+  { id: 'spa', n: 'Spa day', room: 'Sp', dur: 90, from: 600, sub: 'Gupit, masahe at face mask para sa lahat.', fx: () => { stressAll(-14); return vary('spa', ['Mga bagong gupit! Si Tatay Fred ang may pinakamaikli.', 'Pipino sa mata, face mask sa mukha. Mukha kayong mga zombie, sabi ni Carly.', 'Masahe mula kay Rika. Nakatulog si Nelson sa kama.', 'Nail art para sa lahat ng babae. Pati si Butchukok, may pink na kuko.']); } },
+  { id: 'arcade', n: 'Arcade tournament', room: 'Ar', dur: 75, from: 600, cost: { power: 4 }, sub: 'Sino ang hari ng arcade?', fx: () => { stressAll(-12); KID.forEach(k => S.people[k] && stress(k, -8)); return vary('arcade', [`Kampeon si ${N(pick(people()))}! May tropeo mula sa lata ng sardinas.`, 'Tinalo ni Carly si Tatay Fred sa air hockey, 7-0.', 'Nag-dance machine si Papa Na. Viral sana kung may internet.', 'Isang oras na pinaglabanan nina AJ at Kiko ang racing game.']); } },
+  { id: 'picnic', n: 'Piknik sa parke', room: 'Pk', dur: 90, from: 600, to: 1080, cost: { food: 3 }, sub: 'Banig, sandwich, at laro sa damuhan.', fx: () => { stressAll(-14); return vary('picnic', ['Naglaro ng patintero ang mga bata sa damuhan.', 'Humiga kayo sa damo at nagkuwento ng mga ulap na hindi ninyo nakikita.', 'Nag-tumbang preso sina Papa Na at ang mga bata.', 'Pinangalanan ni Ria ang bawat puno sa parke.']); } },
+  { id: 'stars', n: 'Gabi ng mga bituin', room: 'Pk', dur: 60, from: 1140, sub: 'Pinatay ang ilaw, projector ng mga bituin sa kisame ng parke.', fx: () => { stressAll(-12); stress('isha', -6); stress('angel', -6); return vary('stars', ['Itinuro ni Yssa ang mga constellation. Pinangalanan ng mga bata ang isa: "Millie".', 'Nag-wish ang lahat sa isang "shooting star" na gawa ni Papa Na.', 'Nakahiga kayo ni Angel sa damo, magkahawak-kamay, hanggang makatulog ang mga bata.']); } },
+  { id: 'market', n: 'Tiangge sa Mini-Mart', room: 'Mk', dur: 60, from: 600, to: 1080, sub: 'Palitan ng gamit, parang palengke noon.', fx: () => { stressAll(-9); S.parts += Math.random() < .4 ? 1 : 0; return vary('market', ['Nagpalitan ng damit at laruan. Nakuha ni Carly ang lumang sumbrero ni Tatay Fred.', 'Nagbenta ang mga bata ng drawing, bayad ay yakap.', 'May nakitang piyesa si Papa Na sa kahon ng mga lumang gamit.', 'Naging tindera si Nanay Mila. Walang nakatawad sa kanya.']); } },
   { id: 'feast', n: 'Salu-salo sa hapunan', room: 'K', dur: 0, from: 360, to: 1080, cost: { food: 8, meat: 6 }, sub: 'Espesyal na hapunan mamaya: lechon kawali, pancit, leche flan.', feast: true },
 ];
+function vary(key, arr) { const used = (S.vary ||= {})[key] ||= []; let left = arr.filter((_, i) => !used.includes(i)); if (!left.length) { used.length = 0; left = arr; } const t = pick(left); used.push(arr.indexOf(t)); return t; }
 function actSheet() {
   const busyNow = S.activity && S.min < S.activity.until;
   openSheet(`<div class="kick">Araw ${S.day} · ${hhmm(S.min)}</div><h2 class="sh-title">Aktibidad ng pamilya</h2>
@@ -2998,7 +3135,7 @@ function actPlan(p) {
   const r = ROOMS[S.activity.room], cells = [];
   for (let z = r.z; z < r.z + r.h; z++) for (let x = r.x; x < r.x + r.w; x++) if (walkable(x, z)) cells.push([x + .5, z + .5]);
   const i = npcs().indexOf(p.id), c = cells[(i * 7) % cells.length] || [r.x + 1, r.z + 1];
-  const look = TVPOS[S.activity.tv] || roomCenter(S.activity.room), sit = S.activity.id !== 'zumba' && S.activity.id !== 'pingpong';
+  const look = TVPOS[S.activity.tv] || roomCenter(S.activity.room), sit = !['zumba', 'pingpong', 'basket', 'pool', 'gym', 'arcade', 'market'].includes(S.activity.id);
   return { target: { x: c[0], z: c[1] }, after: () => { p.yaw = Math.atan2(look.x - p.x, look.z - p.z); p.setPose(sit ? 'sit' : 'work'); } };
 }
 
@@ -3345,6 +3482,98 @@ function buildDorm() {
   decal('DORMITORYO', 56, 29.5, .45);
   SPOTS.Dorm = [{ x: 52.5, z: 29.5, yaw: 0, taken: null }];
 }
+function buildTown() {
+  const C = c => std({ color: c, roughness: .7 }), G = c => glow(c), white = MAT.white, wood = MAT.walnut;
+  const trunk = C('#6b4a2e'), stone = C('#bdb6aa'), red = C('#c0392b'), orange = C('#e67e22'), black = MAT.black;
+  // Parke: grass, trees, a fountain, benches, swings, lamp posts
+  box(14, .012, 1.1, stone, 67, 0, 23); box(1.1, .012, 14, stone, 67, 0, 23);
+  cyl(1.45, 1.55, .45, stone, 67, 0, 23, 28); cyl(1.28, 1.28, .04, G('#5fc3e8'), 67, .42, 23, 28); cyl(.14, .2, 1.1, stone, 67, 0, 23, 12); ball(.22, G('#a8e4f7'), 67, 1.25, 23); block(66, 22, 67, 23);
+  for (const [x, z, k] of [[62, 18, 1], [72, 18, 1.1], [62, 28, .9], [72, 28, 1], [64.5, 25.5, .8], [69.5, 19.5, .9], [61.5, 23, .7]]) { cyl(.12 * k, .17 * k, 1.5 * k, trunk, x, 0, z, 10); ball(.95 * k, MAT.leaf2, x, 1.95 * k, z); ball(.62 * k, MAT.leaf, x + .35, 2.35 * k, z - .2); block(Math.floor(x), Math.floor(z), Math.floor(x), Math.floor(z)); }
+  for (const [x, z, r] of [[64.2, 21, 0], [69.8, 21, 0], [64.2, 25, Math.PI], [69.8, 25, Math.PI]]) { rbox(1.5, .08, .46, wood, x, .42, z, r, .03); rbox(1.5, .4, .08, wood, x, .5, z + (r ? -.22 : .22), r, .02); box(.06, .42, .4, black, x - .65, 0, z, r); box(.06, .42, .4, black, x + .65, 0, z, r); }
+  for (const [x, z] of [[61, 17], [73, 17], [61, 29], [73, 29], [67, 17], [67, 29]]) { cyl(.05, .06, 2.1, black, x, 0, z, 8); ball(.16, G('#fff3c4'), x, 2.2, z); }
+  for (const [x, z] of [[63.2, 17.2], [70.8, 17.2], [63.2, 28.8], [70.8, 28.8]]) { box(1.6, .2, .6, C('#5a3d2b'), x, 0, z); for (let i = 0; i < 6; i++) ball(.1, G(pick(['#ff7aa8', '#ffd23f', '#ff6b4a', '#c58bff'])), x - .6 + i * .24, .28, z + (i % 2 ? .12 : -.12)); }
+  box(1.7, .012, 1.7, MAT.rug, 62.4, 0, 20.6); rbox(.4, .25, .3, C('#c8a165'), 62.2, 0, 20.4, .3, .05);
+  for (const x of [70.6, 72.4]) { box(.06, 1.9, .06, red, x, 0, 26.6); box(.06, 1.9, .06, red, x, 0, 27.6); } box(1.9, .06, .06, red, 71.5, 1.9, 26.6); box(1.9, .06, .06, red, 71.5, 1.9, 27.6);
+  for (const x of [71, 72]) { box(.4, .04, .25, C('#2f6fa8'), x, .45, 27.1); }
+  decal('ANG BAYAN', 67, 20.2, .6); decal('PARKE', 67, 26.4, .45);
+  // Swimming pool
+  box(9.8, .1, 3.6, white, 66.9, 0, 11.7); box(9.4, .06, 3.2, G('#3fb0dc'), 66.9, .06, 11.7); block(62, 10, 71, 13);
+  box(.9, .08, .35, white, 61.3, .35, 11.7); box(.08, .35, .3, MAT.steel, 61.3, 0, 11.7);
+  for (const z of [9.7, 13.9]) for (const x of [63, 66, 69]) { rbox(.55, .22, 1.3, white, x + .5, 0, z === 9.7 ? 9.5 : 14.4, Math.PI / 2, .05); }
+  cyl(.28, .28, .07, red, 72.8, .9, 10, 16); decal('SWIMMING POOL', 67, 14.6, .3);
+  // Basketball court: lines and two hoops
+  for (const [w, d, x, z] of [[13.6, .05, 67, 1.1], [13.6, .05, 67, 7.9], [.05, 6.8, 60.1, 4.5], [.05, 6.8, 73.9, 4.5], [.05, 6.8, 67, 4.5]]) box(w, .013, d, white, x, 0, z);
+  cyl(1.1, 1.1, .013, white, 67, 0, 4.5, 32); cyl(1.04, 1.04, .014, MAT.court2 || FLOORMAT.court, 67, .001, 4.5, 32);
+  for (const [x, f] of [[60.35, 1], [73.65, -1]]) { cyl(.06, .06, 2.9, MAT.steel, x, 0, 4.5, 10); box(.06, .8, 1.2, white, x + .1 * f, 2.6, 4.5); cyl(.24, .24, .03, orange, x + .42 * f, 2.75, 4.5, 16); block(Math.floor(x), 4, Math.floor(x), 4); }
+  ball(.13, orange, 66, .13, 5.2); decal('BASKETBALL', 67, 2.4, .4);
+  // Gym
+  for (const x of [76.5, 78.5, 80.5]) { rbox(.7, .25, 1.5, black, x, 0, 2.2, 0, .04); box(.06, 1.2, .06, MAT.steel, x - .3, 0, 1.6); box(.06, 1.2, .06, MAT.steel, x + .3, 0, 1.6); box(.7, .12, .2, MAT.darkSteel, x, 1.2, 1.6); block(Math.floor(x), 1, Math.floor(x), 2); }
+  box(.5, 1.3, 2.2, MAT.darkSteel, 82.6, 0, 4.2); for (let i = 0; i < 4; i++) cyl(.16, .16, .12, black, 82.6, .3 + i * .28, 3.4 + i * .5, 14); block(82, 3, 82, 5);
+  box(3.8, .012, 1.8, C('#2c5f8a'), 78.5, 0, 5); decal('GYM', 79, 4.4, .4);
+  // Kapilya: altar, cross, pews
+  box(2.4, .9, .7, white, 79.5, 0, 8.6); box(.12, 1.5, .08, C('#d4a64a'), 79.5, 1.1, 8.15); box(.7, .12, .08, C('#d4a64a'), 79.5, 2.0, 8.15); block(78, 8, 80, 8);
+  for (const x of [78.6, 80.4]) { cyl(.04, .04, .25, white, x, .9, 8.6, 8); ball(.05, G('#ffcf6a'), x, 1.18, 8.6); }
+  for (const z of [10.4, 11.6, 12.8]) for (const x of [77.2, 81.8]) { rbox(2.6, .42, .42, wood, x, 0, z, 0, .03); rbox(2.6, .5, .08, wood, x, .42, z + .2, 0, .02); block(Math.floor(x - 1.2), Math.floor(z), Math.floor(x + 1.2), Math.floor(z)); }
+  decal('KAPILYA', 79.5, 13.3, .35);
+  // Café: counter, coffee machine, round tables
+  rbox(4.6, .95, .65, wood, 78.2, 0, 15.6, 0, .04); box(.5, .45, .4, MAT.steel, 77, .95, 15.55); box(.04, .6, 1.8, G('#3a2a1d'), 75.08, 1.3, 17.5); block(76, 15, 80, 15);
+  for (const [x, z] of [[77, 18.2], [80, 18.2], [82.4, 16.8], [82.4, 19.4]]) { cyl(.45, .45, .04, white, x, .72, z, 18); cyl(.05, .05, .72, black, x, 0, z, 8); chair(x - .6, z, Math.PI / 2); chair(x + .6, z, -Math.PI / 2); block(Math.floor(x), Math.floor(z), Math.floor(x), Math.floor(z)); }
+  plant(83.5, 15.4, .9); decal('CAFÉ', 79, 20.3, .4);
+  // Salon at Spa: chairs with mirrors, two massage beds
+  for (const x of [76.2, 78]) { rbox(.6, .5, .6, C('#e8b4c8'), x, 0, 22.6, 0, .08); box(.7, 1, .03, MAT.glass, x, 1, 22.05); block(Math.floor(x), 22, Math.floor(x), 22); }
+  for (const z of [23.2, 25.3]) { rbox(1.9, .62, .75, MAT.linen, 81.6, 0, z, 0, .06); block(81, Math.floor(z), 82, Math.floor(z)); }
+  for (const x of [79.6, 83.4]) { cyl(.05, .05, .1, white, x, .9, 22.3, 8); ball(.04, G('#ffcf6a'), x, 1.03, 22.3); }
+  plant(83.5, 26.5, .9); decal('SALON AT SPA', 78.5, 25.6, .3);
+  // Arcade: glowing cabinets along the walls, air hockey in the middle
+  [[75.6, 29, Math.PI / 2], [75.6, 30.6, Math.PI / 2], [75.6, 32.2, Math.PI / 2], [83.4, 29, -Math.PI / 2], [83.4, 30.6, -Math.PI / 2], [83.4, 32.2, -Math.PI / 2], [77.6, 35.4, Math.PI], [79.4, 35.4, Math.PI], [81.2, 35.4, Math.PI]].forEach(([x, z, r], i) => { box(.8, 1.7, .7, C(pick(['#2b1d4a', '#1d2f4a', '#4a1d2f'])), x, 0, z, r); box(.62, .5, .02, G(['#ff4fd8', '#4fd8ff', '#ffe14f', '#6aff4f'][i % 4]), x + Math.sin(r) * .36, 1.1, z + Math.cos(r) * .36, r); block(Math.floor(x), Math.floor(z), Math.floor(x), Math.floor(z)); });
+  rbox(2, .8, 1.1, C('#1d5c8a'), 79.5, 0, 31.8, 0, .05); box(1.8, .02, .9, G('#bfefff'), 79.5, .8, 31.8); block(78, 31, 80, 32);
+  decal('ARCADE', 79.5, 29.2, .45);
+  // Mini-mart: shelves of goods, a counter by the door
+  for (const [x, z] of [[62.6, 32.8], [62.6, 34.6], [70.6, 32.8], [70.6, 34.6]]) { box(4, 1.5, .5, MAT.cabinet, x, 0, z); for (let i = 0; i < 12; i++) box(.24, .26, .2, C(pick(['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#e67e22', '#ecf0f1'])), x - 1.7 + (i % 6) * .68, .35 + Math.floor(i / 6) * .55, z, 0); block(Math.floor(x - 2), Math.floor(z), Math.floor(x + 1.9), Math.floor(z)); }
+  rbox(1.6, .95, .6, wood, 67.9, 0, 31.6, 0, .03); box(.4, .3, .3, black, 67.9, .95, 31.6); decal('MINI-MART', 66.9, 34.2, .4);
+}
+function buildBig() {
+  const C = c => std({ color: c, roughness: .7 }), G = c => glow(c), wood = MAT.walnut;
+  // Kainan: six long tables, 48 seats, a serving counter, so everyone eats together
+  rbox(5, .95, .7, MAT.white, 92, 0, 1.6, 0, .04); for (let i = 0; i < 4; i++) cyl(.22, .2, .2, MAT.steel, 90.4 + i * 1.05, .95, 1.6, 14); block(89, 1, 94, 1);
+  for (const x of [88, 92, 96]) for (const z of [5, 9.5]) {
+    box(3.2, .06, .9, wood, x, .73, z); for (const [a, b] of [[-1.5, -.38], [1.5, -.38], [-1.5, .38], [1.5, .38]]) box(.06, .73, .06, wood, x + a, 0, z + b);
+    block(Math.floor(x - 1.6), Math.floor(z), Math.floor(x + 1.5), Math.floor(z));
+    for (let i = 0; i < 4; i++) { const sx = x - 1.2 + i * .8; chair(sx, z - .75, 0); chair(sx, z + .75, Math.PI); SPOTS.seats.push({ x: sx, z: z - .75, yaw: 0, taken: null }, { x: sx, z: z + .75, yaw: Math.PI, taken: null }); }
+  }
+  for (const x of [86, 98]) for (const z of [4, 11]) plant(x, z, 1);
+  box(.04, .9, 2.2, G('#2a1f14'), 85.06, 1.2, 7); decal('KAINAN', 92, 12.3, .5);
+  // Cinema: a big screen and four rows of seats on risers
+  box(.12, 2, 6, MAT.black, 98.85, .3, 18.5); FX.tvCn = box(.01, 1.9, 5.8, glow('#0d1418'), 98.78, .35, 18.5); block(98, 15, 98, 21);
+  [[89, 0], [91, .15], [93, .3], [95, .45]].forEach(([x, y]) => { box(1.4, y + .01, 7.4, C('#3a2f4a'), x, 0, 18.5); for (let k = 0; k < 7; k++) { const z = 15.4 + k * 1.03; rbox(.7, .42, .7, MAT.sofa2, x, y, z, 0, .08); rbox(.18, .55, .7, MAT.sofa2, x - .3, y + .3, z, 0, .05); } block(Math.floor(x), 15, Math.floor(x), 21); });
+  for (const z of [14.3, 22.7]) for (let x = 86; x < 98; x += 1.5) ball(.06, G('#ffd36a'), x, .05, z);
+  decal('CINEMA', 87, 18.5, .5, Math.PI / 2);
+  // Kids Zone: slide, ball pit, trampoline, climbing frame, swings
+  const red = C('#e74c3c'), yel = C('#f1c40f'), blu = C('#3498db');
+  for (let i = 0; i < 6; i++) box(.9, .3 * (i + 1), .35, blu, 87, 0, 26 + i * .35);   // stairs up to the slide
+  box(1.2, .1, 1.2, yel, 87, 1.8, 28.4); for (const [a, b] of [[-.55, -.55], [.55, -.55], [-.55, .55], [.55, .55]]) box(.08, 1.8, .08, red, 87 + a, 0, 28.4 + b);
+  const sl = box(.9, .08, 3.4, red, 87, .95, 30.4); sl.rotation.x = -.55; block(86, 25, 87, 31);
+  box(3, .5, 3, C('#ffffff'), 92, 0, 27.5); for (let i = 0; i < 60; i++) ball(.14, C(pick(['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#9b59b6'])), 90.7 + Math.random() * 2.6, .45 + Math.random() * .1, 26.2 + Math.random() * 2.6); block(90, 26, 93, 28);
+  cyl(1.2, 1.2, .35, MAT.black, 96.5, 0, 27, 24); cyl(1.05, 1.05, .02, blu, 96.5, .36, 27, 24); block(95, 26, 97, 27);
+  for (const x of [89, 91.4]) for (const z of [32, 34.2]) box(.07, 1.8, .07, yel, x, 0, z); for (const y of [.6, 1.2, 1.8]) { box(2.4, .05, .05, yel, 90.2, y, 32); box(2.4, .05, .05, yel, 90.2, y, 34.2); box(.05, .05, 2.2, yel, 89, y, 33.1); box(.05, .05, 2.2, yel, 91.4, y, 33.1); } block(89, 32, 91, 34);
+  for (const x of [95, 97.6]) { box(.07, 2, .07, red, x, 0, 32); box(.07, 2, .07, red, x, 0, 34.4); } box(2.7, .07, .07, red, 96.3, 2, 32); box(2.7, .07, .07, red, 96.3, 2, 34.4);
+  for (const z of [32.7, 33.7]) box(.25, .04, .4, blu, 96.3, .5, z);
+  box(13, .012, 1, C('#ffd9a8'), 92, 0, 30.5); decal('KIDS ZONE', 92, 30.5, .45);
+}
+function townItems() {
+  item(87, 26.4, 'Mag-slide', () => busy(1, () => { advance(15); stress('isha', -7); toast(pick(['Wheee! Sinamahan mo sina Carly at Ria sa slide.', 'Nag-slide ka. Tawa nang tawa ang mga bata.', 'Ang bilis! Muntik ka nang tumama sa ball pit.']), 'good'); save(); }, 'work'), { r: 1.4 });
+  item(92, 29.4, 'Tumalon sa ball pit', () => busy(1, () => { advance(15); stress('isha', -6); toast('Lumubog ka sa mga bola. Hinila ka palabas ni Butchukok.', 'good'); save(); }, 'work'), { r: 1.4 });
+  const relax = (x, z, label, pose, lines, dur = 2, kind) => item(x, z, label, () => busy(dur, () => { advance(30); stress('isha', -8); if (kind) mis(kind); toast(pick(lines), 'good'); save(); }, pose), { r: 1.4 });
+  relax(67, 21.3, 'Magpahinga sa parke', 'sit', ['Naririnig mo ang tubig sa fountain. Parang nasa labas ka ulit.', 'Humiga ka sa damo. Saglit, nakalimutan mo ang mga zombie.', 'Ang bango ng mga bulaklak ni Mama Su.']);
+  relax(61.8, 11.7, 'Lumangoy', 'work', ['Splash! Ang lamig ng tubig. Gising na gising ka.', 'Sampung lap sa pool. Pagod pero masarap sa pakiramdam.', 'Lumutang ka lang at tumingin sa kisame.']);
+  relax(66, 5.2, 'Mag-shoot ng bola', 'work', ['Swish! Tatlong sunod-sunod.', 'Ang daming mintis, pero ang saya.', 'Sinamahan ka ni AJ. One-on-one!']);
+  relax(78.5, 4, 'Mag-ehersisyo', 'work', ['30 minuto sa treadmill. Ang lakas mo ngayon.', 'Nagbuhat ka ng weights. Bukas, masakit ang braso mo.']);
+  relax(79.5, 9.6, 'Magdasal sa Kapilya', 'sit', ['Tahimik. Ikaw, ang kandila, at ang dasal mo para sa lahat.', 'Ipinagdasal mo ang mga naiwan sa labas.']);
+  relax(78.2, 16.5, 'Magkape sa Café', 'sit', ['Mainit na kape. Ang sarap ng amoy.', 'Kape at pandesal. Parang Linggo ng umaga noon.']);
+  relax(76.2, 23.4, 'Magpa-ayos sa Salon', 'sit', ['Bagong gupit! Ang ganda mo raw, sabi ni Angel.', 'Nilinis ni Rika ang mga kuko mo. Ang sarap.']);
+  relax(79.5, 30.6, 'Maglaro sa Arcade', 'work', ['High score! Talo mo ang record ni Carly.', 'Air hockey kontra kay Butchukok. Hinayaan mo siyang manalo.', 'Ang ingay at ang ilaw. Parang mall noon.']);
+  relax(67.9, 32.6, 'Mamili sa Mini-Mart', 'work', ['Nakakita ka ng paborito mong chichirya sa istante.', 'Nag-ayos ka ng mga paninda. Parang may tindahan ka na.']);
+}
 function buildQuar() {
   // Quarantine: four cots behind a glass wall, next to the airlock, for anyone new
   // A (front, by the airlock door): no wounds. B (back, behind a second glass wall): anyone with a wound
@@ -3390,7 +3619,7 @@ function teamSheet(L) {
   const pick3 = [];
   const avail = npcs().filter(id => !defOf(id).kid && !S.people[id].sick && !S.people[id].away && !S.people[id].quar);
   const draw = () => {
-    const n = pick3.length, risk = L.risk * 1.25 * (n === 1 ? 1.3 : n === 2 ? 1 : .75);
+    const n = pick3.length, risk = L.risk * 1.25 * (1 + (PH() - 1) * .2) * (n === 1 ? 1.3 : n === 2 ? 1 : .75);
     openSheet(`<div class="kick">${L.n} · ${L.hrs} oras</div><h2 class="sh-title">Sino ang sasama?</h2>
       <div class="jobs">${avail.map(id => `<button class="job${pick3.includes(id) ? ' on' : ''}" data-p="${id}">${N(id)}</button>`).join('')}</div>
       <div class="sh-body" style="margin-top:10px">${n ? `Panganib: <b>${Math.round(risk * 100)}%</b>. ${pick3.map(N).join(', ')}` : 'Pumili ng 1 hanggang 3.'}</div>
@@ -3412,8 +3641,8 @@ function expReturn() {
   S.exp = null;
   team.forEach(id => { const st = S.people[id], p = P[id]; st.away = 0; if (p) { p.root.visible = true; p.place(20, 32.4, Math.PI); p.goal = null; routine(p); } health(id, -4); });
   doorAnim(1); setTimeout(() => doorAnim(0), 3000);
-  const risk = L.risk * 1.25 * (n === 1 ? 1.3 : n === 2 ? 1 : .75) * (S.day > 50 ? 1.15 : 1), lines = [], got = [];
-  let mult = .6 + .25 * n;
+  const risk = L.risk * 1.25 * (1 + (PH() - 1) * .2) * (n === 1 ? 1.3 : n === 2 ? 1 : .75) * (S.day > 50 ? 1.15 : 1), lines = [], got = [];
+  let mult = (.6 + .25 * n) * (1 - (PH() - 1) * .12);
   if (Math.random() < risk) {
     const bad = pick(['ambush', 'hurt', 'lost', 'bite', 'bite']);
     if (bad === 'ambush') { mult *= .4; const a = Math.min(S.ammo, 2 + (Math.random() * 3 | 0)); S.ammo -= a; stressAll(4); lines.push(`Pauwi na sila nang harangin ng isang grupo ng nanloloob na may bolo. ${a ? `Nagpaputok si ${N(pick(team))} ng ${a} bala para makatakas.` : 'Wala silang bala, kaya iniwan nila ang kalahati ng dala para makatakas.'}`); }
@@ -3591,6 +3820,7 @@ function frame() {
     const lOn = movie || tvOn('L'), vOn = tvOn('V'), mOn = tvOn('M');
     FX.tvL.material.color.setHSL(lOn ? (t * .05) % 1 : 0, lOn ? .5 : 0, lOn ? .35 + .15 * Math.sin(t * 7) : .03);
     FX.tvV.material.color.setHSL(vOn ? (t * .07 + .3) % 1 : 0, vOn ? .55 : 0, vOn ? .4 + .15 * Math.sin(t * 5) : .03);
+    if (FX.tvCn) { const cOn = tvOn('Cn'); FX.tvCn.material.color.setHSL(cOn ? (t * .05 + .6) % 1 : 0, cOn ? .55 : 0, cOn ? .45 + .15 * Math.sin(t * 4) : .03); }
     FX.tvM.material.color.setHSL(mOn ? (t * .06) % 1 : 0, mOn ? .6 : 0, mOn ? .75 + .2 * Math.sin(t * 6) : 1);
     if (FX.dest.visible && !ISHA.path.length) FX.dest.visible = false;
     if (S.task) { FX.marker.visible = true; const s = SPOTS[S.task.room][0]; FX.marker.position.set(s.x, 2.1 + Math.sin(t * 3) * .1, s.z); FX.marker.rotation.y = t * 2; } else FX.marker.visible = false;
