@@ -180,6 +180,7 @@ body.intro .hud,body.intro #labels{display:none!important}
   <div class="clockbox"><b id="clock">06:00</b><span id="phase">Umaga</span></div>
   <div class="spacer"></div>
   <button class="chip" id="btnSpeed" aria-label="Bilis ng oras">1×</button>
+  <button class="iconbtn" id="btnSave" aria-label="I-save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3M8 21v-7h8v7"/></svg></button>
   <button class="iconbtn" id="btnSound" aria-label="Tunog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="snd-on" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></button>
   <button class="chip strong" id="btnFamily">Pamilya</button>
 </header>
@@ -323,7 +324,7 @@ const ROOMS = {
   Sp:{n:'Salon at Spa', x:75,z:22,w:9,h:5, floor:'tile', light:'#ffe6f0'},
   Ar:{n:'Arcade', x:75,z:28,w:9,h:8, floor:'metal', light:'#d6b8ff', job:true, verb:'Maglaro sa arcade'},
   Mk:{n:'Mini-Mart', x:60,z:31,w:14,h:5, floor:'tile', light:'#fff4dc'},
-  Kn:{n:'Kainan', x:85,z:1,w:14,h:12, floor:'wood', light:'#ffe0b0'},
+  Kn:{n:'Kusina at Kainan', x:85,z:1,w:14,h:12, floor:'wood', light:'#ffe0b0', job:true, verb:'Magluto'},
   Cn:{n:'Cinema', x:85,z:14,w:14,h:9, floor:'wood', light:'#c9a8ff'},
   Kz:{n:'Kids Zone', x:85,z:24,w:14,h:12, floor:'epoxy', light:'#fff0c8', job:true, verb:'Makipaglaro sa mga bata'},
   MS:{n:'Master Suite', x:100,z:1,w:17,h:12, floor:'wood', light:'#ffcf9a'},
@@ -341,9 +342,9 @@ BUNK_Z.forEach((z, i) => {
 const DOORS = [[5,9],[18,9],[19,9],[25,2],[32,6],[30,12],[30,15],[25,13],[25,14],[10,13],[5,17],[5,22],[10,24],[18,22],[19,19],[20,19],[21,22],[19,30],[20,30]];
 BUNK_Z.forEach(z => { DOORS.push([40, z + 1], [43, z + 1]); });
 DOORS.push([99, 10], [103, 13], [112, 13], [113, 20], [99, 30], [84, 10], [84, 17], [84, 25], [84, 31], [91, 13], [91, 23], [59, 29], [64, 15], [64, 8], [74, 6], [74, 11], [74, 18], [74, 24], [74, 29], [66, 30], [24, 32], [40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
-const JOBS = ['G','K','P','W','S','O','Y','X','C','H','V','U','Lib','Pl','rest'];
+const JOBS = ['G','K','Kn','P','W','S','O','Y','X','C','H','V','U','Lib','Pl','rest'];
 const RELAX = ['H', 'V', 'U', 'Lib', 'Pl', 'Pk', 'Ar', 'Kz'];
-const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', Pk:'Parke', Ar:'Arcade', Kz:'Kids Zone', rest:'Pahinga' };
+const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', Pk:'Parke', Ar:'Arcade', Kz:'Kids Zone', Kn:'Malaking Kusina', rest:'Pahinga' };
 
 const GW = 120, GH = 37;
 const cell = new Uint8Array(GW * GH);        // 0 bato, 1 sahig, 2 pader, 4 blast door
@@ -937,6 +938,16 @@ function buildRooms() {
   box(.6, 5, 9, MAT.wall, 18.1, 0, 39.5); box(.6, 5, 9, MAT.wall, 21.9, 0, 39.5);
   put(new THREE.PlaneGeometry(3.2, 3), MAT.daylight, 20, 3.6, 44, Math.PI, dyn);
   spot('A', 19, 33, 20, 34.5, 'door');
+  // the garage pad at the top of the stairs, with two armored trucks
+  const padM = std({ color: '#8d8a84', roughness: .95 }), armor = std({ color: '#3f4a33', roughness: .6, metalness: .45 }), tire = std({ color: '#151515', roughness: .9 }), win = glow('#1c2a33'), stripe = std({ color: '#d4a64a', roughness: .5 });
+  box(16, .05, 7, padM, 20, WALL_H, 41.5);
+  for (const x of [14.5, 25.5]) for (const z of [38.2, 44.8]) cyl(.12, .12, .9, stripe, x, WALL_H, z, 8);
+  FX.trucks = [14.6, 25.4].map((x, i) => { const g = new THREE.Group(); g.position.set(x, WALL_H + .05, 41.5); dyn.add(g);
+    box(2.3, 1.5, 3.3, armor, 0, .55, .7, 0, g); box(2.2, 1.25, 1.5, armor, 0, .55, -1.7, 0, g); box(2, .5, .05, win, 0, 1.2, -2.47, 0, g); box(.05, .45, 1, win, 1.11, 1.2, -1.7, 0, g); box(.05, .45, 1, win, -1.11, 1.2, -1.7, 0, g);
+    box(2.36, .12, 4.9, stripe, 0, .52, -.05, 0, g); box(1.2, .3, .9, armor, 0, 2.05, .9, 0, g); box(.1, .12, .9, MAT.black, 0, 2.2, 1.6, 0, g);
+    for (const [a, b] of [[-1.15, -1.6], [1.15, -1.6], [-1.15, .4], [1.15, .4], [-1.15, 1.7], [1.15, 1.7]]) { const w = cyl(.46, .46, .32, tire, a, .02, b, 16, g); w.rotation.z = Math.PI / 2; w.position.y = .46; }
+    for (const a of [-.7, .7]) box(.3, .15, .05, glow('#fff3c4'), a, .85, -2.48, 0, g);
+    decal(i ? 'TRUCK 2' : 'TRUCK 1', x, 44.4, .35); return g; });
 
   // Bunk rooms
   const blankets = [MAT.blanketA, MAT.blanketB, MAT.blanketC];
@@ -1188,7 +1199,7 @@ let ISHA = null, MILLIE = null;
 let paused = 1, speed = 1;
 const SAVE_KEY = 'bunker-day7-save-v1';
 function fresh() {
-  const s = { day: 7, min: 360, res: { food: 240, meat: 90, water: 240, power: 95, o2: 100, feed: 90 }, ammo: 40, stock: 500, parts: 6, anti: 3, meds: 8, up: {}, door: { hp: 100, lvl: 0 }, said: {}, acts: {}, helped: [], raids: {}, extra: [], people: {}, flags: {}, done: {}, last: {}, task: null, timers: [], growth: .35, slots: {}, talked: {}, dayStart: null, summary: null };
+  const s = { day: 7, min: 360, res: { food: 240, meat: 90, water: 240, power: 95, o2: 100, feed: 90 }, ammo: 40, stock: 500, parts: 6, anti: 3, meds: 8, fuel: 60, trucks: [{ hp: 100 }, { hp: 100 }], up: {}, door: { hp: 100, lvl: 0 }, said: {}, acts: {}, helped: [], raids: {}, extra: [], people: {}, flags: {}, done: {}, last: {}, task: null, timers: [], growth: .35, slots: {}, talked: {}, dayStart: null, summary: null };
   for (const d of CAST) s.people[d.id] = { job: d.player ? null : d.job, stress: d.player ? 15 : rand(8, 22) | 0, health: 100, sick: false, bl: rand(15, 45), bw: rand(10, 40), hu: 30, mood: null };
   return s;
 }
@@ -1291,6 +1302,7 @@ function hourTick(night = false) {
   const ids = people(), n = ids.reduce((a, id) => a + (defOf(id).kid ? .5 : 1), 0), W = {};
   // people still count for their job while walking to it or stepping out to the CR, at a lower rate
   if (!night) ids.forEach(id => { const p = P[id], st = S.people[id]; if (p && st.job && st.job !== 'rest' && !st.sick && !st.away && !st.quar) W[st.job] = (W[st.job] || 0) + eff(id) * (p.atWork ? 1 : .6); });
+  W.K = (W.K || 0) + (W.Kn || 0);
   const nf = night ? .5 : 1;   // asleep: half the food, water and air
   const brown = S.res.power <= 0 || !!S.flags.blackout, sun = !night && S.min >= 360 && S.min < 1080;
   addRes('food', (W.G || 0) * .95 * (S.up.green2 ? 1.3 : 1) * (brown ? .4 : 1) - n * .09 * nf * (W.K ? .85 : 1) * (W.P ? .9 : 1) - .1);
@@ -1819,6 +1831,7 @@ function familySheet() {
 // ---------------------------------------------------------------- world reactions
 const tmpM = new THREE.Object3D();
 function refreshWorld() {
+  if (FX.trucks && S) FX.trucks.forEach((g, i) => { g.visible = !(S.exp?.trucks || []).includes(i); g.rotation.z = (S.trucks?.[i]?.hp ?? 100) <= 0 ? .08 : 0; });
   const g = S.growth;
   FX.plantPos.forEach(([x, z], i) => {
     const leafy = i % 3 !== 1, s = .35 + g * .85;
@@ -1932,6 +1945,7 @@ $('#btnView').onclick = () => { tick(); cam.mode = cam.mode === 'follow' ? 'over
 $('#btnFamily').onclick = () => { if (!paused) { tick(); familySheet(); } };
 $('#btnSpeed').onclick = () => { speed = speed === 1 ? 3 : 1; $('#btnSpeed').textContent = speed + '×'; tick(); };
 function soundIcon() { $('#snd-on').style.display = AU.on ? '' : 'none'; }
+$('#btnSave').onclick = () => { if (S && $('#intro').hidden) quickSave(); };
 $('#btnSound').onclick = () => { audioInit(); AU.on = !AU.on; if (AU.master) AU.master.gain.value = AU.on ? .8 : 0; try { localStorage.setItem('bunker-sound', AU.on ? '1' : '0'); } catch (e) { /* not remembered */ } soundIcon(); };
 soundIcon();
 
@@ -1946,7 +1960,7 @@ function nearest() {
   if (((room === 'MS' && Math.hypot(ISHA.x - 108.5, ISHA.z - 4.2) < 2.4) || (room === 'M' && Math.hypot(ISHA.x - 19, ISHA.z - 3.6) < 1.8)) && S.min >= 1200) return { kind: 'sleep', label: 'Matulog' };
   if (room && ROOMS[room].job && SPOTS[room]) {
     const s = SPOTS[room].find(s => Math.hypot(s.x - ISHA.x, s.z - ISHA.z) < 1.3);
-    if (s) { const fix = S.task && S.task.room === room, cw = cookWindow(); return { kind: 'work', room, label: fix ? 'Ayusin' : room === 'K' && cw >= 0 ? 'Magluto ng ' + MEALS[cw].n.toLowerCase() : ROOMS[room].verb, s }; }
+    if (s) { const fix = S.task && S.task.room === room, cw = cookWindow(); return { kind: 'work', room, label: fix ? 'Ayusin' : (room === 'K' || room === 'Kn') && cw >= 0 ? 'Magluto ng ' + MEALS[cw].n.toLowerCase() : ROOMS[room].verb, s }; }
   }
   if (room === 'A' && ISHA.z > 32.6) return { kind: 'door', label: 'Pinto' };
   return null;
@@ -1977,6 +1991,7 @@ function finishWork(room) {
     Lib: () => { stress('isha', -12); return 'Nagbasa ka ng libro sa Library. Bawas stress.'; },
     Pl: () => { stress('isha', -8); KID.forEach(k => S.people[k] && stress(k, -12)); return 'Nakipaglaro ka sa mga bata sa Playroom.'; },
     U: () => { stress('isha', -10); ['ria', 'carly', 'butchukok'].forEach(k => stress(k, -10)); return 'Tumugtog kayo ng mga bata. Ang ingay, pero ang saya.'; } };
+  fx.Kn = fx.K;
   let msg = fx[room](); mis('work'); if (room === 'Pl') mis('kids');
   if (!['H', 'Lib', 'Pl', 'V', 'U'].includes(room)) stress('isha', 4);
   if (fix) { if (S.task.kind === 'leak') S.flags.leak = 0; if (S.task.kind === 'fan') S.flags.fanBroken = 0; if (S.task.kind === 'blackout') S.flags.blackout = 0; msg = 'Naayos mo! ' + msg; S.task = null; refreshTask(); chime(); }
@@ -2942,7 +2957,7 @@ Object.assign(CHAPTERS, { 12: { night: 'tShadow1' }, 15: { night: 'tShadow2' }, 
 Object.assign(CHAPTERS, { 8: { morning: 'zTown' }, 61: { morning: 'zPhase2' }, 151: { morning: 'zPhase3' }, 251: { morning: 'zPhase4' } });
 Object.assign(EVENTS, {
   zTown: { kick: 'Ang Bayan', loc: 'Pk', title: 'Ang Bayan', force: 1, good: 1,
-    body: () => '<p>Sa dulo ng Dormitoryo, may pintong hindi pa nabubuksan ng iba. Binuksan mo ito.</p><p>Isang buong bayan sa ilalim ng lupa: parke na may damo at puno, fountain, swimming pool, basketball court, gym, kapilya, café, salon, arcade, mini-mart, isang malaking Kainan na kasya ang lahat, Cinema, at Kids Zone na may slide. Napanganga ang lahat.</p><p><i>"Hindi na natin kailangang lumabas,"</i> bulong ni Angel.</p>',
+    body: () => '<p>Sa dulo ng Dormitoryo, may pintong hindi pa nabubuksan ng iba. Binuksan mo ito.</p><p>Isang buong bayan sa ilalim ng lupa: parke na may damo at puno, fountain, swimming pool, basketball court, gym, kapilya, café, salon, arcade, mini-mart, isang malaking Kusina at Kainan na kasya ang lahat, Cinema, at Kids Zone na may slide. Napanganga ang lahat.</p><p><i>"Hindi na natin kailangang lumabas,"</i> bulong ni Angel.</p>',
     choices: [{ t: 'Ipasyal ang lahat', sub: 'Puwede na kayong mag-activity dito.', fx: () => { stressAll(-15); return '<p>Tumakbo ang mga bata sa damuhan. Si Tatay Fred, umupo sa bangko sa tabi ng fountain at pumikit. Mula ngayon, dito na ang mga activity: liga, pool party, misa, kapehan, spa, arcade, piknik at tiangge.</p>'; } }] },
 });
 Object.assign(CHAPTERS, { 100: { morning: 'zNoConvoy' }, 104: { night: 'zSilence' }, 118: { morning: 'zRain' }, 130: { night: 'zXmas' }, 137: { night: 'zNewYear' }, 152: { morning: 'zBlight' }, 168: { night: 'zVow' }, 189: { night: 'zHalfYear' }, 205: { morning: 'zOp' }, 222: { k1: 'zHorde2' }, 241: { morning: 'zOutbreak' }, 262: { morning: 'zLando' }, 287: { afternoon: 'zFlyover' }, 302: { morning: 'zDrop' }, 364: { night: 'zYear' } });
@@ -3500,16 +3515,21 @@ function storageWarn() {
   return `<div class="sh-body" style="margin:8px 0;padding:10px 12px;border-radius:12px;background:#3a2a12;color:#ffd79a"><b>${inApp ? 'Nasa loob ka ng Messenger o Facebook.' : 'Nasa Safari tab ka lang.'}</b> ${inApp ? 'Dito, nabubura ang save. Pindutin ang ··· at piliin ang "Open in Safari", tapos' : 'Kapag ilang araw kang hindi naglaro, puwedeng burahin ng iPhone ang save. Para hindi mawala,'} pindutin ang Share → <b>Add to Home Screen</b>, at doon na laging buksan ang Bunker.</div>`;
 }
 function loadSlot(i) { const s = readSlot(i); if (!s) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(s.data)); sessionStorage.setItem('bunker-auto', '1'); } catch (e) { return toast('Hindi ma-load: naka-block ang storage.', 'bad'); } location.reload(); }
+function quickSave() { save(); try { localStorage.setItem(SAVE_KEY + '-at', JSON.stringify({ day: S.day, min: S.min, t: Date.now() })); } catch (e) { /* storage blocked */ } chime(); toast(`Na-save! Araw ${S.day} · ${hhmm(S.min)}. Pagbukas mo ulit, pindutin lang ang "Ituloy".`, 'good'); }
 function saveSheet() {
   save();
-  openSheet(`<div class="kick">Auto-save tuwing oras, at kapag isinara mo ang app</div><h2 class="sh-title">Save</h2>
-    ${storageWarn()}<div class="choices" style="margin-bottom:10px"><button class="choice primary" id="bkBtn"><b>Backup na hindi nabubura</b><span>Save code o save file. Gamitin ito kung nawawala ang save.</span></button></div>
-    <div class="sh-body">${[1, 2, 3].map(i => { const s = readSlot(i); return `<div class="slot"><div style="flex:1"><b>Slot ${i}</b><br><small>${slotLine(s)}</small></div><button class="job" data-save="${i}">I-save</button>${s ? `<button class="job" data-load="${i}">I-load</button>` : ''}</div>`; }).join('')}</div>`);
+  openSheet(`<div class="kick">Kusa rin itong nagse-save bawat oras, at kapag isinara mo ang app</div><h2 class="sh-title">Save</h2>
+    <div class="choices"><button class="choice primary" id="qsBtn"><b>I-SAVE NGAYON</b><span>Araw ${S.day} · ${hhmm(S.min)}. Pagbukas mo ulit, pindutin lang ang "Ituloy".</span></button></div>
+    ${storageWarn()}
+    <details style="margin-top:12px"><summary class="sh-body" style="cursor:pointer"><b>Iba pang opsyon</b> (hindi kailangan)</summary>
+    <div class="choices" style="margin:10px 0"><button class="choice" id="bkBtn"><b>Backup na hindi nabubura</b><span>Save code o save file, kung sakaling mawala ang save.</span></button></div>
+    <div class="sh-body">${[1, 2, 3].map(i => { const s = readSlot(i); return `<div class="slot"><div style="flex:1"><b>Slot ${i}</b><br><small>${slotLine(s)}</small></div><button class="job" data-save="${i}">I-save</button>${s ? `<button class="job" data-load="${i}">I-load</button>` : ''}</div>`; }).join('')}</div></details>`);
   $('#bkBtn').onclick = () => codeSheet(false);
   $('#sheetBody').querySelectorAll('[data-save]').forEach(b => { let armed = !readSlot(+b.dataset.save); b.onclick = () => {
     if (!armed) { armed = true; b.textContent = 'Palitan?'; return; }
     try { localStorage.setItem(SLOT(+b.dataset.save), JSON.stringify({ t: Date.now(), day: S.day, min: S.min, data: S })); chime(); toast(`Na-save sa Slot ${b.dataset.save}.`, 'good'); } catch (e) { toast('Hindi ma-save: puno o naka-block ang storage.', 'bad'); }
     saveSheet(); }; });
+  $('#qsBtn').onclick = () => { quickSave(); closeSheet(); };
   $('#sheetBody').querySelectorAll('[data-load]').forEach(b => { let armed = false; b.onclick = () => { if (!armed) { armed = true; b.textContent = 'Sigurado?'; return; } loadSlot(+b.dataset.load); }; });
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden && S && $('#intro').hidden) save(); else resetJoy(); });
@@ -3584,6 +3604,17 @@ function genEnter() {
       ...(full || qFull(wound) ? [] : [{ t: `Papasukin sa Quarantine ${wound ? 'B (may sugat)' : 'A (walang sugat)'}`, sub: `${t.role}. Doon ka magdedesisyon kung sasama siya sa inyo.`, fx: () => { const d = newbieDef(name, t); d.bitten = bit; admit(d, wound ? 2 : 1); stress('angel', -4); return `<p>Pumasok si <b>${name}</b> sa decon shower, tapos diretso sa Quarantine ${wound ? 'B, ang kwarto para sa may sugat. Babantayan siya ni Angel nang mas mabuti' : 'A, sa tabi ng Airlock'}. Pagkatapos ng 30 oras, ikaw ang magdedesisyon kung papasukin siya.</p>`; } }]),
       { t: 'Isang gabi lang sa airlock', sub: '-4 pagkain. Aalis siya bukas.', fx: () => { addRes('food', -4); helped(name); stressAll(-2); return `<p>Natulog si ${name} sa airlock na may kumot at mainit na sabaw. Umalis siya bago mag-umaga, nag-iwan ng sulat ng pasasalamat.</p>`; } },
       { t: 'Huwag papasukin', sub: 'Ligtas, pero may malulungkot.', fx: () => { setMood(pick(SOFT.filter(s => S.people[s])), 'lungkot', `hindi pinapasok si ${name}`); return `<p>"Sige po," mahina niyang sabi. Matagal siyang nakaupo sa harap ng pinto bago umalis.</p>`; } },
+    ] };
+  return id;
+}
+const KIDNAMES = ['Bunso', 'Tintin', 'Jepoy', 'Ayesha', 'Migz', 'Lala', 'Toto', 'Kaye', 'Nonoy', 'Bebang'];
+function genKid() {
+  const nm = pick(KIDNAMES.filter(k => !people().some(id => defOf(id)?.name === k))) || 'Bunso', age = 4 + (Math.random() * 8 | 0), fem = /Tintin|Ayesha|Lala|Kaye|Bebang/.test(nm), bit = Math.random() < .1, id = 'gen' + (++genN);
+  GEN[id] = { kind: 'knock', kick: 'Blast door', loc: 'A', sound: 'knock', title: `Batang nailigtas: ${nm}`,
+    body: () => `<p>Sa likod ng truck: si <b>${nm}</b>, ${age} taong gulang, payat at nanginginig, yakap ang isang maruming stuffed toy. Hindi siya nagsasalita. Nakatingin lang sa iyo.</p><p>${qFull() ? '<b>Puno ang Quarantine A.</b>' : 'May kama sa Quarantine A.'}</p>`,
+    choices: [
+      ...(qFull() || !freeBed() ? [] : [{ t: `Papasukin si ${nm} sa Quarantine`, sub: 'Bata siya. Babantayan ni Angel nang 30 oras.', fx: () => { const d = { id: 'kd' + Date.now().toString(36), name: nm, role: `${age} taong gulang, nailigtas sa ekspedisyon`, spec: null, job: 'Kz', kid: true, h: .95 + age * .04, skin: pick(NB_SKIN), shirt: pick(['#f2a7c3', '#8ecae6', '#e9c46a', '#9ad1a3']), pants: '#4a5a7a', hair: '#1b130f', style: fem ? 'pony' : 'short', bed: freeBed(), fem, bitten: bit }; KID.push(d.id); admit(d, 1); TRAIT[d.id] = 'ang batang nailigtas namin sa labas'; OWN[d.id] = ['Salamat po sa pagligtas sa akin.', 'Puwede po ba akong maglaro sa slide?', 'Nasaan na po kaya sina Mama?']; stressAll(-6); KID.forEach(k => S.people[k] && stress(k, -6)); return `<p>Binuhat ni Angel si ${nm} papunta sa Quarantine at binigyan ng mainit na gatas. Kumaway si Carly sa salamin. Ngumiti si ${nm}, sa unang pagkakataon.</p>`; } }]),
+      { t: 'Dalhin sa evacuation center', sub: 'Mas ligtas ba doon? Hindi sigurado.', fx: () => { setMood(pick(SOFT.filter(x => S.people[x])) || 'angel', 'lungkot', `hindi pinapasok si ${nm}`); stressAll(6); return `<p>Dinala nina Carlo si ${nm} sa evacuation center sa simbahan. Kumapit siya sa damit ni Carlo bago bumitaw.</p>`; } },
     ] };
   return id;
 }
@@ -3823,8 +3854,13 @@ function buildSuite() {
 function buildBig() {
   const C = c => std({ color: c, roughness: .7 }), G = c => glow(c), wood = MAT.walnut;
   // Kainan: six long tables, 48 seats, a serving counter, so everyone eats together
+  // a full kitchen line along the north wall: stoves, ovens, a big fridge, a sink
+  for (const x of [86.2, 87.4, 96.6, 97.8]) { box(1.1, .9, .65, MAT.steel, x, 0, 1.4); for (const [a, b] of [[-.25, -.15], [.25, -.15], [-.25, .15], [.25, .15]]) cyl(.12, .12, .02, MAT.black, x + a, .9, 1.4 + b, 14); box(.9, .35, .02, MAT.black, x, .3, 1.74); }
+  box(.9, 2.1, .75, MAT.white, 85.55, 0, 3.2); box(.02, 1.9, .02, MAT.steel, 85.95, .1, 3.2); block(85, 3, 85, 3);
+  box(.9, .9, .65, MAT.cabinet, 95.4, 0, 1.4); box(.6, .05, .4, MAT.steel, 95.4, .9, 1.4); block(85, 1, 88, 1); block(95, 1, 98, 1);
+  spot('Kn', 86, 2, 86.2, 1.4); spot('Kn', 87, 2, 87.4, 1.4); spot('Kn', 97, 2, 97.8, 1.4);
   rbox(5, .95, .7, MAT.white, 92, 0, 1.6, 0, .04); for (let i = 0; i < 4; i++) cyl(.22, .2, .2, MAT.steel, 90.4 + i * 1.05, .95, 1.6, 14); block(89, 1, 94, 1);
-  for (const x of [88, 92, 96]) for (const z of [5, 9.5]) {
+  for (const x of [88, 92, 96]) for (const z of [4.4, 7.6, 10.8]) {
     box(3.2, .06, .9, wood, x, .73, z); for (const [a, b] of [[-1.5, -.38], [1.5, -.38], [-1.5, .38], [1.5, .38]]) box(.06, .73, .06, wood, x + a, 0, z + b);
     block(Math.floor(x - 1.6), Math.floor(z), Math.floor(x + 1.5), Math.floor(z));
     for (let i = 0; i < 4; i++) { const sx = x - 1.2 + i * .8; chair(sx, z - .75, 0); chair(sx, z + .75, Math.PI); SPOTS.seats.push({ x: sx, z: z - .75, yaw: 0, taken: null }, { x: sx, z: z + .75, yaw: Math.PI, taken: null }); }
@@ -3893,55 +3929,67 @@ const LOCS = [
   { id: 'hospital', n: 'Ospital ng bayan', hrs: 6, risk: .35, loot: { meds: [10, 20], anti: [0, 2.4], parts: [0, 1] }, d: 'Gamot at antiviral. Pero puno ng zombie ang mga ward.' },
   { id: 'police', n: 'Police station', hrs: 6, risk: .4, loot: { ammo: [5, 10], anti: [0, 1.3] }, d: 'Bala at kaunting antiviral. Delikado, baka may grupo nang nakapwesto.' },
   { id: 'farm', n: 'Bukid sa labas ng bayan', hrs: 8, risk: .25, loot: { feed: [25, 45], seeds: [.2, .35], meat: [4, 10] }, d: 'Patuka, binhi, baka may manok pa.' },
-  { id: 'gas', n: 'Gasolinahan', hrs: 4, risk: .3, loot: { power: [15, 30], parts: [1, 2] }, d: 'Gasolina para sa generator at baterya.' },
+  { id: 'gas', n: 'Gasolinahan', hrs: 4, risk: .3, loot: { fuel: [20, 45], power: [10, 20], parts: [1, 2] }, d: 'Gasolina para sa mga truck, generator at baterya.' },
   { id: 'school', n: 'Paaralan (evacuation center)', hrs: 5, risk: .18, loot: { food: [6, 12], water: [15, 30] }, d: 'Balita, tubig, at baka may survivors.' },
 ];
+const teamRisk = n => [1.3, 1, .75, .62, .52][n - 1] || .52;
+const truckReady = i => (S.trucks?.[i]?.hp ?? 100) > 0 && !(S.exp?.trucks || []).includes(i);
+function fixTruck(i) { if (S.parts < 4) return toast('Kulang ang piyesa. Kailangan ng 4.', 'bad'); S.parts -= 4; S.trucks[i].hp = 100; chime(); toast(`Naayos ni Papa Na ang Truck ${i + 1}.`, 'good'); save(); refreshWorld(); expSheet(); }
 const TREASURE = ['isang lumang gitara', 'isang kahon ng tsokolate', 'mga laruan para sa mga bata', 'isang photo album ng isang pamilya', 'isang bote ng alak para kay Tatay Fred', 'mga lumang komiks', 'isang radyong de-baterya', 'isang kahon ng sabon at shampoo'];
 function expSheet() {
   if (S.exp) { const back = S.exp.until; return openSheet(`<div class="kick">Ekspedisyon</div><h2 class="sh-title">Nasa labas sila</h2><div class="sh-body">${S.exp.team.map(N).join(', ')} ay nasa <b>${LOCS.find(l => l.id === S.exp.loc).n}</b>.<br>Babalik bandang ${hhmm(back % 1440)}${Math.floor(back / 1440) > S.day ? ' bukas' : ''}.</div>`); }
   if (S.min >= 1080) return openSheet('<div class="kick">Ekspedisyon</div><h2 class="sh-title">Gabi na</h2><div class="sh-body">Masyadong delikado lumabas sa dilim. Bukas ng umaga na lang.</div>');
   openSheet(`<div class="kick">Ekspedisyon · hazmat suit at mask</div><h2 class="sh-title">Saan pupunta?</h2>
-    <div class="sh-body">Magpadala ng 1 hanggang 3 tao sa labas para maghanap ng supplies. Mas marami, mas ligtas at mas maraming maiuuwi, pero kulang ang tao sa trabaho habang wala sila.</div>
+    <div class="sh-body">Magpadala ng 1 hanggang 5 tao sa labas para maghanap ng supplies. Mas marami, mas ligtas at mas maraming maiuuwi, pero kulang ang tao sa trabaho habang wala sila.<br><b>Mga truck:</b> ${(S.trucks || []).map((t, i) => `Truck ${i + 1}: ${t.hp > 0 ? `${Math.round(t.hp)}%` : 'SIRA'}`).join(' · ')} · <b>Gasolina:</b> ${Math.round(S.fuel || 0)}</div>
+    ${(S.trucks || []).map((t, i) => t.hp < 100 ? `<button class="choice" data-fix="${i}" ${S.parts >= 4 ? '' : 'disabled style="opacity:.5"'}><b>Ayusin ang Truck ${i + 1}</b><span>4 piyesa (meron kang ${S.parts})</span></button>` : '').join('')}
     <div class="choices">${LOCS.map(l => `<button class="choice" data-l="${l.id}"><b>${l.n}</b><span>${l.d} · ${l.hrs} oras · panganib ${Math.round(l.risk * 100)}%</span></button>`).join('')}</div>`);
   $('#sheetBody').querySelectorAll('[data-l]').forEach(b => b.onclick = () => teamSheet(LOCS.find(l => l.id === b.dataset.l)));
+  $('#sheetBody').querySelectorAll('[data-fix]').forEach(b => b.onclick = () => fixTruck(+b.dataset.fix));
 }
 function teamSheet(L) {
-  const pick3 = [];
+  const pick3 = []; let tk = 0; const n0 = () => pick3.length;
   const avail = npcs().filter(id => !defOf(id).kid && !S.people[id].sick && !S.people[id].away && !S.people[id].quar);
   const draw = () => {
-    const n = pick3.length, risk = L.risk * 1.25 * (1 + (PH() - 1) * .2) * (n === 1 ? 1.3 : n === 2 ? 1 : .75);
-    openSheet(`<div class="kick">${L.n} · ${L.hrs} oras</div><h2 class="sh-title">Sino ang sasama?</h2>
+    const ready = [0, 1].filter(truckReady), maxT = Math.min(ready.length, Math.floor((S.fuel || 0) / 10), Math.max(1, n0())); if (tk > maxT) tk = maxT;
+    const n = pick3.length, risk = L.risk * 1.25 * (1 + (PH() - 1) * .2) * teamRisk(n) * (1 - .25 * tk);
+    openSheet(`<div class="kick">${L.n} · ${Math.max(2, L.hrs - tk)} oras</div><h2 class="sh-title">Sino ang sasama?</h2>
+      <div class="sec">Sasakyan · Gasolina ${Math.round(S.fuel || 0)} (10 bawat truck)</div><div class="jobs">${[0, 1, 2].map(k => `<button class="job${tk === k ? ' on' : ''}" data-t="${k}" ${k <= maxT ? '' : 'disabled style="opacity:.4"'}>${k ? k + ' truck' : 'Lakad lang'}</button>`).join('')}</div>
+      <div class="sec">Mga sasama (hanggang 5)</div>
       <div class="jobs">${avail.map(id => `<button class="job${pick3.includes(id) ? ' on' : ''}" data-p="${id}">${N(id)}</button>`).join('')}</div>
-      <div class="sh-body" style="margin-top:10px">${n ? `Panganib: <b>${Math.round(risk * 100)}%</b>. ${pick3.map(N).join(', ')}` : 'Pumili ng 1 hanggang 3.'}</div>
+      <div class="sh-body" style="margin-top:10px">${n ? `Panganib: <b>${Math.round(risk * 100)}%</b>${tk ? ` · Dami ng maiuuwi: <b>x${(1 + .5 * tk).toFixed(1)}</b> dahil sa truck` : ''}. ${pick3.map(N).join(', ')}` : 'Pumili ng 1 hanggang 5.'}</div>
       <div class="choices"><button class="choice${n ? ' primary' : ''}" id="goExp" ${n ? '' : 'disabled style="opacity:.5"'}><b>Ipadala</b><span>Lalabas sila sa blast door ngayon</span></button></div>`);
-    $('#sheetBody').querySelectorAll('[data-p]').forEach(b => b.onclick = () => { const id = b.dataset.p, i = pick3.indexOf(id); if (i >= 0) pick3.splice(i, 1); else if (pick3.length < 3) pick3.push(id); tick(); draw(); });
-    if (n) $('#goExp').onclick = () => { closeSheet(); sendExp(L, pick3.slice()); };
+    $('#sheetBody').querySelectorAll('[data-p]').forEach(b => b.onclick = () => { const id = b.dataset.p, i = pick3.indexOf(id); if (i >= 0) pick3.splice(i, 1); else if (pick3.length < 5) pick3.push(id); tick(); draw(); });
+    $('#sheetBody').querySelectorAll('[data-t]').forEach(b => b.onclick = () => { tk = +b.dataset.t; tick(); draw(); });
+    if (n) $('#goExp').onclick = () => { closeSheet(); sendExp(L, pick3.slice(), ready.slice(0, tk)); };
   };
   draw();
 }
 function hideAway(id) { const p = P[id]; if (!p) return; releaseSpot(p); p.path = []; p.root.visible = false; p.tag.style.display = 'none'; }
-function sendExp(L, team) {
-  S.exp = { loc: L.id, team, until: TNOW() + L.hrs * 60 };
+function sendExp(L, team, trucks = []) {
+  S.exp = { loc: L.id, team, trucks, until: TNOW() + Math.max(2, L.hrs - trucks.length) * 60 }; S.fuel = Math.max(0, (S.fuel || 0) - 10 * trucks.length); refreshWorld();
   team.forEach(id => { S.people[id].away = 1; hideAway(id); });
   doorAnim(1); clunk(); setTimeout(() => doorAnim(0), 3000);
-  toast(`Lumabas sina ${team.map(N).join(', ')} papunta sa ${L.n}.`, 'good'); mis('exp'); save();
+  toast(`Lumabas sina ${team.map(N).join(', ')} papunta sa ${L.n}${trucks.length ? `, sakay ng ${trucks.length} armored truck` : ''}.`, 'good'); mis('exp'); save();
 }
 function expReturn() {
-  const E = S.exp, L = LOCS.find(l => l.id === E.loc), team = E.team.filter(id => S.people[id]), n = team.length;
-  S.exp = null;
+  const E = S.exp, L = LOCS.find(l => l.id === E.loc), team = E.team.filter(id => S.people[id]), n = team.length, tks = E.trucks || [], t = tks.length;
+  S.exp = null; refreshWorld();
   team.forEach(id => { const st = S.people[id], p = P[id]; st.away = 0; if (p) { p.root.visible = true; p.place(20, 32.4, Math.PI); p.goal = null; routine(p); } health(id, -4); });
   doorAnim(1); setTimeout(() => doorAnim(0), 3000);
-  const risk = L.risk * 1.25 * (1 + (PH() - 1) * .2) * (n === 1 ? 1.3 : n === 2 ? 1 : .75) * (S.day > 50 ? 1.15 : 1), lines = [], got = [];
-  let mult = (.6 + .25 * n) * (1 - (PH() - 1) * .12);
+  const risk = L.risk * 1.25 * (1 + (PH() - 1) * .2) * teamRisk(n) * (1 - .25 * t) * (S.day > 50 ? 1.15 : 1), lines = [], got = [];
+  let mult = (.6 + .25 * Math.min(n, 5)) * (1 + .5 * t) * (1 - (PH() - 1) * .12);
+  if (t) lines.push(pick([`Umandar ang ${t === 2 ? 'dalawang armored truck' : 'armored truck'} sa gitna ng mga zombie. Pinuno nila ang likod ng kahon-kahong supplies.`, `Dahil sa ${t === 2 ? 'mga truck' : 'truck'}, nakapagdala sila ng doble.`, 'Binangga ng truck ang mga zombie sa daan. Walang nakalapit.']));
   if (Math.random() < risk) {
     const bad = pick(['ambush', 'hurt', 'lost', 'bite', 'bite']);
-    if (bad === 'ambush') { mult *= .4; const a = Math.min(S.ammo, 2 + (Math.random() * 3 | 0)); S.ammo -= a; stressAll(4); lines.push(`Pauwi na sila nang harangin ng isang grupo ng nanloloob na may bolo. ${a ? `Nagpaputok si ${N(pick(team))} ng ${a} bala para makatakas.` : 'Wala silang bala, kaya iniwan nila ang kalahati ng dala para makatakas.'}`); }
+    if (bad === 'ambush' && t) { const i = pick(tks), dmg = 35 + Math.random() * 45; S.trucks[i].hp = Math.max(0, S.trucks[i].hp - dmg); lines.push(S.trucks[i].hp <= 0 ? `<b>Nasira ang Truck ${i + 1}</b> sa ambush. Itinulak nila ito pauwi. Kailangang ayusin.` : `Tinamaan ng bala at bato ang Truck ${i + 1} (${Math.round(S.trucks[i].hp)}% na lang).`); }
+    if (bad === 'ambush') { mult *= t ? .7 : .4; const a = Math.min(S.ammo, 2 + (Math.random() * 3 | 0)); S.ammo -= a; stressAll(4); lines.push(`Pauwi na sila nang harangin ng isang grupo ng nanloloob na may bolo. ${a ? `Nagpaputok si ${N(pick(team))} ng ${a} bala para makatakas.` : 'Wala silang bala, kaya iniwan nila ang kalahati ng dala para makatakas.'}`); }
     if (bad === 'hurt') { const h = pick(team); S.people[h].sick = true; health(h, -35); routine(P[h]); lines.push(`Gumuho ang sahig habang tumatakbo sila palayo sa mga zombie. Nabalian si ${N(h)} at kinailangang buhatin pauwi.`); }
     if (bad === 'bite') { mult *= .7; const h = pick(team); lines.push(`Sa loob ng ${L.n}, may zombie na nakatago sa likod ng pinto. <b>Nakagat si ${N(h)}</b> sa braso bago nila ito napatumba.`); setTimeout(() => bite(h), 0); }
     if (bad === 'lost') { mult *= .8; team.forEach(id => stress(id, 10)); lines.push('Naharangan ng kawan ng zombie ang daan pauwi. Ilang oras silang nagtago sa isang bubong bago nakabalik, pagod na pagod.'); }
   } else lines.push(pick([`Tahimik ang daan papunta sa ${L.n}. Mabilis silang nakapaghanap.`, 'Walang tao sa paligid. Puro zombie na natutulog sa init ng araw.', `Muntik na silang makita ng isang grupo, pero nakapagtago sila sa likod ng isang jeep.`]));
   for (const [k, [a, b]] of Object.entries(L.loot)) {
     const v = (a + Math.random() * (b - a)) * mult; if (v < .5 && k !== 'seeds') continue;
+    if (k === 'fuel') { const f = Math.round(v); S.fuel = (S.fuel || 0) + f; got.push(`${f} gasolina`); continue; }
     if (k === 'anti') { const a = Math.floor(v); if (a) { S.anti = (S.anti || 0) + a; got.push(`${a} antiviral`); } }
     else if (k === 'meds') { const m = Math.max(1, Math.round(v / 4)); S.meds = (S.meds || 0) + m; got.push(`${m} gamot`); }
     else if (k === 'seeds') { S.growth = Math.min(1, S.growth + v); got.push('mga binhi'); }
@@ -3950,11 +3998,11 @@ function expReturn() {
     else { addRes(k, v); got.push(`${Math.round(v)} ${{ food: 'pagkain', meat: 'karne', water: 'tubig', power: 'kuryente (gasolina)', feed: 'patuka' }[k]}`); }
   }
   if (Math.random() < .2) { const t = pick(TREASURE); stressAll(-6); lines.push(`May dala rin silang sorpresa: ${t}. Tuwang-tuwa ang lahat.`); }
-  const survivor = Math.random() < .18 && freeBed();
-  if (survivor) lines.push('May isang survivor na sumunod sa kanila hanggang sa pinto. Nakikiusap na papasukin.');
+  const survivor = Math.random() < .18 + .15 * t + .03 * n && freeBed(), kidS = survivor && Math.random() < .4;
+  if (survivor) lines.push(kidS ? pick(['May nakita silang bata na nagtatago sa ilalim ng kotse, nag-iisa. Isinakay nila pauwi.', 'Sa isang bahay, may batang umiiyak sa aparador. Binuhat nila pauwi.']) : pick(['May isang survivor na sumunod sa kanila hanggang sa pinto. Nakikiusap na papasukin.', 'May nailigtas silang tao na napapalibutan ng zombie. Isinakay nila sa truck.']));
   stress('isha', -3);
   queueEvent(addGenSheet(`Bumalik ang ekspedisyon`, `<p>${lines.join(' ')}</p><p><b>Naiuwi:</b> ${got.length ? got.join(', ') : 'halos wala'}.</p>`));
-  if (survivor) queueEvent(genEnter());
+  if (survivor) queueEvent(kidS ? genKid() : genEnter());
   save();
 }
 
@@ -4188,6 +4236,7 @@ async function boot(hotData) {
   if (!saved) { const t = await idbGet(); try { saved = t ? JSON.parse(t) : null; } catch (e) { saved = null; } }
   for (const d of saved?.extra || []) if (!defOf(d.id)) GUESTS.push(d);
   if (saved && saved.meds === undefined) { saved.meds = 8; saved.anti = Math.max(saved.anti || 0, 3); }   // saves from before medicines
+  if (saved && saved.trucks === undefined) { saved.trucks = [{ hp: 100 }, { hp: 100 }]; saved.fuel = 60; }   // saves from before the trucks
   if (saved && saved.stock === undefined) { saved.stock = 500; saved.ammo = Math.max(saved.ammo || 0, 40); }   // saves from before the ammo room
   if (saved) for (const id of Object.keys(saved.people || {})) if (!defOf(id)) delete saved.people[id];   // drop anyone the game no longer knows, keep the rest of the save
   const ch = $('#introChoices');
