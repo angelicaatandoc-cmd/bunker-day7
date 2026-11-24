@@ -292,7 +292,7 @@ const GUESTS = [DADO,
 const ROOMS = {
   G:{n:'Greenhouse', x:1,z:1,w:11,h:8, floor:'epoxy', light:'#ffd6f0', job:true, verb:'Magdilig at mag-ani'},
   M:{n:'Master Suite', x:13,z:1,w:12,h:8, floor:'wood', light:'#ffcf9a'},
-  m:{n:'CR ng Master', x:26,z:1,w:3,h:3, floor:'tile', light:'#fff1dc'},
+  m:{n:'CR ng Master', x:26,z:1,w:3,h:5, floor:'tile', light:'#fff1dc'},
   O:{n:'Oxygen Control', x:30,z:1,w:5,h:5, floor:'metal', light:'#cfeeff', job:true, verb:'I-check ang oxygen'},
   H:{n:'Hobby Room', x:26,z:7,w:9,h:5, floor:'wood', light:'#ffd7a6', job:true, verb:'Mag-relax'},
   K:{n:'Kusina', x:1,z:10,w:9,h:7, floor:'tile', light:'#ffe2b8', job:true, verb:'Magluto'},
@@ -733,12 +733,30 @@ function buildRooms() {
   box(1.0, .06, .3, MAT.walnut, 22.3, 1.7, 1.08); for (let i = 0; i < 6; i++) box(.05, .24, .2, std({ color: pick(['#7a3b2e', '#2f4f6b', '#b08d3a', '#ddd2bb']), roughness: .8 }), 21.95 + i * .1, 1.76, 1.08);
   box(.5, .6, .4, std({ color: '#8a6f5a', roughness: .9 }), 24.4, 0, 7.8); box(.4, .02, .3, MAT.white, 15, .38, 5.1); cyl(.04, .04, .1, MAT.white, 15.35, .38, 5.05, 10);
   plant(13.6, 8.4, 1.1); plant(24.4, 8.4, 1.2); plant(21.8, 1.4, .8);
+  // a laptop on the desk, and a mini library with a reading chair by the east wall
+  box(.42, .02, .3, MAT.darkSteel, 13.55, .78, 1.55); const lid = box(.42, .28, .015, glow('#bfe3ff'), 13.55, .79, 1.41); lid.rotation.x = -.25;
+  box(.38, 2.1, 2.3, MAT.walnut, 24.7, 0, 4.7); for (let r = 0; r < 5; r++) for (let i = 0; i < 9; i++) box(.2, .3, .055, std({ color: pick(['#7a3b2e', '#2f4f6b', '#b08d3a', '#ddd2bb', '#4a6b3a', '#6b3a5a']), roughness: .8 }), 24.5, .12 + r * .4, 3.75 + i * .22);
+  rbox(.8, .42, .8, MAT.sofa, 23.45, 0, 4.4, 0, .1); rbox(.8, .5, .2, MAT.sofa, 23.45, .3, 4.0, 0, .08); lamp(23.45, 0, 5.3); block(24, 3, 24, 5); block(23, 4, 23, 4);
+  SPOTS.angelFree = [{ x: 15, z: 6.6, yaw: Math.PI, pose: 'sit', why: 'nanonood ng TV' }, { x: 14.1, z: 2.25, yaw: Math.PI, pose: 'sit', why: 'nagla-laptop' }, { x: 23.45, z: 4.45, yaw: Math.PI, pose: 'sit', why: 'nagbabasa sa mini library' }];
 
+  // a table for two in the corner of the Master Suite
+  cyl(.42, .42, .04, MAT.walnut, 21.9, .72, 6.4, 20); cyl(.05, .07, .72, MAT.darkSteel, 21.9, 0, 6.4, 10); chair(21.25, 6.4, Math.PI / 2); chair(22.55, 6.4, -Math.PI / 2);
+  cyl(.03, .03, .14, MAT.white, 21.9, .76, 6.4, 8); ball(.03, glow('#ffcf6a'), 21.9, .93, 6.4); ball(.07, glow('#ff7aa8'), 21.75, .82, 6.25); block(21, 6, 22, 6);
   // Master CR
   rbox(.4, .42, .55, MAT.white, 26.4, 0, 1.35, 0, .12); rbox(.85, .85, .5, MAT.cabinet, 28.3, 0, 1.3, 0, .03);
   box(.5, .02, .36, MAT.white, 28.3, .86, 1.3); box(.9, .8, .03, MAT.ledCool, 28.3, 1.2, 1.03);
-  box(1.2, .06, 1.1, MAT.white, 28.35, 0, 3.4); box(.02, 2, 1.1, MAT.glass, 27.75, 0, 3.4);
-  block(26, 1, 26, 1); block(28, 1, 28, 1); block(28, 3, 28, 3);
+  // rain shower behind glass
+  box(1.1, .06, 1.1, MAT.white, 28.4, 0, 2.6); box(.02, 2, 1.1, MAT.glass, 27.84, 0, 2.6); box(1.1, 2, .02, MAT.glass, 28.4, 0, 3.16);
+  cyl(.22, .22, .02, MAT.steel, 28.4, 2.15, 2.6, 18); cyl(.012, .012, .3, MAT.steel, 28.4, 2.15, 2.25, 6);
+  // bathtub along the wall
+  rbox(.8, .55, 1.7, MAT.white, 26.45, 0, 4.25, 0, .12); box(.62, .03, 1.5, glow('#9fd8ef'), 26.45, .48, 4.25); cyl(.03, .03, .25, MAT.steel, 26.45, .55, 3.5, 8);
+  // jacuzzi with glowing, bubbling water
+  cyl(.88, .9, .55, MAT.white, 28.05, 0, 5, 28); FX.jacuzzi = cyl(.74, .74, .03, glow('#6fd3f2'), 28.05, .5, 5, 28);
+  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2; ball(.05, glow('#e8fbff'), 28.05 + Math.cos(a) * .45, .55, 5 + Math.sin(a) * .45); }
+  for (const [x, z] of [[27.2, 5.75], [28.9, 4.2]]) { cyl(.04, .04, .1, MAT.white, x, .55, z, 8); ball(.035, glow('#ffcf6a'), x, .68, z); }
+  box(.05, .9, .5, MAT.walnut, 26.06, .8, 2.6); box(.04, .5, .4, MAT.linen, 26.12, 1.05, 2.6);   // towel rack
+  plant(26.4, 5.6, .7);
+  block(26, 1, 26, 1); block(28, 1, 28, 1); block(28, 2, 28, 2); block(26, 3, 26, 4); block(27, 4, 28, 5);
 
   // Oxygen control
   for (const x of [31, 32.5, 34]) { cyl(.38, .38, 1.9, MAT.steel, x, 0, 1.65); ball(.38, MAT.steel, x, 1.9, 1.65); pipe(x, 1.65, x, 1.65, 2.35, .07, MAT.darkSteel); }
@@ -1227,6 +1245,7 @@ function routine(p, teleport = false) {
   else if (S.activity && S.min < S.activity.until) goal = 'act';
   else if (st.job === 'rest' || (S.flags.restNoon && S.min < 720)) goal = 'rest';
   else goal = 'job:' + st.job;
+  if (p.id === 'angel' && goal === 'job:C' && !people().some(x => S.people[x].sick || (S.people[x].bit && !S.people[x].hid))) goal = 'free:' + (Math.floor(S.min / 90) % 3);
   if (p.goal === goal && !teleport) return;
   p.goal = goal; p.atWork = false; releaseSpot(p);
   let target, after;
@@ -1239,6 +1258,8 @@ function routine(p, teleport = false) {
     const [room, slot] = p.def.bed, b = SPOTS.beds[room][slot];
     const door = room === 'M' ? { x: 18.5 + slot, z: 3.6 } : b.ax !== undefined ? { x: b.ax, z: b.az } : SPOTS[room][0];
     target = door; after = () => { p.place(b.x, b.z, 0); p.setPose('sleep', b.y); };
+  } else if (goal.startsWith('free:')) {
+    const sp = SPOTS.angelFree[+goal.slice(5)]; target = approach(sp); after = () => { p.place(sp.x, sp.z, sp.yaw); p.setPose(sp.pose); };
   } else if (goal === 'quar') {
     const beds = st.qb ? SPOTS.bedQB : SPOTS.bedQA, b = takeSpot(beds, p) || beds[0];
     target = { x: 25.5, z: st.qb ? 35 : 32.5 }; after = () => { p.place(b.x, b.z, st.qb ? -Math.PI / 2 : 0); p.setPose(st.turned ? 'stand' : 'sleep', st.turned ? 0 : b.y); };
@@ -1707,6 +1728,7 @@ function jobLabel(id) {
   if (st.sick) return 'Nasa Clinic, nagpapagaling';
   if (S.min >= 1290) return 'Natutulog';
   if (st.job === 'rest' || (S.flags.restNoon && S.min < 720)) return 'Nagpapahinga';
+  if (p?.goal?.startsWith('free:')) return `Walang may sakit, kaya nasa kwarto ninyo: ${SPOTS.angelFree[+p.goal.slice(5)].why}`;
   return (p && p.atWork ? 'Nagtatrabaho sa ' : 'Papunta sa ') + ROOMS[st.job].n;
 }
 function personSheet(p) {
@@ -2123,7 +2145,7 @@ function buildExtraRooms() {
 
   // toilets and showers (master CR, women's, men's)
   SPOTS.toilet = { m: [{ x: 26.45, z: 1.62, yaw: 0, taken: null }], Bw: [], Bm: [] };
-  SPOTS.shower = { m: [{ x: 28.35, z: 3.4, yaw: -Math.PI / 2, taken: null }], Bw: [], Bm: [] };
+  SPOTS.shower = { m: [{ x: 28.4, z: 2.6, yaw: -Math.PI / 2, taken: null }], Bw: [], Bm: [] };
   for (const [z0, k] of [[21, 'Bw'], [26, 'Bm']]) for (let i = 0; i < 5; i++) {
     SPOTS.toilet[k].push({ x: 23.5 + i, z: z0 + .62, yaw: 0, taken: null });
     SPOTS.shower[k].push({ x: 23.5 + i, z: z0 + 3.5, yaw: Math.PI, taken: null });
@@ -2237,6 +2259,7 @@ function setupItems() {
   townItems();
   item(14, 16.6, 'Manood ng TV', () => tvSheet('L'), { r: 1.5 });
   item(15, 5.4, 'Manood ng TV', () => tvSheet('M'), { r: 1.5 });
+  item(21.9, 5.5, 'Kumain kasama si Angel', () => { ISHA.place(21.25, 6.4, Math.PI / 2); ISHA.setPose('sit'); busy(3, () => { advance(40); addRes('food', -1); stress('isha', -12); if (S.people.angel) { stress('angel', -12); if (S.people.angel.mood) clearMood('angel'); } toast(pick(['Candlelight dinner kayo ni Angel. "Kahit de-lata, basta ikaw ang kasama."', 'Nagluto si Angel ng paborito mong ulam. Kayong dalawa lang, at si Millie sa paanan.', 'Kape at kuwentuhan sa mesa ninyo hanggang hatinggabi.', '"Bee, pag-labas natin, ganito pa rin tayo, ha?" sabi ni Angel.']), 'good'); save(); }, 'sit'); }, { r: .9 });
   item(32, 33.5, 'Manood sa Sinehan', () => tvSheet('V'), { r: 1.6 });
   item(12.7, 17.4, 'Umupo', () => sitAt(12.2, 17.4, Math.PI / 2, 'Umupo ka sa sofa.'), { r: .8 });
   for (const x of [21.9, 23.6]) item(x, 12.9, 'Umupo', () => sitAt(x, 12.2, 0, 'Umupo ka. Ang sarap magpahinga.'), { r: .8 });
@@ -2266,8 +2289,10 @@ function setupItems() {
   item(24.2, 16.7, 'Tingnan ang board', familySheet, { r: .9 });
   item(17.5, 31.9, 'Ekspedisyon', expSheet, { r: .8 });
   for (const k of ['m', 'Bw', 'Bm']) {
-    for (const s of SPOTS.shower[k]) item(k === 'm' ? 27.5 : s.x, k === 'm' ? 3.4 : s.z - 1, 'Maligo', () => shower(s), { r: .7 });
+    for (const s of SPOTS.shower[k]) item(k === 'm' ? 27.4 : s.x, k === 'm' ? 2.5 : s.z - 1, 'Maligo sa rain shower', () => shower(s), { r: .7 });
   }
+  item(27.3, 3.6, 'Magbabad sa bathtub', () => { ISHA.place(26.45, 4.3, 0); busy(3, () => { advance(30); addRes('water', -2); stress('isha', -10); toast(pick(['Mainit na tubig at bula. Nakatulog ka halos sa bathtub.', 'Nagbabad ka habang nakikinig sa lumang kanta. Ang sarap.', 'Pumasok si Millie at umupo sa tabi ng bathtub. Bantay mo raw siya.']), 'good'); unstick(ISHA); save(); }, 'sleep'); }, { r: .7 });
+  item(27.6, 3.9, 'Mag-jacuzzi kasama si Angel', () => { ISHA.place(28.05, 5, 0); busy(3.5, () => { advance(45); addRes('water', -2); addRes('power', -1); stress('isha', -15); if (S.people.angel) { stress('angel', -15); if (S.people.angel.mood) clearMood('angel'); } toast(pick(['Jacuzzi kayo ni Angel. "Parang nag-hotel lang tayo, Bee."', 'Bula, kandila, at si Angel. Nakalimutan mo saglit ang mga zombie.', 'Magkatabi kayo ni Angel sa jacuzzi, nag-uusap tungkol sa bahay na itatayo ninyo paglabas.']), 'good'); unstick(ISHA); save(); }, 'sit'); }, { r: .7 });
 }
 const SHOWS = [
   ['Cartoons', 'Tuwang-tuwa ang mga bata.', 'kids'], ['Teleserye marathon', 'Iyakan at sigawan sa bawat episode.', 'drama'],
