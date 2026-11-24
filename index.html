@@ -239,8 +239,8 @@ const WALL_H = 2.6;
 // ---------------------------------------------------------------- pamilya
 // Palitan ang mga pangalan dito kapag may totoong pangalan na.
 const CAST = [
-  { id:'isha', name:'Isha', role:'Lider ng bunker', spec:null, player:true, h:1.6, skin:'#c99a74', shirt:'#2f4858', pants:'#26272c', hair:'#1b1410', style:'long', bed:['M',0] },
-  { id:'angel', name:'Angel', role:'Partner ni Isha · Medic', spec:'C', job:'C', h:1.58, skin:'#d1a27c', shirt:'#b5654a', pants:'#3a3f4a', hair:'#241a14', style:'bun', bed:['M',1],
+  { id:'isha', name:'Isha', role:'Lider ng bunker', spec:null, player:true, h:1.6, skin:'#c99a74', shirt:'#2f4858', pants:'#26272c', hair:'#1b1410', style:'long', bed:['MS',0] },
+  { id:'angel', name:'Angel', role:'Partner ni Isha · Medic', spec:'C', job:'C', h:1.58, skin:'#d1a27c', shirt:'#b5654a', pants:'#3a3f4a', hair:'#241a14', style:'bun', bed:['MS',1],
     persona:'partner ni Isha; kalmado, organisado, laging may listahan, malambing kay Isha' },
   { id:'mila', name:'Nanay Mila', role:'Kusinera', spec:'K', job:'K', h:1.5, skin:'#b88a66', shirt:'#7a4e6e', pants:'#3b3734', hair:'#cfcac2', style:'bob', bed:['R1',0],
     persona:'matanda na, lola ng pamilya; maalaga, laging nagtatanong kung kumain ka na, pinakamasarap magluto' },
@@ -291,7 +291,7 @@ const GUESTS = [DADO,
 // ---------------------------------------------------------------- mapa
 const ROOMS = {
   G:{n:'Greenhouse', x:1,z:1,w:11,h:8, floor:'epoxy', light:'#ffd6f0', job:true, verb:'Magdilig at mag-ani'},
-  M:{n:'Master Suite', x:13,z:1,w:12,h:8, floor:'wood', light:'#ffcf9a'},
+  M:{n:'Command Room', x:13,z:1,w:12,h:8, floor:'wood', light:'#ffcf9a'},
   m:{n:'CR ng Master', x:26,z:1,w:3,h:5, floor:'tile', light:'#fff1dc'},
   O:{n:'Oxygen Control', x:30,z:1,w:5,h:5, floor:'metal', light:'#cfeeff', job:true, verb:'I-check ang oxygen'},
   H:{n:'Hobby Room', x:26,z:7,w:9,h:5, floor:'wood', light:'#ffd7a6', job:true, verb:'Mag-relax'},
@@ -326,6 +326,10 @@ const ROOMS = {
   Kn:{n:'Kainan', x:85,z:1,w:14,h:12, floor:'wood', light:'#ffe0b0'},
   Cn:{n:'Cinema', x:85,z:14,w:14,h:9, floor:'wood', light:'#c9a8ff'},
   Kz:{n:'Kids Zone', x:85,z:24,w:14,h:12, floor:'epoxy', light:'#fff0c8', job:true, verb:'Makipaglaro sa mga bata'},
+  MS:{n:'Master Suite', x:100,z:1,w:17,h:12, floor:'wood', light:'#ffcf9a'},
+  MB:{n:'Banyo ng Master', x:100,z:14,w:8,h:6, floor:'tile', light:'#fff1dc'},
+  MO:{n:'Opisina at Library', x:109,z:14,w:8,h:6, floor:'wood', light:'#ffdcae'},
+  Hs:{n:'Ospital', x:100,z:21,w:17,h:14, floor:'tile', light:'#eef6ff'},
   A:{n:'Airlock', x:16,z:31,w:8,h:3, floor:'metal', light:'#ffe9c8'},
   Q:{n:'Quarantine', x:25,z:31,w:4,h:5, floor:'tile', light:'#e4f7ff'},
 };
@@ -336,12 +340,12 @@ BUNK_Z.forEach((z, i) => {
 });
 const DOORS = [[5,9],[18,9],[19,9],[25,2],[32,6],[30,12],[30,15],[25,13],[25,14],[10,13],[5,17],[5,22],[10,24],[18,22],[19,19],[20,19],[21,22],[19,30],[20,30]];
 BUNK_Z.forEach(z => { DOORS.push([40, z + 1], [43, z + 1]); });
-DOORS.push([84, 10], [84, 17], [84, 25], [84, 31], [91, 13], [91, 23], [59, 29], [64, 15], [64, 8], [74, 6], [74, 11], [74, 18], [74, 24], [74, 29], [66, 30], [24, 32], [40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
+DOORS.push([99, 10], [103, 13], [112, 13], [113, 20], [99, 30], [84, 10], [84, 17], [84, 25], [84, 31], [91, 13], [91, 23], [59, 29], [64, 15], [64, 8], [74, 6], [74, 11], [74, 18], [74, 24], [74, 29], [66, 30], [24, 32], [40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
 const JOBS = ['G','K','P','W','S','O','Y','X','C','H','V','U','Lib','Pl','rest'];
 const RELAX = ['H', 'V', 'U', 'Lib', 'Pl', 'Pk', 'Ar', 'Kz'];
 const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', Pk:'Parke', Ar:'Arcade', Kz:'Kids Zone', rest:'Pahinga' };
 
-const GW = 100, GH = 37;
+const GW = 120, GH = 37;
 const cell = new Uint8Array(GW * GH);        // 0 bato, 1 sahig, 2 pader, 4 blast door
 const roomOf = new Array(GW * GH).fill(null);
 const blocked = new Uint8Array(GW * GH);
@@ -737,7 +741,7 @@ function buildRooms() {
   box(.42, .02, .3, MAT.darkSteel, 13.55, .78, 1.55); const lid = box(.42, .28, .015, glow('#bfe3ff'), 13.55, .79, 1.41); lid.rotation.x = -.25;
   box(.38, 2.1, 2.3, MAT.walnut, 24.7, 0, 4.7); for (let r = 0; r < 5; r++) for (let i = 0; i < 9; i++) box(.2, .3, .055, std({ color: pick(['#7a3b2e', '#2f4f6b', '#b08d3a', '#ddd2bb', '#4a6b3a', '#6b3a5a']), roughness: .8 }), 24.5, .12 + r * .4, 3.75 + i * .22);
   rbox(.8, .42, .8, MAT.sofa, 23.45, 0, 4.4, 0, .1); rbox(.8, .5, .2, MAT.sofa, 23.45, .3, 4.0, 0, .08); lamp(23.45, 0, 5.3); block(24, 3, 24, 5); block(23, 4, 23, 4);
-  SPOTS.angelFree = [{ x: 15, z: 6.6, yaw: Math.PI, pose: 'sit', why: 'nanonood ng TV' }, { x: 14.1, z: 2.25, yaw: Math.PI, pose: 'sit', why: 'nagla-laptop' }, { x: 23.45, z: 4.45, yaw: Math.PI, pose: 'sit', why: 'nagbabasa sa mini library' }];
+
 
   // a table for two in the corner of the Master Suite
   cyl(.42, .42, .04, MAT.walnut, 21.9, .72, 6.4, 20); cyl(.05, .07, .72, MAT.darkSteel, 21.9, 0, 6.4, 10); chair(21.25, 6.4, Math.PI / 2); chair(22.55, 6.4, -Math.PI / 2);
@@ -1015,7 +1019,7 @@ function buildRooms() {
   ball(.3, MAT.blanketC, 45.6, .18, 25.4).scale.set(1, .5, 1); ball(.3, MAT.blanketA, 46.4, .18, 26).scale.set(1, .5, 1);
   spot('U', 46, 25, 47.65, 25); spot('U', 45, 27, 44.6, 27.2); spot('U', 46, 27, 45.8, 28.8);
   decal('MUSIKA', 45.9, 29.5, .45, Math.PI / 2);
-  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar(); buildTown(); buildBig();
+  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar(); buildTown(); buildBig(); buildSuite();
   decal('GREENHOUSE', 6.5, 8.2, .8); decal('KUSINA', 6.5, 16.4, .7); decal('PANTRY', 5.5, 20.2, .6);
   decal('TUBIG', 5, 28.3, .7); decal('SOLAR', 14.5, 25.4, .7); decal('SALA', 18, 13.5, .9, 0, .18);
   decal('OXYGEN', 32.5, 3.4, .55); decal('HOBBY', 30.5, 11.4, .6); decal('CLINIC', 30.5, 18.5, .6);
@@ -1265,7 +1269,7 @@ function routine(p, teleport = false) {
     target = { x: 25.5, z: st.qb ? 35 : 32.5 }; after = () => { p.place(b.x, b.z, st.qb ? -Math.PI / 2 : 0); p.setPose(st.turned ? 'stand' : 'sleep', st.turned ? 0 : b.y); };
   } else if (goal === 'clinic') {
     const b = takeSpot(SPOTS.bedC, p) || SPOTS.bedC[0];
-    target = { x: 30.5, z: 16.5 }; after = () => { p.place(b.x, b.z + .05, 0); p.setPose('sleep', .62); };
+    target = b.ax !== undefined ? { x: b.ax, z: b.az } : { x: 30.5, z: 16.5 }; after = () => { p.place(b.x, b.z + .05, 0); p.setPose('sleep', .62); };
   } else if (goal === 'rest') {
     const seat = Math.random() < .6 && takeSpot([...SPOTS.sofa, ...SPOTS.libSeat], p);
     if (seat) { target = approach(seat); after = () => { p.place(seat.x, seat.z, seat.yaw); p.setPose('sit'); }; }
@@ -1368,7 +1372,7 @@ const EVENTS = {
       { t: 'Huwag pansinin.', sub: 'Ligtas tayo. Pero maririnig ito ng lahat.', fx: () => { stress('angel', 10); stress('ria', 14); stress('carly', 14); S.flags.ignored = 1;
         return '<p>Ilang minuto pang kumatok. Tapos, wala na. Walang nagsalita sa hapunan.</p>'; } },
     ] },
-  k3: { kick: 'Kabanata 3 · Master Suite', loc: 'M', title: 'May boses sa radyo', sound: 'chime',
+  k3: { kick: 'Kabanata 3 · Command Room', loc: 'M', title: 'May boses sa radyo', sound: 'chime',
     body: () => '<p>Sa command desk, biglang kumaluskos ang radyo. Boses ng babae, putol-putol: <i>"...ito ang AFP Northern Luzon Command... hindi ligtas ang anumang lugar sa ibaba ng Tarlac... rescue convoy mula Tarlac papuntang Baguio sa ika-100 araw... sa mga may radyo, iulat ang lokasyon at bilang ng inyong grupo..."</i></p><p>Kung sasagot ka, malalaman ng gobyerno na nandito kayo. Pero maririnig din ng kahit sinong may scanner.</p>',
     choices: [
       { t: 'Sumagot.', sub: 'Baka sila ang daan palabas. Baka rin hindi.', fx: () => { S.flags.radioReply = 1; stressAll(-6); return '<p>"Narito kami. Labing-isa." Mahabang static. Tapos: <i>"Natanggap. Hintayin ang susunod na mensahe."</i> Napangiti si Tatay Fred.</p>'; } },
@@ -1445,7 +1449,7 @@ const EVENTS = {
       { t: 'Movie night sa Sala!', sub: 'Kaunting kuryente, malaking ginhawa.', fx: () => { addRes('power', -4); stressAll(-12); S.flags.movie = S.day; return '<p>Nagsiksikan kayo sa sofa. Pinakamalakas ang tawa ni Papa Na sa pinaka-corny na eksena.</p>'; } },
       { t: 'Maaga tayong matulog.', sub: 'Tipid sa kuryente.', fx: () => { stress('yssa', 4); return '<p>Ibinalik ni Yssa ang hard drive sa bulsa niya. "Bukas na lang."</p>'; } },
     ] },
-  date: { kick: 'Master Suite', loc: 'M', title: 'Kayong dalawa lang', min: 8, cool: 3, w: 2, night: 1, good: 1,
+  date: { kick: 'Master Suite', loc: 'MS', title: 'Kayong dalawa lang', min: 8, cool: 3, w: 2, night: 1, good: 1,
     body: () => '<p>Pagbalik mo sa Master Suite, may dalawang tasa ng kape sa mesa at nakasindi ang maliit na lampara. Nakaupo si Angel sa sofa, nakangiti. Nakahiga si Millie sa paanan niya.</p>',
     choices: [
       { t: 'Umupo sa tabi niya.', sub: 'Ilang oras na para sa inyong dalawa.', fx: () => { stress('isha', -20); stress('angel', -20); chime(); return '<p>Hindi ninyo napag-usapan ang bunker kahit isang beses. Pinag-usapan ninyo ang bahay na gagawin ninyo paglabas.</p>'; } },
@@ -1934,7 +1938,7 @@ function nearest() {
   const it = nearItem(); if (it && (!best || it.d < bd)) return it;
   if (best) return best;
   const room = roomAtPos(ISHA.x, ISHA.z);
-  if (room === 'M' && S.min >= 1200 && Math.hypot(ISHA.x - 19, ISHA.z - 3.6) < 1.8) return { kind: 'sleep', label: 'Matulog' };
+  if (((room === 'MS' && Math.hypot(ISHA.x - 108.5, ISHA.z - 4.2) < 2.4) || (room === 'M' && Math.hypot(ISHA.x - 19, ISHA.z - 3.6) < 1.8)) && S.min >= 1200) return { kind: 'sleep', label: 'Matulog' };
   if (room && ROOMS[room].job && SPOTS[room]) {
     const s = SPOTS[room].find(s => Math.hypot(s.x - ISHA.x, s.z - ISHA.z) < 1.3);
     if (s) { const fix = S.task && S.task.room === room, cw = cookWindow(); return { kind: 'work', room, label: fix ? 'Ayusin' : room === 'K' && cw >= 0 ? 'Magluto ng ' + MEALS[cw].n.toLowerCase() : ROOMS[room].verb, s }; }
@@ -2056,7 +2060,7 @@ function endDay() {
     if (S.flags.ignored && !S.done.box && S.day >= 10) queueEvent('box');
     save(); saveDayStart();
     npcs().forEach(id => { const p = P[id]; releaseSpot(p); p.goal = null; const room = p.def.bed[0], sp = room === 'M' ? SPOTS.M[0] : SPOTS[room][0]; p.place(sp.x, sp.z, sp.yaw || 0); p.setPose('stand'); });
-    ISHA.place(18.5, 3.7, Math.PI); ISHA.setPose('stand');
+    ISHA.place(108.5, 4.4, Math.PI); ISHA.setPose('stand');
     showDayCard(`ARAW ${S.day}`, `06:00 · ${S.day < 100 && !S.flags.noConvoy ? `${100 - S.day} ARAW BAGO ANG CONVOY` : `${S.day - 6} ARAW SA ILALIM NG LUPA`} · SA LABAS: ${PH_TXT[PH()].toUpperCase()}`, `<b>Kahapon</b><br>${lines.join('<br>')}${warn.length ? '<br><br><b>Bantayan</b><br>' + warn.join('<br>') : ''}<br><br><b>Misyon ngayon</b><br>${misHTML()}`, () => { routineAll(); });
   }, 1200);
 }
@@ -2144,8 +2148,8 @@ function buildExtraRooms() {
   spot('Pl', 45, 33, 45.2, 34.9); spot('Pl', 46, 33, 47.4, 34.4); spot('Pl', 44, 33, 45.2, 34.9); spot('Pl', 46, 31, 45.9, 32.6); spot('Pl', 44, 31, 45.9, 32.6);
 
   // toilets and showers (master CR, women's, men's)
-  SPOTS.toilet = { m: [{ x: 26.45, z: 1.62, yaw: 0, taken: null }], Bw: [], Bm: [] };
-  SPOTS.shower = { m: [{ x: 28.4, z: 2.6, yaw: -Math.PI / 2, taken: null }], Bw: [], Bm: [] };
+  SPOTS.toilet = { m: [{ x: 26.45, z: 1.62, yaw: 0, taken: null }], MB: [{ x: 107.4, z: 14.75, yaw: 0, taken: null }], Bw: [], Bm: [] };
+  SPOTS.shower = { m: [{ x: 28.4, z: 2.6, yaw: -Math.PI / 2, taken: null }], MB: [{ x: 101, z: 18.9, yaw: 0, taken: null }], Bw: [], Bm: [] };
   for (const [z0, k] of [[21, 'Bw'], [26, 'Bm']]) for (let i = 0; i < 5; i++) {
     SPOTS.toilet[k].push({ x: 23.5 + i, z: z0 + .62, yaw: 0, taken: null });
     SPOTS.shower[k].push({ x: 23.5 + i, z: z0 + 3.5, yaw: Math.PI, taken: null });
@@ -2178,7 +2182,7 @@ function goPoint(x, z) {
 
 // ---------------------------------------------------------------- needs: eating, peeing, pooping
 const FEMALE = new Set(['isha', 'angel', 'mila', 'su', 'rika', 'ria', 'monica', 'carly', 'jen', 'abby', 'yssa', 'rosa', 'bea']);
-const crOf = id => (id === 'isha' || id === 'angel') ? 'm' : FEMALE.has(id) ? 'Bw' : 'Bm';
+const crOf = id => (id === 'isha' || id === 'angel') ? 'MB' : FEMALE.has(id) ? 'Bw' : 'Bm';
 const mealSoon = () => MEALS.some(m => m.at - S.min > 0 && m.at - S.min < 60);
 function needPlan(p, st) {
   if (st.needGo === 'snack') { const s = { x: 2.6, z: 14.6 }; return { target: s, after: () => { p.yaw = -Math.PI / 2; p.setPose('work'); p.useUntil = S.min + 8; } }; }
@@ -2259,6 +2263,12 @@ function setupItems() {
   townItems();
   item(14, 16.6, 'Manood ng TV', () => tvSheet('L'), { r: 1.5 });
   item(15, 5.4, 'Manood ng TV', () => tvSheet('M'), { r: 1.5 });
+  item(102.4, 6.5, 'Manood ng TV kasama si Angel', () => { ISHA.place(103.2, 6, -Math.PI / 2); ISHA.setPose('sit'); busy(3, () => { advance(45); addRes('power', -1); stress('isha', -10); if (S.people.angel) stress('angel', -8); toast(pick(['Romcom ang pinili ni Angel. Nakatulog siya sa balikat mo bago matapos.', 'Teleserye marathon sa kwarto ninyo. Si Millie, nakapatong sa inyong dalawa.', 'Lumang concert DVD. Sabay kayong kumanta ni Angel.']), 'good'); save(); }, 'sit'); }, { r: 1.2 });
+  item(113.6, 8.7, 'Kumain kasama si Angel', () => { ISHA.place(112.95, 9.6, Math.PI / 2); ISHA.setPose('sit'); busy(3, () => { advance(40); addRes('food', -1); stress('isha', -12); if (S.people.angel) { stress('angel', -12); if (S.people.angel.mood) clearMood('angel'); } toast(pick(['Candlelight dinner kayo ni Angel. "Kahit de-lata, basta ikaw ang kasama."', 'Nagluto si Angel ng paborito mong ulam. Kayong dalawa lang, at si Millie sa paanan.', '"Bee, pag-labas natin, ganito pa rin tayo, ha?" sabi ni Angel.']), 'good'); save(); }, 'sit'); }, { r: .9 });
+  item(103.3, 17.4, 'Mag-jacuzzi kasama si Angel', () => { ISHA.place(105.3, 17.4, 0); busy(3.5, () => { advance(45); addRes('water', -2); addRes('power', -1); stress('isha', -15); if (S.people.angel) { stress('angel', -15); if (S.people.angel.mood) clearMood('angel'); } toast(pick(['Jacuzzi kayo ni Angel. "Parang nag-hotel lang tayo, Bee."', 'Bula, kandila, at si Angel. Nakalimutan mo saglit ang mga zombie.', 'Magkatabi kayo ni Angel sa jacuzzi, nag-uusap tungkol sa bahay na itatayo ninyo paglabas.']), 'good'); unstick(ISHA); save(); }, 'sit'); }, { r: .8 });
+  item(101.6, 15.6, 'Magbabad sa bathtub', () => { ISHA.place(100.5, 15.6, 0); busy(3, () => { advance(30); addRes('water', -2); stress('isha', -10); toast(pick(['Mainit na tubig at bula. Nakatulog ka halos sa bathtub.', 'Nagbabad ka habang nakikinig sa lumang kanta.', 'Pumasok si Millie at umupo sa tabi ng bathtub. Bantay mo raw siya.']), 'good'); unstick(ISHA); save(); }, 'sleep'); }, { r: .8 });
+  item(110.4, 16, 'Mag-laptop', () => { ISHA.place(110.4, 15.35, Math.PI); ISHA.setPose('sit'); busy(2, () => { advance(30); stress('isha', -6); toast(pick(['Tiningnan mo ang mga lumang litrato ninyo ni Angel sa laptop.', 'Naglaro ka ng offline na game. Talo ka pa rin.', 'Isinulat mo sa journal ang lahat ng nangyari ngayong linggo.']), 'good'); save(); }, 'sit'); }, { r: .9 });
+  item(114, 16.1, 'Magbasa ng libro', () => { ISHA.place(113.2, 17, Math.PI); ISHA.setPose('sit'); busy(2.5, () => { advance(45); stress('isha', -8); toast(pick(['Isang kabanata ng lumang nobela. Nakalimutan mo ang oras.', 'Binasa mo nang malakas ang tula para kay Angel.', 'Libro ng mga recipe. Gutom ka na tuloy.']), 'good'); save(); }, 'sit'); }, { r: .9 });
   item(21.9, 5.5, 'Kumain kasama si Angel', () => { ISHA.place(21.25, 6.4, Math.PI / 2); ISHA.setPose('sit'); busy(3, () => { advance(40); addRes('food', -1); stress('isha', -12); if (S.people.angel) { stress('angel', -12); if (S.people.angel.mood) clearMood('angel'); } toast(pick(['Candlelight dinner kayo ni Angel. "Kahit de-lata, basta ikaw ang kasama."', 'Nagluto si Angel ng paborito mong ulam. Kayong dalawa lang, at si Millie sa paanan.', 'Kape at kuwentuhan sa mesa ninyo hanggang hatinggabi.', '"Bee, pag-labas natin, ganito pa rin tayo, ha?" sabi ni Angel.']), 'good'); save(); }, 'sit'); }, { r: .9 });
   item(32, 33.5, 'Manood sa Sinehan', () => tvSheet('V'), { r: 1.6 });
   item(12.7, 17.4, 'Umupo', () => sitAt(12.2, 17.4, Math.PI / 2, 'Umupo ka sa sofa.'), { r: .8 });
@@ -2288,8 +2298,8 @@ function setupItems() {
   item(46.1, 31.6, 'Magdrawing sa chalkboard', () => play('chalk'), { r: .8 });
   item(24.2, 16.7, 'Tingnan ang board', familySheet, { r: .9 });
   item(17.5, 31.9, 'Ekspedisyon', expSheet, { r: .8 });
-  for (const k of ['m', 'Bw', 'Bm']) {
-    for (const s of SPOTS.shower[k]) item(k === 'm' ? 27.4 : s.x, k === 'm' ? 2.5 : s.z - 1, 'Maligo sa rain shower', () => shower(s), { r: .7 });
+  for (const k of ['m', 'MB', 'Bw', 'Bm']) {
+    for (const s of SPOTS.shower[k]) item(k === 'm' ? 27.4 : k === 'MB' ? 102.3 : s.x, k === 'm' ? 2.5 : k === 'MB' ? 18.9 : s.z - 1, 'Maligo sa rain shower', () => shower(s), { r: .7 });
   }
   item(27.3, 3.6, 'Magbabad sa bathtub', () => { ISHA.place(26.45, 4.3, 0); busy(3, () => { advance(30); addRes('water', -2); stress('isha', -10); toast(pick(['Mainit na tubig at bula. Nakatulog ka halos sa bathtub.', 'Nagbabad ka habang nakikinig sa lumang kanta. Ang sarap.', 'Pumasok si Millie at umupo sa tabi ng bathtub. Bantay mo raw siya.']), 'good'); unstick(ISHA); save(); }, 'sleep'); }, { r: .7 });
   item(27.6, 3.9, 'Mag-jacuzzi kasama si Angel', () => { ISHA.place(28.05, 5, 0); busy(3.5, () => { advance(45); addRes('water', -2); addRes('power', -1); stress('isha', -15); if (S.people.angel) { stress('angel', -15); if (S.people.angel.mood) clearMood('angel'); } toast(pick(['Jacuzzi kayo ni Angel. "Parang nag-hotel lang tayo, Bee."', 'Bula, kandila, at si Angel. Nakalimutan mo saglit ang mga zombie.', 'Magkatabi kayo ni Angel sa jacuzzi, nag-uusap tungkol sa bahay na itatayo ninyo paglabas.']), 'good'); unstick(ISHA); save(); }, 'sit'); }, { r: .7 });
@@ -2395,7 +2405,7 @@ const newsLine = d => (Math.random() < .6 ? pick(NEWS_PH[PH()]) : pick(NEWS))(d)
 function radioSheet() {
   busy(1.2, () => { advance(10); const n = pick(NEWS)(S.day); toast('Radyo: ' + n); stress('isha', -2); });
 }
-function nap() { ISHA.place(18.55, 2.3, 0); ISHA.setPose('sleep', .66); busy(1.8, () => { advance(60); stress('isha', -10); toast('Nakaidlip ka nang isang oras.', 'good'); unstick(ISHA); }, 'sleep'); ISHA.setPose('sleep', .66); }
+function nap() { ISHA.place(107.9, 2.4, 0); ISHA.setPose('sleep', .66); busy(1.8, () => { advance(60); stress('isha', -10); toast('Nakaidlip ka nang isang oras.', 'good'); unstick(ISHA); }, 'sleep'); ISHA.setPose('sleep', .66); }
 function cribUse() {
   if (S.flags.diaper) busy(1.6, () => { S.flags.diaper = 0; const b = S.people.butchukok; if (b) { b.bl = 0; b.bw = Math.min(b.bw, 15); } stress('monica', -4); stress('butchukok', -10); toast('Pinalitan mo ang diaper ni Butchukok. Ngumiti siya sa iyo.', 'good'); });
   else { mis('kids'); stress('isha', -5); stress('butchukok', -6); toast(pick(['Pinatawa mo si Butchukok. "Da-da!"', 'Hinawakan ni Butchukok ang daliri mo at ayaw bitawan.', 'Nag-peekaboo kayo. Tawa siya nang tawa.'])); }
@@ -2555,13 +2565,13 @@ Object.assign(EVENTS, {
       { t: 'Iturok ang dalawang antiviral', sub: 'Babalik siya. Kailangan ng 2.', fx: () => { const id = S.flags.turnWho; if ((S.anti || 0) < 2) return `<p>Isa lang ang meron kayo${S.anti ? '' : ', o wala pa'}. Kailangan ninyong maghanap pa. Nakatali muna si ${N(id)} sa Clinic.</p>`; cure(id); closeSheet(); return `<p>Isang oras na nanginig si ${N(id)}. Tapos, mahina: <i>"Isha...?"</i> Umiyak ang lahat sa Clinic.</p>`; } },
       { t: 'Itali muna sa Clinic', sub: 'Hindi siya makakatrabaho. Bigat sa lahat.', fx: () => { const id = S.flags.turnWho; stressAll(10); if (PAIRS[id]) setMood(PAIRS[id], 'lungkot', `zombie na si ${N(id)}`); return `<p>Ikinandado ninyo ang Clinic. Gabi-gabi, naririnig ng lahat ang ungol ni ${N(id)}. Maghanap ng antiviral sa ospital o police station.</p>`; } },
     ] },
-  zLab1: { kick: 'Master Suite', loc: 'M', title: 'Boses mula sa Clark', force: 1, sound: 'chime',
+  zLab1: { kick: 'Command Room', loc: 'M', title: 'Boses mula sa Clark', force: 1, sound: 'chime',
     body: () => '<p>Bagong frequency. Babae, pagod pero malinaw: <i>"Ito si Dr. Liza Ramos, virologist, mula sa nasunog na lab sa Clark. Doon nagsimula ang Z-virus, at alam ko kung paano ito tapusin. Kailangan ko ng dugo ng taong nakagat pero naligtas ng antiviral. Sa sinumang nakikinig..."</i></p><p>Napatingin si Angel sa iyo. "Kung may lunas, Bee, hindi na kailangang matakot ng mga bata."</p>',
     choices: [
       { t: 'Sumagot: tutulong kami', sub: 'Magsisimula ang paghahanap ng lunas.', fx: () => { S.flags.lab = 1; stressAll(-6); return '<p><i>"Salamat. Salamat. Itala ninyo ang bawat kagat at bawat lunas. Kokontakin ko kayo ulit."</i></p>'; } },
       { t: 'Makinig lang', sub: 'Baka patibong. Baka hindi.', fx: () => { S.flags.lab = 0; return '<p>Isinulat ni Angel ang frequency. "Kung magbago ang isip mo, Bee."</p>'; } },
     ] },
-  zLab2: { kick: 'Master Suite', loc: 'M', title: 'Ang kailangan ni Dr. Ramos', force: 1, sound: 'chime',
+  zLab2: { kick: 'Command Room', loc: 'M', title: 'Ang kailangan ni Dr. Ramos', force: 1, sound: 'chime',
     body: () => `<p><i>"${S.flags.lab ? 'Isha, si Liza ito.' : 'Sa sinumang nakikinig, si Dr. Ramos ito.'} Malapit na ako. Kailangan ko ng isang taong naligtas ng antiviral, at dalawang dosis pa para sa pagsubok. Iwan ninyo sa lumang kapilya, ako na ang kukuha."</i></p><p>${S.flags.cured ? 'May naligtas na kayo, kaya may dugong maibibigay si Angel.' : 'Wala pa kayong naliligtas sa kagat. Pero puwede pa ring magbigay ng antiviral.'}</p>`,
     choices: [
       { t: 'Ibigay ang sample at 2 antiviral', sub: 'Mabigat, pero baka ito ang lunas.', fx: () => { if ((S.anti || 0) < 2) { S.flags.labHelp = .5; return '<p>Kulang kayo sa antiviral. Dugo lang ang naiwan ni Angel sa kapilya. "Kulang pero salamat," sabi ni Dr. Ramos sa radyo.</p>'; } S.anti -= 2; S.flags.labHelp = 1; stressAll(-4); return '<p>Iniwan nina Carlo at AJ ang kahon sa kapilya. Pagbalik nila kinaumagahan, may sulat: <i>"Salamat. Babalikan ko kayo."</i></p>'; } },
@@ -2595,7 +2605,7 @@ Object.assign(EVENTS, {
       { t: 'Tumayo sa harap ng lahat', sub: '"Hindi tayo susuko. Tuloy ang buhay dito."', fx: () => { S.flags.noConvoy = 1; stressAll(14); stress('isha', -6); return '<p>Walang pumalakpak. Pero isa-isa silang tumango. Kinabukasan, bumalik ang lahat sa trabaho.</p>'; } },
       { t: 'Hayaang umiyak muna ang lahat', sub: 'Isang araw na pahinga. Mabigat, pero totoo.', fx: () => { S.flags.noConvoy = 1; stressAll(20); npcs().forEach(id => { if (!defOf(id).kid) S.people[id].job = 'rest'; }); routineAll(); return '<p>Walang nagtrabaho buong araw. Sa gabi, may nagsimulang kumanta sa Sala. Unti-unti, sumabay ang lahat.</p>'; } },
     ] },
-  zSilence: { kind: 'night', kick: 'Master Suite', loc: 'M', title: 'Tahimik ang radyo', force: 1,
+  zSilence: { kind: 'night', kick: 'Command Room', loc: 'M', title: 'Tahimik ang radyo', force: 1,
     body: () => '<p>Apat na araw nang walang boses sa radyo. Kahit ang AFP. Kahit si Mang Lando. Puro static.</p><p>Tinanong ni Carly: <i>"Tita Isha, tayo na lang po ba ang natitira?"</i></p>',
     choices: [
       { t: '"Hindi. Maraming katulad natin, nagtatago lang."', sub: 'Pag-asa para sa mga bata.', fx: () => { stress('carly', -10); stress('ria', -10); return '<p>Tumango si Carly at niyakap si Millie. Gabi-gabi, si Angel na ang nakikinig sa radyo.</p>'; } },
@@ -2776,7 +2786,7 @@ Object.assign(CHAPTERS, { 100: { morning: 'zNoConvoy' }, 104: { night: 'zSilence
 // ---------------------------------------------------------------- more story: each arc runs over several days and remembers your choice
 function migoDef() { const d = newbieDef('Migo', { role: 'Anak ni Nelson', job: 'W', spec: 'W', perk: 'parts' }); d.id = 'migo'; d.fem = false; d.h = 1.7; d.style = 'short'; d.bed = d.bed || ['Lib', 0]; d.thief = false; return d; }
 Object.assign(EVENTS, {
-  zMigo1: { kick: 'Master Suite', loc: 'M', title: 'Boses ni Migo', force: 1, sound: 'chime',
+  zMigo1: { kick: 'Command Room', loc: 'M', title: 'Boses ni Migo', force: 1, sound: 'chime',
     body: () => '<p>Hatinggabi. Bagong boses sa radyo, binata, pabulong: <i>"Papa? Papa, si Migo ito. Nasa lumang paaralan ako sa Capas, sa ikalawang palapag. May kasama akong tatlong bata. Hindi kami makababa. Puno ng zombie ang hagdan."</i></p><p>Nabitawan ni Nelson ang tasa niya. Ilang taon na silang hindi nag-uusap ng anak niya.</p>',
     choices: [
       { t: '"Kapit lang, Migo. Pupuntahan ka namin."', sub: 'Pangako. Kailangan mong tuparin.', fx: () => { S.flags.migo = 'promise'; stress('nelson', -20); return '<p>Umiyak si Nelson sa radyo. "Anak, pasensya na sa lahat." Ang sagot ni Migo: <i>"Papa, bilisan mo lang."</i></p>'; } },
@@ -2853,7 +2863,7 @@ Object.assign(EVENTS, {
       { t: 'Bigyan ng antiviral sa airlock', sub: '1 antiviral. Kaaway mo siya dati.', fx: () => { if (!(S.anti || 0)) return '<p>Wala na kayong antiviral. Umupo si Jomar sa harap ng pinto at hindi na umalis. Kinaumagahan, wala na siya.</p>'; S.anti--; S.flags.jomarSaved = 1; stress('aj', -20); stressAll(-4); return '<p>Iniwan ni AJ ang antiviral sa airlock. Bago umalis, yumuko si Jomar sa camera. <i>"Hindi ko ito makakalimutan, Isha."</i></p>'; } },
       { t: 'Hindi. Hindi pagkatapos ng lahat', sub: 'Itatago ninyo ang antiviral.', fx: () => { setMood('aj', 'lungkot', 'hinayaan nilang maging zombie si Jomar'); return '<p>Matagal na nakatayo si Jomar. Tapos, naglakad siya papunta sa dilim. Hindi na nagsalita si AJ buong gabi.</p>'; } },
     ] },
-  zLook: { kind: 'night', kick: 'Master Suite', loc: 'M', title: 'Kayong dalawa', force: 1, good: 1,
+  zLook: { kind: 'night', kick: 'Master Suite', loc: 'MS', title: 'Kayong dalawa', force: 1, good: 1,
     body: () => { const done = [S.flags.migoOK && 'nailigtas ninyo si Migo', S.flags.vaccine && 'may lunas na dahil sa inyo', S.flags.jomarSaved && 'pinatawad mo si Jomar', S.flags.bridgeDone && 'naayos ninyo ang tulay', S.baby || S.people.baby ? `ipinanganak si ${N('baby')}` : null].filter(Boolean);
       return `<p>Gising pa si Angel nang pumasok ka sa Master Suite. Nakahiga si Millie sa paanan ninyo.</p><p><i>"Bee, naaalala mo pa ba ang Araw 7? Takot na takot tayo noon."</i></p><p>${done.length ? `Isa-isa niyang binilang: ${done.join(', ')}.` : 'Hindi lahat ng nangyari ay maganda. Pero nandito pa rin kayo.'} <i>"Ang galing mo, Bee."</i></p>`; },
     choices: [{ t: 'Yakapin siya', sub: '', fx: () => { stress('isha', -25); stress('angel', -25); clearMood('angel'); return '<p>Walang ungol sa labas ngayong gabi. Tahimik lang, kayong dalawa at si Millie.</p>'; } }] },
@@ -2867,7 +2877,7 @@ Object.assign(EVENTS, {
       { t: 'Si Carlo at ang shotgun, sa grille', sub: '1 bala. Mabilis pero maingay.', fx: () => { if (S.ammo < 1) { S.flags.fanBroken = 1; S.timers.push({ kind: 'fan', h: 6 }); stressAll(8); return '<p>Walang bala! Hinampas ni Carlo ng bolo sa grille. Napatay ang zombie, pero sira ang fan. Anim na oras bago maayos.</p>'; } S.ammo--; stressAll(3); return '<p>BANG. Tumahimik ang duct. Kinailangan nina Paolo at Nelson na hilahin ang katawan palabas. Walang kumain ng hapunan.</p>'; } },
       { t: 'Isara ang damper at hayaang mamatay doon', sub: 'Walang bala, pero bababa ang oxygen.', fx: () => { addRes('o2', -18); S.flags.fanBroken = 1; S.timers.push({ kind: 'fan', h: 8 }); stress('paolo', 10); return '<p>Isinara ninyo ang damper. Buong araw, mahina ang hangin at amoy-bulok ang Oxygen Control.</p>'; } },
     ] },
-  zBark: { kind: 'trouble', kick: 'Master Suite', loc: 'M', title: 'Hindi tumitigil si Millie', min: 9, cool: 5, w: 2,
+  zBark: { kind: 'trouble', kick: 'Master Suite', loc: 'MS', title: 'Hindi tumitigil si Millie', min: 9, cool: 5, w: 2,
     body: () => '<p>Buong gabi tumahol si Millie sa pinto. Naaamoy niya ang mga zombie sa labas. Sabi ni Carlo, naririnig daw ito hanggang sa kalye.</p>',
     choices: [
       { t: 'Patulugin si Millie sa tabi mo', sub: 'Ikaw ang magbabantay sa kanya. Pagod ka bukas.', fx: () => { stress('isha', 10); return '<p>Buong gabi mong hinahaplos si Millie hanggang tumahimik siya. Hindi ka halos nakatulog.</p>'; } },
@@ -2967,7 +2977,7 @@ Object.assign(EVENTS, {
       { t: 'Salu-salo ngayong gabi!', sub: '-15 pagkain, -10 karne. Malaking ginhawa.', fx: () => { addRes('food', -15); addRes('meat', -10); stressAll(-20); npcs().forEach(id => clearMood(id)); chime(); return '<p>Lechon kawali, pancit, at leche flan na gawa ni Nanay Mila. Kantahan hanggang hatinggabi. Walang galit, walang lungkot ngayong gabi.</p>'; } },
       { t: 'Simpleng dasal at pasasalamat', sub: 'Walang gastos.', fx: () => { stressAll(-8); return '<p>Nagdasal kayo nang magkakahawak-kamay. Si Mama Jen ang nanguna.</p>'; } },
     ] },
-  mRadio2: { kind: 'trouble', kick: 'Master Suite', loc: 'M', title: 'Kumpirmado sa radyo', force: 1, sound: 'chime',
+  mRadio2: { kind: 'trouble', kick: 'Command Room', loc: 'M', title: 'Kumpirmado sa radyo', force: 1, sound: 'chime',
     body: () => '<p><i>"...AFP Northern Luzon Command. Kumpirmado: aalis ang convoy sa Tarlac sa Araw 100. Sa mga grupo sa ilalim ng lupa, iulat ang inyong bilang at lokasyon..."</i></p>',
     choices: [
       { t: 'Iulat ang bilang at lokasyon', sub: 'Darating sila mismo sa pinto ninyo.', fx: () => { S.flags.radioReply = 1; stressAll(-10); return `<p>"${people().length} katao at isang aso." Mahabang static, tapos: <i>"Natanggap. Kita-kits sa Araw 100."</i> Umiyak si Nanay Mila sa tuwa.</p>`; } },
@@ -3557,6 +3567,51 @@ function buildTown() {
   for (const [x, z] of [[62.6, 32.8], [62.6, 34.6], [70.6, 32.8], [70.6, 34.6]]) { box(4, 1.5, .5, MAT.cabinet, x, 0, z); for (let i = 0; i < 12; i++) box(.24, .26, .2, C(pick(['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#e67e22', '#ecf0f1'])), x - 1.7 + (i % 6) * .68, .35 + Math.floor(i / 6) * .55, z, 0); block(Math.floor(x - 2), Math.floor(z), Math.floor(x + 1.9), Math.floor(z)); }
   rbox(1.6, .95, .6, wood, 67.9, 0, 31.6, 0, .03); box(.4, .3, .3, black, 67.9, .95, 31.6); decal('MINI-MART', 66.9, 34.2, .4);
 }
+function buildSuite() {
+  const C = c => std({ color: c, roughness: .7 }), G = c => glow(c), wood = MAT.walnut, white = MAT.white;
+  // Master Suite: a king bed, a TV lounge, a table for two, a dresser, Millie's corner
+  box(5.2, .012, 4, MAT.rug, 108.5, 0, 3);
+  rbox(3.1, 1.25, .15, MAT.sofa, 108.5, 0, 1.1, 0, .05); rbox(2.9, .36, 2.5, wood, 108.5, 0, 2.4, 0, .04); rbox(2.7, .26, 2.3, MAT.linen, 108.5, .36, 2.42, 0, .08); rbox(2.75, .09, 1.5, MAT.duvet, 108.5, .62, 2.95, 0, .04);
+  for (const x of [107.8, 109.2]) rbox(.75, .16, .38, MAT.linen, x, .64, 1.55, 0, .07);
+  for (const x of [106.45, 110.55]) { rbox(.55, .55, .45, wood, x, 0, 1.35, 0, .03); lamp(x, .55, 1.35); }
+  block(106, 1, 110, 3);
+  SPOTS.beds.MS = [{ x: 107.9, y: .66, z: 2.4, ax: 107.9, az: 4.2 }, { x: 109.1, y: .66, z: 2.4, ax: 109.1, az: 4.2 }];
+  SPOTS.MS = [{ x: 108.5, z: 4.6, yaw: Math.PI, taken: null }];
+  SPOTS.angelFree = [{ x: 103.2, z: 7, yaw: -Math.PI / 2, pose: 'sit', why: 'nanonood ng TV' }, { x: 110.4, z: 15.35, yaw: Math.PI, pose: 'sit', why: 'nagla-laptop sa opisina' }, { x: 114.8, z: 17, yaw: Math.PI, pose: 'sit', why: 'nagbabasa sa library' }];
+  box(.1, 1.4, 2.8, MAT.black, 100.12, .5, 6.5); FX.tvMS = box(.01, 1.3, 2.65, G('#ff9a5c'), 100.19, .55, 6.5); block(100, 5, 100, 7);
+  rbox(.95, .42, 2.7, MAT.sofa2, 103.2, 0, 6.5, 0, .1); rbox(.22, .5, 2.7, MAT.sofa2, 103.62, .3, 6.5, 0, .08); block(103, 5, 103, 7);
+  rbox(.6, .38, 1.2, wood, 101.9, 0, 6.5, 0, .03); box(1.8, .012, 3, MAT.rug2, 102.3, 0, 6.5);
+  box(2.2, 2.2, .6, wood, 114.6, 0, 1.33); box(1.6, .85, .5, wood, 116.2, 0, 4.2); box(.7, .9, .03, MAT.glass, 116.6, 1.1, 4.2); block(113, 1, 115, 1); block(116, 3, 116, 4);
+  cyl(.42, .42, .04, wood, 113.6, .72, 9.6, 20); cyl(.05, .07, .72, MAT.darkSteel, 113.6, 0, 9.6, 10); chair(112.95, 9.6, Math.PI / 2); chair(114.25, 9.6, -Math.PI / 2);
+  cyl(.03, .03, .14, white, 113.6, .76, 9.6, 8); ball(.03, G('#ffcf6a'), 113.6, .93, 9.6); ball(.07, G('#ff7aa8'), 113.45, .82, 9.45); block(113, 9, 114, 9);
+  cyl(.55, .58, .16, MAT.rug2, 115.6, 0, 11.6, 24); cyl(.11, .09, .06, MAT.steel, 116.3, 0, 12.4, 14); cyl(.11, .09, .06, MAT.pipeRed, 116.6, 0, 12.1, 14); ball(.06, MAT.yellow, 114.8, .06, 12.3);
+  plant(100.6, 1.5, 1.1); plant(116.4, 7.2, 1.2); plant(100.6, 12.3, 1); plant(110.8, 12.3, .9);
+  decal('MASTER SUITE', 108.5, 7.4, .5);
+  // Banyo: jacuzzi, bathtub, rain shower, toilet, double sink
+  cyl(1.1, 1.12, .55, white, 105.3, 0, 17.4, 30); FX.jacuzzi2 = cyl(.95, .95, .03, G('#6fd3f2'), 105.3, .5, 17.4, 30); for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; ball(.05, G('#e8fbff'), 105.3 + Math.cos(a) * .6, .55, 17.4 + Math.sin(a) * .6); } block(104, 16, 106, 18);
+  for (const [x, z] of [[104, 19.4], [106.6, 19.4]]) { cyl(.04, .04, .1, white, x, 0, z, 8); ball(.04, G('#ffcf6a'), x, .14, z); }
+  rbox(.85, .55, 1.8, white, 100.5, 0, 15.6, 0, .12); box(.66, .03, 1.6, G('#9fd8ef'), 100.5, .48, 15.6); block(100, 14, 100, 16);
+  box(1.3, .06, 1.2, white, 100.7, 0, 18.9); box(.02, 2, 1.2, MAT.glass, 101.36, 0, 18.9); box(1.3, 2, .02, MAT.glass, 100.7, 0, 18.3); cyl(.24, .24, .02, MAT.steel, 100.7, 2.15, 18.9, 18); block(100, 18, 101, 19);
+  rbox(.4, .42, .55, white, 107.4, 0, 14.45, 0, .12); box(.04, 1.4, .9, MAT.cabinet, 106.95, 0, 14.6); block(107, 14, 107, 14);
+  rbox(.5, .85, 1.8, MAT.cabinet, 107.65, 0, 16.6, 0, .03); for (const z of [16.1, 17.1]) box(.36, .02, .4, white, 107.6, .86, z); box(.03, .9, 1.7, MAT.ledCool, 107.97, 1.2, 16.6); block(107, 16, 107, 17);
+  box(.05, .9, .5, wood, 102.4, .8, 14.06); plant(103.2, 19.5, .7);
+  // Opisina at Library: desk with laptop, shelves, two reading chairs
+  rbox(1.5, .06, .7, wood, 110.4, .73, 14.55, 0, .02); box(.05, .73, .6, wood, 109.75, 0, 14.55); box(.05, .73, .6, wood, 111.05, 0, 14.55);
+  box(.42, .02, .3, MAT.darkSteel, 110.4, .79, 14.6); const lid = box(.42, .28, .015, G('#bfe3ff'), 110.4, .8, 14.45); lid.rotation.x = -.25; chair(110.4, 15.35, Math.PI); block(109, 14, 111, 14);
+  const books = (x, z, alongZ, len) => { box(alongZ ? .38 : len, 2.1, alongZ ? len : .38, wood, x, 0, z); for (let r = 0; r < 5; r++) for (let i = 0; i < Math.floor(len / .22); i++) box(alongZ ? .2 : .055, .3, alongZ ? .055 : .2, std({ color: pick(['#7a3b2e', '#2f4f6b', '#b08d3a', '#ddd2bb', '#4a6b3a', '#6b3a5a']), roughness: .8 }), alongZ ? x - .15 : x - len / 2 + .12 + i * .22, .12 + r * .4, alongZ ? z - len / 2 + .12 + i * .22 : z - .15); };
+  books(116.75, 16.9, true, 5.6); books(110.8, 19.75, false, 3.4); books(115.3, 19.75, false, 2.6); block(116, 14, 116, 19); block(109, 19, 112, 19); block(114, 19, 116, 19);
+  for (const x of [113.2, 114.8]) { rbox(.8, .42, .8, MAT.sofa, x, 0, 17, 0, .1); rbox(.8, .5, .2, MAT.sofa, x, .3, 17.4, 0, .08); block(Math.floor(x), 17, Math.floor(x), 17); }
+  lamp(114, 0, 16.2); box(3, .012, 2, MAT.rug, 114, 0, 17); decal('LIBRARY', 112.5, 18.6, .3);
+  // Ospital: twelve beds, curtains, a nurse station
+  const curtain = std({ color: '#cfe6ee', roughness: .9, transparent: true, opacity: .8, side: THREE.DoubleSide });
+  for (const [z, f] of [[22.15, 1], [33.85, -1]]) for (let i = 0; i < 6; i++) { const x = 101.3 + i * 1.9;
+    box(1, .5, 2.05, white, x, 0, z); rbox(.9, .14, 1.9, MAT.linen, x, .5, z, 0, .05); rbox(.6, .1, .3, MAT.linen, x, .64, z - .75 * f, 0, .05);
+    box(.02, 1.8, 2, curtain, x + .95, .2, z); block(Math.floor(x), Math.floor(z - .9), Math.floor(x), Math.floor(z + .9));
+    SPOTS.bedC.push({ x, z, taken: null, ax: x, az: f > 0 ? 24.4 : 31.5 }); }
+  rbox(3.2, 1, .7, white, 114.4, 0, 27.5, 0, .04); box(.6, .4, .03, MAT.screenGreen, 114, 1.1, 27.3); block(113, 27, 115, 27);
+  box(.6, 1.8, 1.6, MAT.cabinet, 116.6, 0, 24); box(.02, 1, 1.5, MAT.glass, 116.28, .8, 24); block(116, 23, 116, 24);
+  box(10, .012, 1.4, C('#bfe3f0'), 107, 0, 28); decal('OSPITAL', 106, 28, .55);
+}
 function buildBig() {
   const C = c => std({ color: c, roughness: .7 }), G = c => glow(c), wood = MAT.walnut;
   // Kainan: six long tables, 48 seats, a serving counter, so everyone eats together
@@ -3727,13 +3782,13 @@ function makeBaby(name) {
   spawn(def, 31, 17); routine(P.baby); TRAIT.baby = 'ang pinakabagong miyembro ng pamilya, ang pag-asa natin'; OWN.baby = ['*natutulog*'];
 }
 Object.assign(EVENTS, {
-  sig1: { kick: 'Master Suite', loc: 'M', title: 'May signal sa radyo', force: 1, sound: 'chime',
+  sig1: { kick: 'Command Room', loc: 'M', title: 'May signal sa radyo', force: 1, sound: 'chime',
     body: () => '<p>Hatinggabi. Kumaluskos ang radyo sa command desk: tatlong maikli, tatlong mahaba, tatlong maikli. SOS. Tapos, boses ng lalaki: <i>"...may bunker din kami sa may Concepcion... labindalawa kami... sino pa ang nakakarinig..."</i></p><p>Hindi kayo nag-iisa.</p>',
     choices: [
       { t: 'Sumagot at magpakilala', sub: 'Baka sila ang kakampi natin. Baka hindi.', fx: () => { S.flags.sig = 'talk'; stressAll(-5); return '<p>"Nandito rin kami," sabi mo. Mahabang katahimikan, tapos tawa ng ginhawa sa kabila. <i>"Salamat sa Diyos. Ako si Mang Lando."</i> Mag-uusap daw kayo ulit.</p>'; } },
       { t: 'Makinig lang muna', sub: 'Alamin muna kung sino sila.', fx: () => { S.flags.sig = 'listen'; return '<p>Isinulat ni Angel ang lahat ng narinig. Gabi-gabi, makikinig kayo.</p>'; } },
     ] },
-  sig2: { kick: 'Master Suite', loc: 'M', title: 'Humihingi ng tulong ang kabilang bunker', force: 1, sound: 'chime',
+  sig2: { kick: 'Command Room', loc: 'M', title: 'Humihingi ng tulong ang kabilang bunker', force: 1, sound: 'chime',
     body: () => `<p><i>"${S.flags.sig === 'talk' ? 'Isha, si Mang Lando ito.' : 'Sa sinumang nakikinig.'} May batang may mataas na lagnat dito. Ubos na ang gamot namin. Kapalit, may sobra kaming piyesa at bala."</i></p>`,
     choices: [
       { t: 'Magpadala ng gamot sa kalahating daan', sub: 'Iiwan nina Carlo at AJ sa lumang kapilya.', fx: () => { S.flags.sigGood = 1; people().forEach(id => health(id, -3)); S.parts += 3; S.ammo += 4; stress('angel', -6); return '<p>Iniwan nina Carlo at AJ ang gamot sa kapilya. Pagbalik nila kinabukasan, may kahon doon: tatlong piyesa, apat na bala, at sulat-kamay ng bata: "SALAMAT PO."</p>'; } },
@@ -3903,7 +3958,7 @@ function continueGame(saved) {
   for (const id of Object.keys(S.people)) if (S.people[id].away) hideAway(id);
   for (const d of S.extra) if (d.baby && !KID.includes(d.id)) KID.push(d.id);
   if (!S.mis || S.mis.day !== S.day) newMissions();
-  ISHA.place(18.5, 3.7, Math.PI); FX.door.rotation.y = 0; doorAnim(0);
+  ISHA.place(108.5, 4.4, Math.PI); FX.door.rotation.y = 0; doorAnim(0);
   cam.target.set(18.5, 0, 3.7); routineAll(true); refreshWorld(); refreshTask();
   $('#intro').hidden = true;
   showDayCard(`ARAW ${S.day}`, `${hhmm(S.min)} · ITINULOY`, S.flags.restocked ? 'Habang wala ka, may dumating na tulong: puno ulit ang pantry, tubig, baterya at oxygen. Tuloy ang laban.' : 'Nandito pa rin kayong lahat. Tuloy ang laban.', () => routineAll());
