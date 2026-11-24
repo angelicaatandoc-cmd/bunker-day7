@@ -2289,6 +2289,7 @@ function setupItems() {
   item(19, 3.8, 'Umidlip', nap, { r: 1.1, when: () => S.min < 1200 });
   item(38.3, 17.4, () => S.flags.diaper ? 'Palitan ang diaper' : 'Laruin si Butchukok', cribUse, { r: 1 });
   item(() => MILLIE.x, () => MILLIE.z, 'Laruin si Millie', petMillie, { r: 1 });
+  item(115.3, 10.6, 'Ibato ang laruan kay Millie', () => { busy(1.5, () => { advance(15); stress('isha', -7); if (S.people.angel) stress('angel', -3); toast(pick(['Ibinato mo ang squeaky ball. Tumakbo si Millie, ibinalik, at humihingi pa ng isa.', 'Tug of war gamit ang lubid. Panalo si Millie, gaya ng dati.', 'Kinuha ni Millie ang stuffed toy at itinago sa ilalim ng kama ninyo.', 'Inabot mo ang chew bone. Humiga si Millie sa paanan mo at masayang ngumunguya.']), 'good'); save(); }, 'work'); }, { r: 1.3 });
   item(12.2, 32.4, 'Buksan ang Armory', armorySheet, { r: 1.2 });
   item(38.4, 32.4, 'Gumawa ng popcorn', popcorn, { r: .9 });
   item(28.6, 10.4, 'Mag-ping pong', pingpong, { r: 1 });
@@ -3586,6 +3587,13 @@ function buildSuite() {
   cyl(.03, .03, .14, white, 113.6, .76, 9.6, 8); ball(.03, G('#ffcf6a'), 113.6, .93, 9.6); ball(.07, G('#ff7aa8'), 113.45, .82, 9.45); block(113, 9, 114, 9);
   cyl(.55, .58, .16, MAT.rug2, 115.6, 0, 11.6, 24); cyl(.11, .09, .06, MAT.steel, 116.3, 0, 12.4, 14); cyl(.11, .09, .06, MAT.pipeRed, 116.6, 0, 12.1, 14); ball(.06, MAT.yellow, 114.8, .06, 12.3);
   plant(100.6, 1.5, 1.1); plant(116.4, 7.2, 1.2); plant(100.6, 12.3, 1); plant(110.8, 12.3, .9);
+  // Millie's toys: a basket of toys, a rope, squeaky balls, a plush, a chew bone, a tug ring
+  cyl(.32, .26, .34, C('#c8a165'), 116.4, 0, 10.3, 16); for (const [dx, dz, c] of [[-.1, -.05, '#e74c3c'], [.1, .08, '#3498db'], [0, .12, '#f1c40f']]) ball(.1, C(c), 116.4 + dx, .38, 10.3 + dz); block(116, 10, 116, 10);
+  const rope = cyl(.04, .04, .55, C('#e8d5b0'), 114.7, .05, 11.1, 8); rope.rotation.z = Math.PI / 2; rope.rotation.y = .5; ball(.07, C('#c0392b'), 114.45, .07, 11.0); ball(.07, C('#2980b9'), 114.95, .07, 11.25);
+  ball(.08, C('#f1c40f'), 115.1, .08, 12.6); ball(.07, C('#e67e22'), 114.2, .07, 12.2);
+  ball(.13, C('#d9a6c8'), 116.1, .13, 11.2); ball(.07, C('#d9a6c8'), 116.1, .28, 11.12); for (const dx of [-.06, .06]) ball(.035, C('#d9a6c8'), 116.1 + dx, .33, 11.1);
+  const chew = box(.24, .05, .07, white, 114.9, .03, 11.9); chew.rotation.y = -.7;
+  const ring = cyl(.14, .14, .04, C('#27ae60'), 113.9, 0, 11.4, 16); ring.rotation.x = .2;
   decal('MASTER SUITE', 108.5, 7.4, .5);
   // Banyo: jacuzzi, bathtub, rain shower, toilet, double sink
   cyl(1.1, 1.12, .55, white, 105.3, 0, 17.4, 30); FX.jacuzzi2 = cyl(.95, .95, .03, G('#6fd3f2'), 105.3, .5, 17.4, 30); for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; ball(.05, G('#e8fbff'), 105.3 + Math.cos(a) * .6, .55, 17.4 + Math.sin(a) * .6); } block(104, 16, 106, 18);
