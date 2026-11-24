@@ -1173,8 +1173,31 @@ function eff(id) {
 }
 const hhmm = m => `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`;
 function phaseName(m) { return m < 660 ? 'Umaga' : m < 780 ? 'Tanghali' : m < 1080 ? 'Hapon' : m < 1320 ? 'Gabi' : 'Hatinggabi'; }
-function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage blocked: the game still runs, it just won't remember */ } }
-function loadSave() { try { const t = localStorage.getItem(SAVE_KEY); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+function save() { const t = JSON.stringify(S); try { localStorage.setItem(SAVE_KEY, t); localStorage.setItem(SAVE_KEY + '-bak', t); } catch (e) { /* storage blocked: the game still runs, it just won't remember */ } idbPut(t); }
+// a second copy in IndexedDB, in case localStorage is cleared on its own
+let IDB = null;
+try { const rq = indexedDB.open('bunker-day7', 1); rq.onupgradeneeded = () => rq.result.createObjectStore('s'); rq.onsuccess = () => { IDB = rq.result; }; } catch (e) { /* no IndexedDB: localStorage only */ }
+function idbPut(t) { try { IDB && IDB.transaction('s', 'readwrite').objectStore('s').put(t, 'save'); } catch (e) { /* best effort */ } }
+const idbGet = () => new Promise(res => { const go = () => { try { const r = IDB.transaction('s').objectStore('s').get('save'); r.onsuccess = () => res(r.result || null); r.onerror = () => res(null); } catch (e) { res(null); } }; if (IDB) go(); else setTimeout(() => IDB ? go() : res(null), 600); });
+try { navigator.storage?.persist?.(); } catch (e) { /* not supported */ }
+const saveCode = () => 'BUNKER7:' + btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+function readCode(txt) { try { const m = String(txt).trim().match(/BUNKER7:([A-Za-z0-9+/=]+)/); if (!m) return null; const d = JSON.parse(decodeURIComponent(escape(atob(m[1])))); return d && d.people && d.day ? d : null; } catch (e) { return null; } }
+function loadFromData(d) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(d)); sessionStorage.setItem('bunker-auto', '1'); } catch (e) { /* storage blocked */ } idbPut(JSON.stringify(d)); location.reload(); }
+function downloadSave() { const b = new Blob([saveCode()], { type: 'text/plain' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = `bunker-araw-${S.day}.txt`; document.body.appendChild(a); a.click(); a.remove(); }
+function codeSheet(fromIntro) {
+  const html = `<div class="kick">Backup ng save</div><h2 class="sh-title">${fromIntro ? 'Ibalik ang save' : 'Save code'}</h2>
+    <div class="sh-body">${fromIntro ? 'I-paste ang save code, o piliin ang save file na na-download mo.' : 'Hindi ito nabubura kahit burahin ng iPhone ang laman ng browser. Kopyahin at itago sa Notes, o i-download bilang file.'}</div>
+    ${fromIntro ? '' : `<div class="choices"><button class="choice primary" id="cCopy"><b>Kopyahin ang save code</b><span>Araw ${S.day} · i-paste sa Notes o sa chat</span></button><button class="choice" id="cFile"><b>I-download ang save file</b><span>Mapupunta sa Files app</span></button></div>`}
+    <div class="sec">${fromIntro ? 'Save code' : 'May save code ka? Ilagay dito para i-load'}</div>
+    <form class="say" id="codeForm"><input id="codeIn" autocomplete="off" placeholder="BUNKER7:..."><button>Load</button></form>
+    <div class="choices"><label class="choice" style="cursor:pointer"><b>Pumili ng save file</b><span>.txt na galing sa "I-download"</span><input type="file" id="codeFile" accept=".txt,text/plain" hidden></label></div>`;
+  openSheet(html);
+  if ($('#cCopy')) $('#cCopy').onclick = async () => { const c = saveCode(); try { await navigator.clipboard.writeText(c); toast('Nakopya ang save code! I-paste mo sa Notes.', 'good'); } catch (e) { $('#codeIn').value = c; $('#codeIn').select(); toast('Kopyahin ang code sa kahon sa ibaba.'); } };
+  if ($('#cFile')) $('#cFile').onclick = () => { downloadSave(); toast('Na-download ang save file.', 'good'); };
+  $('#codeForm').onsubmit = e => { e.preventDefault(); const d = readCode($('#codeIn').value); if (!d) return toast('Hindi mabasa ang save code. Kopyahin ulit nang buo.', 'bad'); loadFromData(d); };
+  $('#codeFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; const d = readCode(await f.text()); if (!d) return toast('Hindi save file ng Bunker ito.', 'bad'); loadFromData(d); };
+}
+function loadSave() { try { const t = localStorage.getItem(SAVE_KEY) || localStorage.getItem(SAVE_KEY + '-bak'); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
 
 // ---------------------------------------------------------------- NPC routines
 function releaseSpot(p) { if (p.spot) { p.spot.taken = null; p.spot = null; } }
@@ -1201,7 +1224,7 @@ function routine(p, teleport = false) {
     target = s; after = () => { p.place(s.x, s.z, s.yaw); p.setPose('sit'); };
   } else if (goal === 'bed') {
     const [room, slot] = p.def.bed, b = SPOTS.beds[room][slot];
-    const door = room === 'M' ? { x: 18.5 + slot, z: 3.6 } : SPOTS[room][0];
+    const door = room === 'M' ? { x: 18.5 + slot, z: 3.6 } : b.ax !== undefined ? { x: b.ax, z: b.az } : SPOTS[room][0];
     target = door; after = () => { p.place(b.x, b.z, 0); p.setPose('sleep', b.y); };
   } else if (goal === 'quar') {
     const beds = st.qb ? SPOTS.bedQB : SPOTS.bedQA, b = takeSpot(beds, p) || beds[0];
@@ -3135,11 +3158,18 @@ function moodLine(id) { const st = S.people[id]; if (id === 'isha' || !st) retur
 const SLOT = i => SAVE_KEY + '-slot' + i;
 function readSlot(i) { try { const t = localStorage.getItem(SLOT(i)); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
 const slotLine = s => s ? `Araw ${s.day} · ${hhmm(s.min)} · ${new Date(s.t).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : 'Walang laman';
+function storageWarn() {
+  const ua = navigator.userAgent, inApp = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Line\/|MicroMessenger/i.test(ua), home = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  if (home) return '';
+  return `<div class="sh-body" style="margin:8px 0;padding:10px 12px;border-radius:12px;background:#3a2a12;color:#ffd79a"><b>${inApp ? 'Nasa loob ka ng Messenger o Facebook.' : 'Nasa Safari tab ka lang.'}</b> ${inApp ? 'Dito, nabubura ang save. Pindutin ang ··· at piliin ang "Open in Safari", tapos' : 'Kapag ilang araw kang hindi naglaro, puwedeng burahin ng iPhone ang save. Para hindi mawala,'} pindutin ang Share → <b>Add to Home Screen</b>, at doon na laging buksan ang Bunker.</div>`;
+}
 function loadSlot(i) { const s = readSlot(i); if (!s) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(s.data)); sessionStorage.setItem('bunker-auto', '1'); } catch (e) { return toast('Hindi ma-load: naka-block ang storage.', 'bad'); } location.reload(); }
 function saveSheet() {
   save();
   openSheet(`<div class="kick">Auto-save tuwing oras, at kapag isinara mo ang app</div><h2 class="sh-title">Save</h2>
+    ${storageWarn()}<div class="choices" style="margin-bottom:10px"><button class="choice primary" id="bkBtn"><b>Backup na hindi nabubura</b><span>Save code o save file. Gamitin ito kung nawawala ang save.</span></button></div>
     <div class="sh-body">${[1, 2, 3].map(i => { const s = readSlot(i); return `<div class="slot"><div style="flex:1"><b>Slot ${i}</b><br><small>${slotLine(s)}</small></div><button class="job" data-save="${i}">I-save</button>${s ? `<button class="job" data-load="${i}">I-load</button>` : ''}</div>`; }).join('')}</div>`);
+  $('#bkBtn').onclick = () => codeSheet(false);
   $('#sheetBody').querySelectorAll('[data-save]').forEach(b => { let armed = !readSlot(+b.dataset.save); b.onclick = () => {
     if (!armed) { armed = true; b.textContent = 'Palitan?'; return; }
     try { localStorage.setItem(SLOT(+b.dataset.save), JSON.stringify({ t: Date.now(), day: S.day, min: S.min, data: S })); chime(); toast(`Na-save sa Slot ${b.dataset.save}.`, 'good'); } catch (e) { toast('Hindi ma-save: puno o naka-block ang storage.', 'bad'); }
@@ -3172,7 +3202,7 @@ function newbieDef(name, t) {
   const fem = /^(Aling|Ate|Lola|Nene)/.test(name), i = GBEDS();
   return { id: 'nb' + Date.now().toString(36) + i, name, role: t.role, spec: t.spec, job: t.job, h: fem ? 1.56 : 1.68, skin: pick(NB_SKIN), shirt: pick(NB_SHIRT), pants: '#2f2c28', hair: '#1f1712', style: fem ? pick(['long', 'bun', 'pony']) : 'short', bed: freeBed(), fem, perk: t.perk, thief: Math.random() < .15 };
 }
-const qFull = (b = 0) => people().filter(id => S.people[id].quar && !!S.people[id].qb === !!b).length >= (b ? 2 : 4);
+const qFull = (b = 0) => people().filter(id => S.people[id].quar && !!S.people[id].qb === !!b).length >= (b ? 2 : 3);
 function quarHTML(id) {
   const st = S.people[id]; if (!st?.quar || st.turned) return '';
   const early = st.quar > 0;
@@ -3296,14 +3326,14 @@ function buildDorm() {
   // Dormitoryo: two rows of steel bunk beds on the east side, a lounge with lockers, a long table and a sofa on the west
   SPOTS.beds.Dorm = [];
   const blankets = [MAT.blanketA, MAT.blanketB, MAT.blanketC];
-  for (const bx of [54.6, 57.4]) for (let k = 0; k < 5; k++) {
-    const z0 = 24.15 + k * 2.35;
+  const BUNKS = [[51.5, 24.15], [51.5, 26.5], [54.5, 24.15], [54.5, 26.5], [54.5, 30.3], [54.5, 32.65], [57.5, 24.15], [57.5, 26.5], [57.5, 30.3], [57.5, 32.65]];
+  BUNKS.forEach(([bx, z0], k) => {
     for (const [a, b] of [[-.45, .05], [.45, .05], [-.45, 2.05], [.45, 2.05]]) box(.06, 2, .06, MAT.darkSteel, bx + a, 0, z0 + b);
     for (const y of [.3, 1.4]) { box(.96, .08, 2.06, MAT.darkSteel, bx, y, z0 + 1.05); rbox(.86, .14, 1.94, MAT.linen, bx, y + .08, z0 + 1.05, 0, .05); rbox(.88, .06, 1.2, blankets[(k + (bx > 56 ? 1 : 0)) % 3], bx, y + .22, z0 + 1.35, 0, .03); rbox(.5, .1, .3, MAT.linen, bx, y + .24, z0 + .35, 0, .04); }
     box(.06, 1.1, .06, MAT.darkSteel, bx - .45, 1.4, z0 + 1.2); for (let r = 0; r < 4; r++) box(.04, .03, .4, MAT.darkSteel, bx - .45, .5 + r * .28, z0 + 1.2);   // ladder
     block(Math.floor(bx), Math.floor(z0), Math.floor(bx), Math.floor(z0 + 2));
-    SPOTS.beds.Dorm.push({ x: bx, y: .52, z: z0 + 1.05 }, { x: bx, y: 1.62, z: z0 + 1.05 });
-  }
+    SPOTS.beds.Dorm.push({ x: bx, y: .52, z: z0 + 1.05, ax: bx - 1, az: z0 + 1.05 }, { x: bx, y: 1.62, z: z0 + 1.05, ax: bx - 1, az: z0 + 1.05 });
+  });
   for (let k = 0; k < 6; k++) { box(.5, 1.8, .5, k % 2 ? MAT.olive : MAT.darkSteel, 49.35, 0, 28.3 + k * .55); box(.02, .3, .04, MAT.steel, 49.62, 1.1, 28.3 + k * .55); }
   block(49, 28, 49, 30);
   box(5, .012, 3, MAT.rug2, 52, 0, 33);
@@ -3311,8 +3341,8 @@ function buildDorm() {
   for (const x of [51.2, 52, 52.8]) { chair(x, 31.8, 0); chair(x, 33.2, Math.PI); }
   block(51, 32, 52, 32);
   rbox(2.4, .42, .9, MAT.sofa, 52, 0, 35.3, 0, .1); rbox(2.4, .5, .22, MAT.sofa, 52, .3, 35.7, 0, .08); block(51, 35, 52, 35);
-  lamp(50.6, .78, 32.5); plant(49.5, 35.4, 1.1); plant(53.8, 24.6, 1);
-  decal('DORMITORYO', 52, 27, .55);
+  lamp(50.6, .78, 32.5); plant(49.5, 35.4, 1.1); plant(49.6, 24.6, 1);
+  decal('DORMITORYO', 56, 29.5, .45);
   SPOTS.Dorm = [{ x: 52.5, z: 29.5, yaw: 0, taken: null }];
 }
 function buildQuar() {
@@ -3320,10 +3350,12 @@ function buildQuar() {
   // A (front, by the airlock door): no wounds. B (back, behind a second glass wall): anyone with a wound
   SPOTS.bedQA = []; SPOTS.bedQB = [];
   const glassQ = std({ color: '#9fc4cf', roughness: .9, transparent: true, opacity: .5, side: THREE.DoubleSide });
-  for (const x of [26.1, 26.95, 27.8, 28.6]) { box(.06, .32, .06, MAT.darkSteel, x - .3, 0, 31.6); box(.06, .32, .06, MAT.darkSteel, x + .3, 0, 33.3); rbox(.66, .1, 1.8, MAT.linen, x, .32, 32.45, 0, .03); rbox(.62, .05, 1, MAT.blanketA, x, .42, 32.8, 0, .02); SPOTS.bedQA.push({ x, z: 32.3, y: .45, taken: null }); }
-  for (const z of [34.55, 35.45]) { rbox(1.8, .1, .66, MAT.linen, 27.6, .32, z, 0, .03); rbox(1, .05, .62, MAT.blanketC, 28, .42, z, 0, .02); SPOTS.bedQB.push({ x: 26.9, z, y: .45, taken: null }); }
+  for (const x of [26.1, 26.95, 27.8]) { box(.06, .32, .06, MAT.darkSteel, x - .3, 0, 31.6); box(.06, .32, .06, MAT.darkSteel, x + .3, 0, 33.3); rbox(.66, .1, 1.8, MAT.linen, x, .32, 32.45, 0, .03); rbox(.62, .05, 1, MAT.blanketA, x, .42, 32.8, 0, .02); SPOTS.bedQA.push({ x, z: 32.3, y: .45, taken: null }); }
+  for (const z of [34.55, 35.45]) { rbox(1.5, .1, .66, MAT.linen, 27.2, .32, z, 0, .03); rbox(.9, .05, .62, MAT.blanketC, 27.5, .42, z, 0, .02); SPOTS.bedQB.push({ x: 26.9, z, y: .45, taken: null }); }
   box(.02, 1.9, 2.8, glassQ, 25.55, .1, 32.5);
   box(3.2, 1.9, .02, glassQ, 27.4, .1, 34.02); box(.02, 1.9, 1.9, glassQ, 25.85, .1, 35);
+  // a toilet and sink in each room, behind a half wall, so nobody has to leave quarantine
+  for (const [tz, sz] of [[31.45, 33.3], [35.55, 34.3]]) { rbox(.38, .42, .52, MAT.white, 28.62, 0, tz, 0, .12); box(.04, 1.4, .9, MAT.cabinet, 28.2, 0, tz + (tz < 33 ? .2 : -.2)); box(.4, .8, .35, MAT.white, 28.7, 0, sz); box(.3, .02, .25, MAT.steel, 28.7, .8, sz); }
   decal('QUARANTINE A', 27.3, 31.75, .3); decal('B · MAY SUGAT', 27.6, 35.8, .26);
   SPOTS.Q = [{ x: 25.5, z: 32.5, yaw: 0, taken: null }];
 }
@@ -3633,17 +3665,20 @@ async function boot(hotData) {
   requestAnimationFrame(frame);
   $('#fade').style.opacity = 0;
   let saved = hotData?.save || loadSave();
+  if (!saved) { const t = await idbGet(); try { saved = t ? JSON.parse(t) : null; } catch (e) { saved = null; } }
   for (const d of saved?.extra || []) if (!defOf(d.id)) GUESTS.push(d);
   if (saved && saved.meds === undefined) { saved.meds = 8; saved.anti = Math.max(saved.anti || 0, 3); }   // saves from before medicines
   if (saved && saved.stock === undefined) { saved.stock = 500; saved.ammo = Math.max(saved.ammo || 0, 40); }   // saves from before the ammo room
-  if (saved && Object.keys(saved.people || {}).some(id => !defOf(id))) saved = null;   // save from before the real family names
+  if (saved) for (const id of Object.keys(saved.people || {})) if (!defOf(id)) delete saved.people[id];   // drop anyone the game no longer knows, keep the rest of the save
   const ch = $('#introChoices');
   ch.innerHTML = (saved ? `<button class="choice primary" id="bCont"><b>Ituloy · Araw ${saved.day}</b><span>${hhmm(saved.min)} · babalik ka sa bunker</span></button>` : '') +
     `<button class="choice${saved ? '' : ' primary'}" id="bNew"><b>${saved ? 'Bagong laro' : 'Simulan ang Day 7'}</b><span>${saved ? 'Buburahin ang auto-save (hindi ang mga slot)' : 'Isasara na ang blast door'}</span></button>` +
-    ([1, 2, 3].some(i => readSlot(i)) ? '<button class="choice" id="bSlots"><b>Mga save</b><span>Mag-load mula sa Slot 1 hanggang 3</span></button>' : '');
+    ([1, 2, 3].some(i => readSlot(i)) ? '<button class="choice" id="bSlots"><b>Mga save</b><span>Mag-load mula sa Slot 1 hanggang 3</span></button>' : '') +
+    '<button class="choice" id="bCode"><b>May save code o file ako</b><span>Ibalik ang laro mula sa backup</span></button>' + storageWarn();
   const startIntro = () => { audioInit(); cam.mode = 'follow'; CUT.uOn.value = 1; $('#btnView').textContent = 'Tanaw'; };
   if (saved) $('#bCont').onclick = () => { startIntro(); cam.yaw = 0; continueGame(saved); };
   $('#bNew').onclick = () => { startIntro(); paused = 1; newGame(); };
+  $('#bCode').onclick = () => codeSheet(true);
   if ($('#bSlots')) $('#bSlots').onclick = () => { ch.innerHTML = [1, 2, 3].map(i => { const s = readSlot(i); return `<button class="choice${s ? '' : ''}" data-l="${i}" ${s ? '' : 'disabled style="opacity:.45"'}><b>Slot ${i}</b><span>${slotLine(s)}</span></button>`; }).join(''); ch.querySelectorAll('[data-l]').forEach(b => b.onclick = () => loadSlot(+b.dataset.l)); };
   try { if (saved && sessionStorage.getItem('bunker-auto')) { sessionStorage.removeItem('bunker-auto'); $('#bCont').click(); } } catch (e) { /* no session storage: player taps Ituloy */ }
   window.claude?.hot?.snapshot?.(() => ({ save: S }));
