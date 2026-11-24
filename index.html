@@ -326,6 +326,9 @@ const ROOMS = {
   Lib:{n:'Library', x:1,z:30,w:9,h:5, floor:'wood', light:'#ffdcae', job:true, verb:'Magbasa'},
   Pl:{n:'Playroom', x:44,z:31,w:4,h:5, floor:'wood', light:'#ffe0b5', job:true, verb:'Makipaglaro sa mga bata'},
   Dorm:{n:'Dormitoryo', x:49,z:24,w:10,h:12, floor:'wood', light:'#ffdcae'},
+  Tl:{n:'Talyer', x:49,z:1,w:10,h:6, floor:'concrete', light:'#fff0d6', job:true, verb:'Gumawa ng piyesa'},
+  Ps:{n:'Paaralan at Nursery', x:49,z:8,w:10,h:6, floor:'wood', light:'#ffeccc', job:true, verb:'Magturo sa mga bata'},
+  Lb:{n:'Labahan', x:49,z:15,w:10,h:8, floor:'tile', light:'#eef6ff'},
   // Ang Bayan: a town under the ground, so nobody has to miss the outside
   Pk:{n:'Parke', x:60,z:16,w:14,h:14, floor:'grass', light:'#fff6d8', job:true, verb:'Mamasyal sa parke'},
   Pw:{n:'Swimming Pool', x:60,z:9,w:14,h:6, floor:'tile', light:'#d8f4ff'},
@@ -353,10 +356,10 @@ BUNK_Z.forEach((z, i) => {
 });
 const DOORS = [[5,9],[18,9],[19,9],[25,2],[32,6],[30,12],[30,15],[25,13],[25,14],[10,13],[5,17],[5,22],[10,24],[18,22],[19,19],[20,19],[21,22],[19,30],[20,30]];
 BUNK_Z.forEach(z => { DOORS.push([40, z + 1], [43, z + 1]); });
-DOORS.push([99, 10], [103, 13], [112, 13], [113, 20], [99, 30], [84, 10], [84, 17], [84, 25], [84, 31], [91, 13], [91, 23], [59, 29], [64, 15], [64, 8], [74, 6], [74, 11], [74, 18], [74, 24], [74, 29], [66, 30], [24, 32], [40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
-const JOBS = ['G','K','Kn','P','W','S','O','Y','X','C','H','V','U','Lib','Pl','rest'];
-const RELAX = ['H', 'V', 'U', 'Lib', 'Pl', 'Pk', 'Ar', 'Kz'];
-const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', Pk:'Parke', Ar:'Arcade', Kz:'Kids Zone', Kn:'Malaking Kusina', rest:'Pahinga' };
+DOORS.push([53, 7], [53, 14], [53, 23], [59, 2], [59, 11], [99, 10], [103, 13], [112, 13], [113, 20], [99, 30], [84, 10], [84, 17], [84, 25], [84, 31], [91, 13], [91, 23], [59, 29], [64, 15], [64, 8], [74, 6], [74, 11], [74, 18], [74, 24], [74, 29], [66, 30], [24, 32], [40, 26], [40, 33], [43, 26], [21, 28], [15, 31], [5, 29], [43, 32], [44, 30], [48, 26], [48, 33]);
+const JOBS = ['G','K','Kn','P','W','S','O','Y','X','C','Tl','H','V','U','Ps','Lib','Pl','rest'];
+const RELAX = ['H', 'V', 'U', 'Lib', 'Pl', 'Pk', 'Ar', 'Kz', 'Ps'];
+const JOB_NAME = { G:'Greenhouse', K:'Kusina', P:'Pantry', W:'Tubig', S:'Solar', O:'Oxygen', C:'Clinic', H:'Hobby', V:'Sinehan', U:'Musika', Lib:'Library', Pl:'Playroom', Y:'Manukan', X:'Bantay', Pk:'Parke', Ar:'Arcade', Kz:'Kids Zone', Kn:'Malaking Kusina', Tl:'Talyer', Ps:'Paaralan', rest:'Pahinga' };
 
 const GW = 120, GH = 37;
 const cell = new Uint8Array(GW * GH);        // 0 bato, 1 sahig, 2 pader, 4 blast door
@@ -1043,7 +1046,7 @@ function buildRooms() {
   ball(.3, MAT.blanketC, 45.6, .18, 25.4).scale.set(1, .5, 1); ball(.3, MAT.blanketA, 46.4, .18, 26).scale.set(1, .5, 1);
   spot('U', 46, 25, 47.65, 25); spot('U', 45, 27, 44.6, 27.2); spot('U', 46, 27, 45.8, 28.8);
   decal('MUSIKA', 45.9, 29.5, .45, Math.PI / 2);
-  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar(); buildTown(); buildBig(); buildSuite(); buildDecor();
+  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar(); buildTown(); buildBig(); buildSuite(); buildHome(); buildDecor();
   decal('GREENHOUSE', 6.5, 8.2, .8); decal('KUSINA', 6.5, 16.4, .7); decal('PANTRY', 5.5, 20.2, .6);
   decal('TUBIG', 5, 28.3, .7); decal('SOLAR', 14.5, 25.4, .7); decal('SALA', 18, 13.5, .9, 0, .18);
   decal('OXYGEN', 32.5, 3.4, .55); decal('HOBBY', 30.5, 11.4, .6); decal('CLINIC', 30.5, 18.5, .6);
@@ -1316,6 +1319,8 @@ function hourTick(night = false) {
   // people still count for their job while walking to it or stepping out to the CR, at a lower rate
   if (!night) ids.forEach(id => { const p = P[id], st = S.people[id]; if (p && st.job && st.job !== 'rest' && !st.sick && !st.away && !st.quar) W[st.job] = (W[st.job] || 0) + eff(id) * (p.atWork ? 1 : .6); });
   W.K = (W.K || 0) + (W.Kn || 0);
+  if (!night && W.Tl) { S.partsF = (S.partsF || 0) + W.Tl * .12; if (S.partsF >= 1) { S.parts += Math.floor(S.partsF); S.partsF %= 1; } }
+  if (!night && W.Ps) KID.forEach(k => S.people[k] && S.people[k].job === 'Ps' && stress(k, -1.5));
   const nf = night ? .5 : 1;   // asleep: half the food, water and air
   const brown = S.res.power <= 0 || !!S.flags.blackout, sun = !night && S.min >= 360 && S.min < 1080;
   addRes('food', (W.G || 0) * .95 * (S.up.green2 ? 1.3 : 1) * (brown ? .4 : 1) - n * .09 * nf * (W.K ? .85 : 1) * (W.P ? .9 : 1) - .1);
@@ -1944,7 +1949,7 @@ function tap(x, y) {
 }
 const GROUND = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const MAP_GROUPS = [
-  ['Bunker', ['M', 'L', 'K', 'P', 'G', 'C', 'W', 'S', 'O', 'Y', 'H', 'V', 'U', 'Lib', 'Pl', 'X', 'A', 'Bw', 'Bm']],
+  ['Bunker', ['M', 'L', 'K', 'P', 'G', 'C', 'W', 'S', 'O', 'Y', 'H', 'V', 'U', 'Lib', 'Pl', 'X', 'A', 'Bw', 'Bm', 'Tl', 'Ps', 'Lb']],
   ['Tulugan', ['Dorm', 'Q']],
   ['Ang Bayan', ['Kn', 'Pk', 'Pw', 'Ct', 'Gy', 'Ch', 'Cf', 'Sp', 'Ar', 'Mk', 'Cn', 'Kz']],
   ['Sa dulo', ['MS', 'MO', 'MB', 'Hs']],
@@ -2029,8 +2034,10 @@ function finishWork(room) {
     Pl: () => { stress('isha', -8); KID.forEach(k => S.people[k] && stress(k, -12)); return 'Nakipaglaro ka sa mga bata sa Playroom.'; },
     U: () => { stress('isha', -10); ['ria', 'carly', 'butchukok'].forEach(k => stress(k, -10)); return 'Tumugtog kayo ng mga bata. Ang ingay, pero ang saya.'; } };
   fx.Kn = fx.K;
+  fx.Tl = () => { S.parts += 1; return 'Gumawa ka ng piyesa sa Talyer mula sa lumang bakal. +1 piyesa'; };
+  fx.Ps = () => { stress('isha', -6); KID.forEach(k => S.people[k] && stress(k, -10)); return 'Nagturo ka sa Paaralan. Natuto ng bagong kanta ang mga bata.'; };
   let msg = fx[room](); mis('work'); if (room === 'Pl') mis('kids');
-  if (!['H', 'Lib', 'Pl', 'V', 'U'].includes(room)) stress('isha', 4);
+  if (!['H', 'Lib', 'Pl', 'V', 'U', 'Ps'].includes(room)) stress('isha', 4);
   if (fix) { if (S.task.kind === 'leak') S.flags.leak = 0; if (S.task.kind === 'fan') S.flags.fanBroken = 0; if (S.task.kind === 'blackout') S.flags.blackout = 0; msg = 'Naayos mo! ' + msg; S.task = null; refreshTask(); chime(); }
   toast(msg, 'good'); advance(30); refreshWorld(); save();
   hint(5, 'Bawat Gawin ay 30 minuto at dagdag stress sa iyo.');
@@ -2152,7 +2159,7 @@ function doorAnim(open) { FX.doorTarget = open ? -1.7 : 0; }
 
 // ================================================================ v5: needs, rooms, items, moods, chat, knocks, raids, activities, saves
 const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
-const KIDJOBS = ['Kz', 'Pl', 'Pk', 'Ar', 'U', 'H', 'V', 'Lib', 'rest'];
+const KIDJOBS = ['Ps', 'Kz', 'Pl', 'Pk', 'Ar', 'U', 'H', 'V', 'Lib', 'rest'];
 
 // ---------------------------------------------------------------- library + playroom furniture, toilets
 function buildExtraRooms() {
@@ -3898,6 +3905,30 @@ function buildTown() {
   for (const [x, z] of [[62.6, 32.8], [62.6, 34.6], [70.6, 32.8], [70.6, 34.6]]) { box(4, 1.5, .5, MAT.cabinet, x, 0, z); for (let i = 0; i < 12; i++) box(.24, .26, .2, C(pick(['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#e67e22', '#ecf0f1'])), x - 1.7 + (i % 6) * .68, .35 + Math.floor(i / 6) * .55, z, 0); block(Math.floor(x - 2), Math.floor(z), Math.floor(x + 1.9), Math.floor(z)); }
   rbox(1.6, .95, .6, wood, 67.9, 0, 31.6, 0, .03); box(.4, .3, .3, black, 67.9, .95, 31.6); decal('MINI-MART', 66.9, 34.2, .4);
 }
+function buildHome() {
+  const C = c => std({ color: c, roughness: .7 }), G = c => glow(c), wood = MAT.walnut, steel = MAT.steel, white = MAT.white;
+  // Talyer: workbenches, a tool wall, a vise, a half-built bike, crates of scrap
+  for (const x of [51, 55]) { rbox(2.6, .9, .8, wood, x, 0, 1.5, 0, .03); box(2.5, .05, .75, MAT.darkSteel, x, .9, 1.5); box(.25, .2, .2, MAT.darkSteel, x - .9, .95, 1.4); block(Math.floor(x - 1.3), 1, Math.floor(x + 1.2), 1); }
+  box(4.6, 1.2, .05, C('#6b5a45'), 51.6, 1.1, 1.03); for (let i = 0; i < 9; i++) box(.06, .35 + (i % 3) * .1, .04, i % 2 ? steel : C('#c0392b'), 49.7 + i * .45, 1.4, 1.08);
+  for (const [x, z] of [[57.8, 5.2], [57.8, 4.2]]) { box(.7, .5, .6, MAT.olive, x, 0, z); block(57, Math.floor(z), 57, Math.floor(z)); }
+  const wh = cyl(.35, .35, .05, MAT.black, 53, .35, 5, 16); wh.rotation.x = Math.PI / 2; const wh2 = cyl(.35, .35, .05, MAT.black, 54.2, .35, 5, 16); wh2.rotation.x = Math.PI / 2; box(1.2, .05, .05, C('#2f6fa8'), 53.6, .6, 5);
+  spot('Tl', 51, 2, 51, 1.5); spot('Tl', 55, 2, 55, 1.5); decal('TALYER', 54, 4, .4);
+  // Paaralan at Nursery: desks, a blackboard, a globe; a crib and a rocking chair in the corner
+  box(3.4, 1.1, .06, C('#2d4a3a'), 52, 1.2, 8.05); box(3.2, .04, .1, wood, 52, 1.15, 8.12);
+  for (const x of [50.6, 52, 53.4]) for (const z of [10, 11.6]) { box(.8, .05, .5, wood, x, .6, z); box(.05, .6, .45, MAT.darkSteel, x - .35, 0, z); box(.05, .6, .45, MAT.darkSteel, x + .35, 0, z); chair(x, z + .45, Math.PI); block(Math.floor(x), Math.floor(z), Math.floor(x), Math.floor(z)); }
+  cyl(.04, .06, .7, wood, 49.6, 0, 12.8, 8); ball(.22, C('#3d8bd9'), 49.6, .9, 12.8);
+  rbox(1.3, .8, .7, white, 57.5, 0, 9.2, 0, .04); for (let i = 0; i < 6; i++) box(.03, .55, .03, white, 56.95 + i * .22, .55, 8.86); box(1.1, .1, .55, C('#f6d6e0'), 57.5, .45, 9.2);
+  rbox(.7, .5, .7, MAT.sofa, 57.5, 0, 11.4, 0, .1); rbox(.7, .55, .15, MAT.sofa, 57.5, .3, 11.72, 0, .05); box(1.4, .012, 1.4, MAT.rug, 57.4, 0, 10.3); block(57, 9, 58, 9);
+  for (const [x, c] of [[56.3, '#f1c40f'], [56.7, '#e74c3c'], [57.1, '#3498db']]) box(.2, .2, .2, C(c), x, 0, 12.6);
+  spot('Ps', 52, 9, 52, 8.05); decal('PAARALAN', 52, 13.2, .35); decal('NURSERY', 57.4, 13.1, .3);
+  // Labahan: washers and dryers, a clothesline, an ironing board, a sewing machine
+  for (let i = 0; i < 4; i++) { const x = 49.8 + i * .85; box(.75, .9, .7, white, x, 0, 15.5); cyl(.24, .24, .02, C('#bfe3ff'), x, .45, 15.86, 18).rotation.x = Math.PI / 2; } block(49, 15, 52, 15);
+  for (const z of [18, 20]) { cyl(.025, .025, 1.8, steel, 54, 0, z, 6); cyl(.025, .025, 1.8, steel, 58.4, 0, z, 6); box(4.4, .01, .01, white, 56.2, 1.78, z); for (let i = 0; i < 7; i++) box(.4, .5, .02, C(pick(['#e07a5f', '#81b29a', '#f2cc8f', '#3d405b', '#f4f1de'])), 54.5 + i * .6, 1.25, z); }
+  box(1.3, .04, .35, C('#5b7fa6'), 50.6, .85, 19); box(.04, .85, .3, steel, 50.1, 0, 19); box(.04, .85, .3, steel, 51.1, 0, 19);
+  box(1, .75, .6, wood, 50.4, 0, 21.6); box(.45, .25, .2, C('#222'), 50.4, .75, 21.6); chair(50.4, 21.0, 0); block(50, 21, 50, 21);
+  for (let i = 0; i < 3; i++) cyl(.25, .22, .4, C('#c8a165'), 57.8, 0, 16.2 + i * .7, 14);
+  decal('LABAHAN', 54.5, 21.8, .4);
+}
 function buildDecor() {
   // a beauty pass: art on the walls, plants in free corners, runners and sconces in the halls
   const ARTS = [
@@ -4021,6 +4052,8 @@ function buildBig() {
   box(13, .012, 1, C('#ffd9a8'), 92, 0, 30.5); decal('KIDS ZONE', 92, 30.5, .45);
 }
 function townItems() {
+  item(51.2, 16.6, 'Maglaba', () => busy(2, () => { advance(30); addRes('water', -3); stressAll(-3); stress('isha', -4); toast(pick(['Malinis na ang mga damit ng lahat. Amoy sabon ang buong Labahan.', 'Nagsampay ka habang kumakanta. Sumabay si Aling Rosa.', 'Nakita mo ang paboritong t-shirt ni Angel. Itinupi mo nang maayos.']), 'good'); save(); }, 'work'), { r: 1.3 });
+  item(57.5, 10.2, 'Patulugin ang baby', () => busy(1.5, () => { advance(20); stress('isha', -8); if (S.people.baby) stress('baby', -10); if (S.people.butchukok) stress('butchukok', -8); toast('Inugoy mo ang kuna habang kumakanta ng "Sana\'y Wala Nang Wakas". Nakatulog ang maliliit.', 'good'); save(); }, 'sit'), { r: 1.2 });
   item(() => S.crisis?.x ?? -99, () => S.crisis?.z ?? -99, 'KRISIS', () => busy(1.4, () => endCrisis(S.crisis && S.min <= S.crisis.until, 'isha'), 'work'), { r: 1.8, when: () => !!S.crisis?.until });
   Object.defineProperty(ITEMS[ITEMS.length - 1], 'label', { get: () => { const c = CRISES.find(x => x.k === S.crisis?.k); return c ? c.go + '!' : 'Gawin'; } });
   item(87, 26.4, 'Mag-slide', () => busy(1, () => { advance(15); stress('isha', -7); toast(pick(['Wheee! Sinamahan mo sina Carly at Ria sa slide.', 'Nag-slide ka. Tawa nang tawa ang mga bata.', 'Ang bilis! Muntik ka nang tumama sa ball pit.']), 'good'); save(); }, 'work'), { r: 1.4 });
