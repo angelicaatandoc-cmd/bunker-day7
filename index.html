@@ -86,6 +86,15 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--amber);outline-
 #bottom>*{pointer-events:auto}
 .hint{font:500 13px var(--f-label);color:var(--muted);letter-spacing:.04em;max-width:46%;text-shadow:0 1px 4px #000;pointer-events:none!important}
 .acts{display:flex;align-items:flex-end;gap:12px}
+.stackbtns{display:flex;flex-direction:column;gap:10px;pointer-events:auto}
+.mapbtn{background:var(--amber);color:#1a1408;border-color:transparent}
+.leftcol{display:flex;flex-direction:column;gap:6px;max-width:58%}
+.leftcol .hint{max-width:none}
+.where{align-self:flex-start;font:700 13px var(--f-label);letter-spacing:.04em;padding:6px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:var(--text)}
+.where:empty{display:none}
+.mapgrp{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mapgrp button{text-align:left;padding:10px 12px;border-radius:12px;background:#252c30;border:1px solid var(--line);color:var(--text);font:600 14px var(--f-label)}
+.mapgrp button.here{background:var(--amber);color:#1a1408}
 .round{width:54px;height:54px;border-radius:50%;background:var(--panel);border:1px solid var(--line);font:700 12px var(--f-label);letter-spacing:.04em;display:grid;place-items:center}
 #act{position:relative;width:84px;height:84px;border-radius:50%;background:var(--amber);color:var(--amber-ink);font:700 14px/1.05 var(--f-label);letter-spacing:.02em;padding:6px;text-align:center;box-shadow:0 6px 24px rgba(240,167,58,.35)}
 #act svg{position:absolute;inset:-6px;width:96px;height:96px;transform:rotate(-90deg);pointer-events:none}
@@ -191,9 +200,9 @@ body.intro .hud,body.intro #labels{display:none!important}
 <div class="hud" id="task" hidden><div id="taskText"></div></div>
 <div class="hud" id="toasts"></div>
 <div class="hud" id="bottom">
-  <div class="hint" id="hint">Hilahin ang kaliwang bahagi ng screen para maglakad.</div>
+  <div class="leftcol"><div class="where" id="where"></div><div class="hint" id="hint">Hilahin ang kaliwang bahagi ng screen para maglakad.</div></div>
   <div class="acts">
-    <button class="round" id="btnView">Tanaw</button>
+    <div class="stackbtns"><button class="round mapbtn" id="btnMap">Mapa</button><button class="round" id="btnView">Tanaw</button></div>
     <button id="act" hidden><span id="actText">Kausapin</span><svg viewBox="0 0 100 100"><circle id="actRing" cx="50" cy="50" r="46"/></svg></button>
   </div>
 </div>
@@ -1933,6 +1942,28 @@ function tap(x, y) {
     if (walkable(cx, cz)) goPoint(v3.x, v3.z); else if (id) walkTo(id, v3.x, v3.z); }
 }
 const GROUND = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const MAP_GROUPS = [
+  ['Bunker', ['M', 'L', 'K', 'P', 'G', 'C', 'W', 'S', 'O', 'Y', 'H', 'V', 'U', 'Lib', 'Pl', 'X', 'A', 'Bw', 'Bm']],
+  ['Tulugan', ['Dorm', 'Q']],
+  ['Ang Bayan', ['Kn', 'Pk', 'Pw', 'Ct', 'Gy', 'Ch', 'Cf', 'Sp', 'Ar', 'Mk', 'Cn', 'Kz']],
+  ['Sa dulo', ['MS', 'MO', 'MB', 'Hs']],
+];
+function goNow(id) {
+  const r = ROOMS[id], c = roomCenter(id), cells = [];
+  for (let z = r.z; z < r.z + r.h; z++) for (let x = r.x; x < r.x + r.w; x++) if (walkable(x, z)) cells.push([x + .5, z + .5]);
+  if (!cells.length) return; cells.sort((a, b) => Math.hypot(a[0] - c.x, a[1] - c.z) - Math.hypot(b[0] - c.x, b[1] - c.z));
+  if (doing) doing = null; ISHA.path = []; ISHA.goal = null; ISHA.place(cells[0][0], cells[0][1], ISHA.yaw); ISHA.setPose('stand');
+  if (cam.mode === 'over') $('#btnView').click(); advance(5); toast(`Nandito ka na: ${r.n}`, 'good');
+}
+function mapSheet() {
+  const here = roomAtPos(ISHA.x, ISHA.z), cr = S.crisis?.until ? S.crisis : null;
+  openSheet(`<div class="kick">Pindutin ang kwarto para pumunta agad</div><h2 class="sh-title">Mapa</h2>
+    ${cr ? `<div class="choices" style="margin-bottom:12px"><button class="choice primary" data-go="${cr.room}"><b>⚠ Pumunta sa krisis: ${ROOMS[cr.room].n}</b><span>${Math.max(0, Math.round(cr.until - S.min))} minuto na lang</span></button></div>` : ''}
+    ${S.task ? `<div class="choices" style="margin-bottom:12px"><button class="choice" data-go="${S.task.room}"><b>Gawain: ${ROOMS[S.task.room].n}</b><span>${S.task.text}</span></button></div>` : ''}
+    ${MAP_GROUPS.map(([g, ids]) => `<div class="sec">${g}</div><div class="mapgrp">${ids.filter(id => ROOMS[id]).map(id => `<button data-go="${id}" class="${id === here ? 'here' : ''}">${id === 'M' ? 'Kwarto ninyo (Master Suite)' : ROOMS[id].n}</button>`).join('')}</div>`).join('')}`);
+  $('#sheetBody').querySelectorAll('[data-go]').forEach(b => b.onclick = () => { closeSheet(); goNow(b.dataset.go); });
+}
+setInterval(() => { const el = $('#where'); if (!el) return; if (!S || !ISHA || !$('#intro').hidden) { el.textContent = ''; return; } const r = roomAtPos(ISHA.x, ISHA.z); el.textContent = r ? '📍 ' + ROOMS[r].n : ''; }, 500);
 function walkTo(id, px, pz) {
   const r = ROOMS[id], c = roomCenter(id), cells = [];
   for (let z = r.z; z < r.z + r.h; z++) for (let x = r.x; x < r.x + r.w; x++) if (walkable(x, z)) cells.push([x + .5, z + .5]);
@@ -1947,6 +1978,7 @@ addEventListener('keydown', e => { if (e.target.tagName === 'INPUT') return; key
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 $('#btnView').onclick = () => { tick(); cam.mode = cam.mode === 'follow' ? 'over' : 'follow'; $('#btnView').textContent = cam.mode === 'follow' ? 'Tanaw' : 'Lakad'; if (cam.mode === 'over') { cam.yaw = 0; if (ISHA) cam.over.set(clamp(ISHA.x, 0, GW), 0, clamp(ISHA.z + 2, 0, GH)); } cam.overDist = overDistFit(); CUT.uOn.value = cam.mode === 'follow' ? 1 : 0; if (cam.mode === 'over') hint(4, 'Hilahin para gumalaw ang tanaw. I-tap ang tao para kausapin.'); };
 $('#btnFamily').onclick = () => { if (!paused) { tick(); familySheet(); } };
+$('#btnMap').onclick = () => { if (!paused && S && $('#intro').hidden) { tick(); mapSheet(); } };
 $('#btnSpeed').onclick = () => { speed = speed === 1 ? 3 : 1; $('#btnSpeed').textContent = speed + '×'; tick(); };
 function soundIcon() { $('#snd-on').style.display = AU.on ? '' : 'none'; }
 $('#btnSave').onclick = () => { if (S && $('#intro').hidden) quickSave(); };
