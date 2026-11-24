@@ -1645,6 +1645,11 @@ function checkSlots() {
   fire('inside', 1020, 'day', .85);
   fire('night', 1230, 'night', .7);
   let ks = (S.knockAt ||= {})[S.day]; if (!Array.isArray(ks)) ks = S.knockAt[S.day] = knockTimes();   // at least five knocks a day
+  if (S.day >= 8) { const at = (S.crisisAt ||= {})[S.day] ||= 540 + Math.floor(Math.random() * 540);
+    if (!sl.crisis && S.min >= at && !S.crisis) { sl.crisis = 1; startCrisis(); }
+    if (PH() >= 2 && !sl.crisis2 && S.min >= Math.min(1200, at + 300)) { sl.crisis2 = 1; if (!S.crisis && Math.random() < (PH() >= 3 ? .6 : .3)) startCrisis(); } }
+  if (S.crisis?.until && S.min > S.crisis.until) endCrisis(false);
+  refreshTask();
   ks.forEach((at, i) => { const slot = 'k' + i; if (sl[slot] || S.min < at) return; sl[slot] = 1; queueEvent(ch[slot] || (i === 1 || i === 3 ? genEnter() : nextKnock())); });
 }
 function runQueue() {
@@ -1704,7 +1709,7 @@ function updateHUD() {
   for (const [k] of RES) { const v = pct(k), el = $('#m-' + k); el.querySelector('.v').textContent = v; el.querySelector('i').style.width = v + '%'; el.classList.toggle('low', v < 20); }
 }
 function toast(msg, kind = '') { const t = document.createElement('div'); t.className = 'toast ' + kind; t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3800); while ($('#toasts').children.length > 3) $('#toasts').firstChild.remove(); }
-function refreshTask() { $('#task').hidden = !S.task; if (S.task) $('#taskText').textContent = 'Gawain: ' + S.task.text; }
+function refreshTask() { const c = S?.crisis?.until ? S.crisis : null; $('#task').hidden = !S?.task && !c; if (c) $('#taskText').textContent = `⚠ KRISIS sa ${ROOMS[c.room].n}: ${Math.max(0, Math.round(c.until - S.min))} minuto na lang!`; else if (S?.task) $('#taskText').textContent = 'Gawain: ' + S.task.text; }
 let hintStep = 0;
 function hint(step, text) { if (step < hintStep) return; hintStep = step + 1; $('#hint').textContent = text; }
 
@@ -2055,6 +2060,7 @@ function endDay() {
     const horde = nightHorde(); if (horde) lines.push(horde);
     if (growthDay < .8 && S.growth >= .8) warn.push('Malapit nang anihin ang greenhouse.');
     if (S.flags.tease) { warn.unshift(`<i>${S.flags.tease}</i>`); S.flags.tease = null; }
+    S.crisis = null;
     S.day++; S.min = 360; S.dayStart = snapshotRes(); morningNeeds();
     if (S.day >= 365) { save(); showEnding(); return; }
     if (S.flags.ignored && !S.done.box && S.day >= 10) queueEvent('box');
@@ -2723,6 +2729,99 @@ Object.assign(EVENTS, {
     body: () => `<p>Sobrang bigat ang binuhat ni ${N(S.flags.gymWho)}. Napilay ang likod niya.</p>`,
     choices: [{ t: 'Pahinga sa Clinic', sub: 'Isang araw na wala siya.', fx: () => { const id = S.flags.gymWho; S.people[id].sick = true; health(id, -20); routine(P[id]); return `<p>Nilagyan ni Angel ng yelo ang likod ni ${N(id)}. "Isa-isang plate lang next time," sabi niya.</p>`; } }] },
 });
+// ---------------------------------------------------------------- a crisis every day: a clock, a place to run to, a real cost
+const adultPick = (f = () => true) => pick(npcs().filter(id => !defOf(id).kid && !S.people[id].sick && !S.people[id].away && !S.people[id].quar && f(id))) || 'nelson';
+const kidPick = () => pick(KID.filter(k => S.people[k] && !S.people[k].sick && k !== 'baby'));
+const CRISES = [
+  { k: 'fire', room: 'K', mins: 150, t: 'SUNOG SA KUSINA!', who: () => S.people.mila ? 'mila' : adultPick(), send: 'carlo',
+    body: w => `Naiwan ang kawali sa apoy. Umaakyat ang apoy sa mga kurtina ng Kusina, at makapal na ang usok sa pasilyo. Umuubo si ${N(w)} sa sulok.`, go: 'Apulahin ang sunog',
+    ok: w => { stressAll(-6); return `Isang buong tangke ng fire extinguisher. Basang-basa ka, puro uling ang mukha, pero patay ang apoy. Niyakap ka ni ${N(w)} nang mahigpit.`; },
+    bad: w => { addRes('food', -30); health(w, -30); S.people[w].sick = true; P[w] && routine(P[w]); stressAll(10); return `Kumalat ang apoy bago naapula. Nasunog ang 30 kahon ng pagkain, at may paso si ${N(w)} sa braso. Nasa Clinic siya.`; } },
+  { k: 'vent', room: 'Hs', mins: 180, t: 'May zombie sa Ospital!', who: () => S.people.angel ? 'angel' : adultPick(), send: 'carlo',
+    body: w => `Bumagsak ang rehas ng vent sa kisame ng Ospital. May zombie na gumagapang palabas, papunta sa mga kama ng may sakit. Si ${N(w)} lang ang nasa loob, nakaharang gamit ang tray.`, go: 'Patumbahin ang zombie',
+    ok: w => { S.ammo = Math.max(0, S.ammo - 1); stressAll(-5); return `Isang putok ng shotgun. Bumagsak ang zombie sa sahig ng Ospital, ilang pulgada mula kay ${N(w)}. Walang nakagat.`; },
+    bad: w => { bite(w); stressAll(12); return `Huli na. Nasunggaban ng zombie si ${N(w)} bago ito napatumba ng iba. <b>Nakagat si ${N(w)}.</b>`; } },
+  { k: 'slide', room: 'Kz', mins: 150, t: 'Naipit sa Kids Zone!', can: () => !!kidPick(), who: kidPick, send: 'paolo',
+    body: w => `Gumuho ang climbing frame sa Kids Zone. Naipit si ${N(w)} sa ilalim, umiiyak, at hindi makagalaw ang binti.`, go: 'Buhatin ang bakal',
+    ok: w => { stress(w, -10); stressAll(-6); return `Binuhat mo ang bakal nang mag-isa. Hinila palabas si ${N(w)}. May galos lang. "Superhero si Tita Isha!"`; },
+    bad: w => { health(w, -40); S.people[w].sick = true; P[w] && routine(P[w]); stressAll(10); return `Matagal bago naalis ang bakal. Bali ang binti ni ${N(w)}. Nasa Ospital siya ngayon.`; } },
+  { k: 'pipe', room: 'W', mins: 150, t: 'Pumutok ang main pipe!', who: () => S.people.nelson ? 'nelson' : adultPick(), send: 'nelson',
+    body: () => 'Isang malakas na putok, tapos sigawan. Pumutok ang main pipe sa Water Filtration. Bumubulwak ang malinis na tubig sa sahig, at bawat minuto, nauubos ang reserba.', go: 'Isara ang main valve',
+    ok: () => { stressAll(-4); return 'Pinihit mo ang valve hanggang sa huling ikot. Tumigil ang bulwak. Kaunti lang ang nasayang.'; },
+    bad: () => { addRes('water', -70); S.flags.leak = 1; S.timers.push({ kind: 'leak', h: 6 }); stressAll(8); return 'Huli na. Nasayang ang 70 tubig, at tumutulo pa rin ang tubo hanggang maayos.'; } },
+  { k: 'o2', room: 'O', mins: 140, t: 'BUMABABA ANG OXYGEN!', who: () => S.people.paolo ? 'paolo' : adultPick(), send: 'paolo',
+    body: () => 'Tumunog ang alarm sa buong bunker. Barado ang scrubber ng Oxygen Control, at bumababa ang O₂. Nahihilo na ang mga bata.', go: 'Linisin ang scrubber',
+    ok: () => { addRes('o2', 15); stressAll(-5); return 'Hinugot mo ang baradong filter at pinalitan. Umugong ulit ang fan. Nakahinga nang maluwag ang lahat.'; },
+    bad: () => { addRes('o2', -45); people().forEach(id => health(id, -8)); stressAll(12); return 'Bumaba nang husto ang oxygen bago naayos. Nahimatay ang dalawang matanda. Masakit ang ulo ng lahat.'; } },
+  { k: 'door', room: 'A', mins: 120, t: 'May siwang ang blast door!', who: () => S.people.carlo ? 'carlo' : adultPick(), send: 'carlo',
+    body: w => `Nabaluktot ang gilid ng blast door. May mga kamay ng zombie na sumisingit sa siwang, kumakalmot. Nakadagan si ${N(w)} sa pinto, nag-iisa.`, go: 'Isara ang siwang',
+    ok: w => { S.door.hp = Math.min(doorMax(), S.door.hp + 20); stressAll(-5); return `Itinulak ninyo ni ${N(w)} ang pinto at hinang ang siwang. Naputol ang mga kamay sa labas. Ligtas.`; },
+    bad: w => { S.door.hp = Math.max(5, S.door.hp - 60); bite(w); stressAll(12); return `Bumuka ang siwang bago ka dumating. Nasunggaban si ${N(w)}. <b>Nakagat si ${N(w)}</b>, at sira ang pinto.`; } },
+  { k: 'arcade', room: 'Ar', mins: 150, t: 'Sunog sa Arcade!', who: () => kidPick() || adultPick(), send: 'na',
+    body: w => `Kislap, tapos apoy. Nag-short circuit ang isang makina sa Arcade. Nasa loob pa si ${N(w)}, takot na takot, hindi makalabas sa usok.`, go: 'Patayin ang kuryente at ilabas siya',
+    ok: w => { stressAll(-5); return `Pinatay mo ang breaker at binuhat si ${N(w)} palabas ng usok. Isang makina lang ang nasunog.`; },
+    bad: w => { addRes('power', -35); health(w, -25); S.people[w].sick = true; P[w] && routine(P[w]); stressAll(10); return `Kumalat ang apoy sa tatlong makina. Bumagsak ang kuryente, at nalanghap ni ${N(w)} ang usok. Nasa Ospital siya.`; } },
+  { k: 'pool', room: 'Pw', mins: 100, t: 'May nalulunod sa pool!', can: () => !!kidPick(), who: kidPick, send: 'aj',
+    body: w => `Sigaw ni Monica mula sa Swimming Pool: <b>"SI ${N(w).toUpperCase()}! NASA ILALIM!"</b> Dumulas siya sa gilid at hindi marunong lumangoy.`, go: 'Sumisid at sagipin',
+    ok: w => { stressAll(-8); stress(w, -10); return `Sumisid ka nang walang pag-iisip. Iniahon mo si ${N(w)}, umubo siya, at umiyak. Buhay. Niyakap siya ng nanay niya at ayaw nang bitawan.`; },
+    bad: w => { health(w, -50); S.people[w].sick = true; P[w] && routine(P[w]); stressAll(15); return `Si AJ ang nakasagip kay ${N(w)}, pero matagal siyang nasa ilalim. Buhay siya, pero mahina. Sa Ospital siya ngayong gabi.`; } },
+  { k: 'ceiling', room: 'Lib', mins: 150, t: 'Gumuho ang kisame!', who: () => adultPick(), send: 'nelson',
+    body: w => `Dagundong sa Library. Gumuho ang bahagi ng kisame dahil sa tagas mula sa itaas. Naipit si ${N(w)} sa ilalim ng mga tabla at libro.`, go: 'Hukayin siya palabas',
+    ok: w => { stressAll(-5); return `Isa-isang inalis mo ang mga tabla. Nakalabas si ${N(w)}, puro alikabok pero buo.`; },
+    bad: w => { health(w, -45); S.people[w].sick = true; P[w] && routine(P[w]); stressAll(10); return `Naipit si ${N(w)} nang matagal. Bali ang tadyang. Nasa Ospital siya.`; } },
+  { k: 'rats', room: 'G', mins: 180, t: 'Sinasalakay ng daga ang Greenhouse!', who: () => S.people.su ? 'su' : adultPick(), send: 'su',
+    body: w => `Daan-daang daga, galing sa labas sa isang butas sa pader. Kinakain nila ang mga tanim. Umiiyak si ${N(w)} habang pinapalo sila ng walis.`, go: 'Takpan ang butas',
+    ok: () => { stressAll(-4); return 'Tinakpan mo ang butas ng semento at bakal. Naitaboy ang mga daga. Kaunti lang ang nasira.'; },
+    bad: () => { S.growth = Math.max(0, S.growth - .45); addRes('food', -20); stressAll(8); return 'Halos kalahati ng greenhouse ang naubos bago natakpan ang butas.'; } },
+  { k: 'thief', room: 'X', mins: 150, t: 'May nagnanakaw sa Armory!', who: () => adultPick(), send: 'carlo',
+    body: () => 'Bukas ang Armory. Sa camera, may anino na mabilis na nagsisilid ng bala sa bag. Naka-hood. Hindi mo makita ang mukha.', go: 'Habulin sa Armory',
+    ok: () => { stressAll(-4); const ext = (S.extra || []).filter(d => S.people[d.id] && !d.kid); return ext.length ? `Nahuli mo siya sa akto: si ${pick(ext).name}. Umiiyak, ibinalik ang lahat ng bala. "Gusto ko lang ng proteksyon."` : 'Nahuli mo siya: isang batang galing sa labas na pumasok sa vent. Pinakain mo, at pinaalis nang may baon.'; },
+    bad: () => { S.ammo = Math.max(0, S.ammo - 15); S.stock = Math.max(0, (S.stock || 0) - 60); stressAll(8); return 'Nakatakas siya. Nawala ang 15 bala at 60 sa supply room.'; } },
+  { k: 'fumes', room: 'S', mins: 140, t: 'Usok mula sa generator!', who: () => S.people.na ? 'na' : adultPick(), send: 'na',
+    body: w => `Puting usok mula sa backup generator sa Solar room. Carbon monoxide. Nahihilo si ${N(w)} sa sahig, at kumakalat ang usok sa pasilyo.`, go: 'Patayin ang generator',
+    ok: w => { stressAll(-4); return `Pinatay mo ang generator at binuhat si ${N(w)} palabas. Binuksan ang mga vent. Ligtas na.`; },
+    bad: w => { people().forEach(id => health(id, -10)); health(w, -25); S.people[w].sick = true; P[w] && routine(P[w]); addRes('power', -20); stressAll(10); return `Kumalat ang usok bago naayos. Masakit ang ulo ng lahat, at nasa Ospital si ${N(w)}.`; } },
+  { k: 'panic', room: 'Ch', mins: 150, t: 'May nagwawala sa Kapilya!', who: () => adultPick(id => S.people[id].stress > 40) || adultPick(), send: 'angel',
+    body: w => `Sumisigaw si ${N(w)} sa Kapilya, may hawak na kutsilyo mula sa Kusina. <i>"Mamamatay din tayong lahat dito! Bubuksan ko ang pinto!"</i>`, go: 'Kausapin siya at kunin ang kutsilyo',
+    ok: w => { stress(w, -30); clearMood(w); stressAll(-4); return `Dahan-dahan kang lumapit. Hinayaan mo siyang umiyak. Ibinigay niya ang kutsilyo at niyakap ka. "Pasensya na, Isha. Pagod na pagod na ako."`; },
+    bad: w => { const v = adultPick(id => id !== w); health(v, -30); S.people[v].sick = true; P[v] && routine(P[v]); setMood(w, 'lungkot', 'may nasaktan siya sa Kapilya'); stressAll(12); return `Tumakbo si ${N(w)} papunta sa Airlock. Naharang siya ni ${N(v)}, pero nasugatan ito. Nasa Ospital si ${N(v)}.`; } },
+  { k: 'millie', room: 'A', mins: 110, t: 'Tumakbo si Millie sa labas!', who: () => 'isha', send: 'aj',
+    body: () => 'Bumukas ang airlock para sa ekspedisyon, at bago pa naisara, tumakbo si Millie palabas, hinahabol ang pusa. Tahol nang tahol sa kalye. May mga zombie sa dulo ng kanto.', go: 'Habulin si Millie',
+    ok: () => { stress('isha', -15); stressAll(-6); return 'Tumakbo ka palabas, sumipol. Lumingon si Millie at tumakbo pabalik sa iyo, nang dalawang hakbang lang ang layo ng zombie. Naisara ang pinto. Hindi mo binitawan si Millie nang isang oras.'; },
+    bad: () => { stress('isha', 30); if (S.people.angel) setMood('angel', 'lungkot', 'muntik nang mawala si Millie'); stressAll(8); return 'Nawala si Millie nang buong araw. Bandang hatinggabi, may kumalmot sa pinto: si Millie, may sugat sa binti pero buhay. Hindi ka nakatulog.'; } },
+  { k: 'secret', room: 'Dorm', mins: 150, t: 'May nangingisay sa Dormitoryo!', can: () => (S.extra || []).some(d => S.people[d.id] && !d.kid && !S.people[d.id].quar), who: () => pick((S.extra || []).filter(d => S.people[d.id] && !d.kid && !S.people[d.id].quar)).id, send: 'angel',
+    body: w => `Sigawan sa Dormitoryo. Nangingisay si ${N(w)} sa kama, puti ang mga mata. May kagat pala sa binti na itinago niya. Ilang minuto na lang bago siya maging zombie.`, go: 'Turukan ng antiviral',
+    ok: w => { if ((S.anti || 0) > 0) { S.anti--; stressAll(-5); return `Itinurok mo ang antiviral sa hita niya. Tumigil ang pangingisay. Pagdilat niya: "Salamat..." (-1 antiviral)`; } S.people[w].sick = true; P[w] && routine(P[w]); return `Wala kayong antiviral, kaya itinali mo siya sa kama bago siya tuluyang nagbago. Walang nakagat. Naghahanap pa kayo ng lunas para sa kanya.`; },
+    bad: w => { S.people[w].bit = 1; const v = adultPick(id => id !== w); bite(v); stressAll(14); return `Naging zombie si ${N(w)} sa gitna ng Dormitoryo at nakagat si ${N(v)} bago siya naitali.`; } },
+];
+function resultSheet(title, html, good) { const id = 'gen' + (++genN); GEN[id] = { kick: 'Krisis', title, good, body: () => html, choices: [{ t: 'Sige', sub: '', fx: () => '' }] }; return id; }
+function startCrisis() {
+  const pool = CRISES.filter(c => !c.can || c.can()); if (!pool.length) return;
+  const c = vary('crisis', pool), w = c.who(), pos = approach(roomCenter(c.room)), mins = Math.round(c.mins * (1 - (PH() - 1) * .1));
+  if (!w) return;
+  const sw = S.people[c.send] && !S.people[c.send].sick && c.send !== w ? c.send : adultPick(id => id !== w);
+  S.crisis = { k: c.k, who: w, room: c.room, x: pos.x, z: pos.z, mins, until: null };
+  const id = 'gen' + (++genN);
+  GEN[id] = { kind: 'knock', kick: `KRISIS · ${ROOMS[c.room].n}`, loc: c.room, title: c.t, sound: 'knock',
+    body: () => `<p>${c.body(w)}</p><p><b>⏱ May ${mins} minuto ka.</b></p>`,
+    choices: [
+      { t: `Ako na! ${c.go}`, sub: `Tumakbo sa ${ROOMS[c.room].n}. Sundan ang marka.`, fx: () => { if (!S.crisis) return ''; S.crisis.until = S.min + mins; refreshTask(); return ''; } },
+      { t: `Ipadala si ${N(sw)}`, sub: 'Hindi mo na kailangang pumunta. Pero baka hindi niya kaya.', fx: () => endCrisis(Math.random() < (S.people[sw]?.stress > 70 ? .4 : .6), sw, true) },
+    ] };
+  queueEvent(id);
+}
+function endCrisis(ok, by, inline) {
+  const cr = S.crisis; if (!cr) return '';
+  const c = CRISES.find(x => x.k === cr.k); S.crisis = null; refreshTask();
+  if (!S.people[cr.who] && cr.who !== 'isha') return '';
+  const txt = ok ? c.ok(cr.who) : c.bad(cr.who);
+  if (ok) { chime(); mis('crisis'); } else beep(330, .4);
+  if (by && by !== 'isha') stress(by, 10);
+  const sent = by && by !== 'isha', html = sent && ok ? `<p>Tumakbo si ${N(by)} sa ${ROOMS[cr.room].n}. <b>Nagawa niya!</b> ${pick(['Ligtas ang lahat.', 'Walang nasaktan.', 'Pagbalik niya, nanginginig pa ang kamay niya, pero nakangiti.'])}</p>` : `<p>${sent ? `Hindi nakaya ni ${N(by)}. ` : ''}${txt}</p>`;
+  if (inline) return html;
+  queueEvent(resultSheet(ok ? 'Nailigtas mo sila!' : 'Huli na...', html, ok)); save(); return '';
+}
+
 // ---------------------------------------------------------------- thrillers: mysteries with twists, told over several days
 function lunaDef() { return { id: 'luna', name: 'Luna', role: '12 taong gulang, anak ng gumawa ng bunker', spec: null, job: 'Kz', kid: true, h: 1.38, skin: '#c99a72', shirt: '#7a9e7e', pants: '#3a3f4a', hair: '#1b130f', style: 'long', bed: freeBed() || ['Lib', 0] }; }
 Object.assign(EVENTS, {
@@ -3649,6 +3748,8 @@ function buildBig() {
   box(13, .012, 1, C('#ffd9a8'), 92, 0, 30.5); decal('KIDS ZONE', 92, 30.5, .45);
 }
 function townItems() {
+  item(() => S.crisis?.x ?? -99, () => S.crisis?.z ?? -99, 'KRISIS', () => busy(1.4, () => endCrisis(S.crisis && S.min <= S.crisis.until, 'isha'), 'work'), { r: 1.8, when: () => !!S.crisis?.until });
+  Object.defineProperty(ITEMS[ITEMS.length - 1], 'label', { get: () => { const c = CRISES.find(x => x.k === S.crisis?.k); return c ? c.go + '!' : 'Gawin'; } });
   item(87, 26.4, 'Mag-slide', () => busy(1, () => { advance(15); stress('isha', -7); toast(pick(['Wheee! Sinamahan mo sina Carly at Ria sa slide.', 'Nag-slide ka. Tawa nang tawa ang mga bata.', 'Ang bilis! Muntik ka nang tumama sa ball pit.']), 'good'); save(); }, 'work'), { r: 1.4 });
   item(92, 29.4, 'Tumalon sa ball pit', () => busy(1, () => { advance(15); stress('isha', -6); toast('Lumubog ka sa mga bola. Hinila ka palabas ni Butchukok.', 'good'); save(); }, 'work'), { r: 1.4 });
   const relax = (x, z, label, pose, lines, dur = 2, kind) => item(x, z, label, () => busy(dur, () => { advance(30); stress('isha', -8); if (kind) mis(kind); toast(pick(lines), 'good'); save(); }, pose), { r: 1.4 });
@@ -3911,7 +4012,7 @@ function frame() {
     if (FX.tvCn) { const cOn = tvOn('Cn'); FX.tvCn.material.color.setHSL(cOn ? (t * .05 + .6) % 1 : 0, cOn ? .55 : 0, cOn ? .45 + .15 * Math.sin(t * 4) : .03); }
     FX.tvM.material.color.setHSL(mOn ? (t * .06) % 1 : 0, mOn ? .6 : 0, mOn ? .75 + .2 * Math.sin(t * 6) : 1);
     if (FX.dest.visible && !ISHA.path.length) FX.dest.visible = false;
-    if (S.task) { FX.marker.visible = true; const s = SPOTS[S.task.room][0]; FX.marker.position.set(s.x, 2.1 + Math.sin(t * 3) * .1, s.z); FX.marker.rotation.y = t * 2; } else FX.marker.visible = false;
+    if (S.task || S.crisis?.until) { FX.marker.visible = true; const s = S.crisis?.until ? S.crisis : SPOTS[S.task.room][0]; FX.marker.position.set(s.x, 2.1 + Math.sin(t * 3) * .1, s.z); FX.marker.rotation.y = t * 2; } else FX.marker.visible = false;
     if ((hudT += dt) > .2) { hudT = 0; updateHUD(); }
     if ((actT += dt) > .12 && !paused) { actT = 0; action = cam.mode === 'follow' ? nearest() : null; $('#act').hidden = !action; if (action) $('#actText').textContent = action.label; }
   }
