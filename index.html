@@ -1019,7 +1019,7 @@ function buildRooms() {
   ball(.3, MAT.blanketC, 45.6, .18, 25.4).scale.set(1, .5, 1); ball(.3, MAT.blanketA, 46.4, .18, 26).scale.set(1, .5, 1);
   spot('U', 46, 25, 47.65, 25); spot('U', 45, 27, 44.6, 27.2); spot('U', 46, 27, 45.8, 28.8);
   decal('MUSIKA', 45.9, 29.5, .45, Math.PI / 2);
-  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar(); buildTown(); buildBig(); buildSuite();
+  buildExtraRooms(); buildGuestBeds(); buildDorm(); buildQuar(); buildTown(); buildBig(); buildSuite(); buildDecor();
   decal('GREENHOUSE', 6.5, 8.2, .8); decal('KUSINA', 6.5, 16.4, .7); decal('PANTRY', 5.5, 20.2, .6);
   decal('TUBIG', 5, 28.3, .7); decal('SOLAR', 14.5, 25.4, .7); decal('SALA', 18, 13.5, .9, 0, .18);
   decal('OXYGEN', 32.5, 3.4, .55); decal('HOBBY', 30.5, 11.4, .6); decal('CLINIC', 30.5, 18.5, .6);
@@ -1848,7 +1848,7 @@ function drawBoards() {
 }
 
 // ---------------------------------------------------------------- lights
-const hemi = new THREE.HemisphereLight('#eef2f3', '#4a433c', .8); scene.add(hemi);
+const hemi = new THREE.HemisphereLight('#fff4e6', '#4a433c', .95); scene.add(hemi);
 const key = new THREE.DirectionalLight('#fff1dc', 1.45);
 key.castShadow = true; key.shadow.mapSize.set(TOUCH ? 1536 : 2048, TOUCH ? 1536 : 2048);
 Object.assign(key.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, near: 1, far: 40 }); key.shadow.bias = -.0004; key.shadow.normalBias = .03;
@@ -3730,6 +3730,43 @@ function buildTown() {
   // Mini-mart: shelves of goods, a counter by the door
   for (const [x, z] of [[62.6, 32.8], [62.6, 34.6], [70.6, 32.8], [70.6, 34.6]]) { box(4, 1.5, .5, MAT.cabinet, x, 0, z); for (let i = 0; i < 12; i++) box(.24, .26, .2, C(pick(['#e74c3c', '#f1c40f', '#3498db', '#2ecc71', '#e67e22', '#ecf0f1'])), x - 1.7 + (i % 6) * .68, .35 + Math.floor(i / 6) * .55, z, 0); block(Math.floor(x - 2), Math.floor(z), Math.floor(x + 1.9), Math.floor(z)); }
   rbox(1.6, .95, .6, wood, 67.9, 0, 31.6, 0, .03); box(.4, .3, .3, black, 67.9, .95, 31.6); decal('MINI-MART', 66.9, 34.2, .4);
+}
+function buildDecor() {
+  // a beauty pass: art on the walls, plants in free corners, runners and sconces in the halls
+  const ARTS = [
+    (g, s) => { const gr = g.createLinearGradient(0, 0, 0, s); gr.addColorStop(0, '#2b3a67'); gr.addColorStop(.6, '#f08a4b'); gr.addColorStop(1, '#ffd38a'); g.fillStyle = gr; g.fillRect(0, 0, s, s); g.fillStyle = '#ffe9b0'; g.beginPath(); g.arc(s * .5, s * .62, s * .12, 0, 7); g.fill(); g.fillStyle = '#2e2a3a'; g.fillRect(0, s * .72, s, s * .28); },
+    (g, s) => { g.fillStyle = '#cfe6ee'; g.fillRect(0, 0, s, s); g.fillStyle = '#4a6b3a'; g.beginPath(); g.moveTo(0, s); g.lineTo(s * .3, s * .35); g.lineTo(s * .55, s * .7); g.lineTo(s * .8, s * .3); g.lineTo(s, s * .6); g.lineTo(s, s); g.fill(); g.fillStyle = '#ffffff'; g.beginPath(); g.moveTo(s * .3, s * .35); g.lineTo(s * .38, s * .48); g.lineTo(s * .22, s * .48); g.fill(); },
+    (g, s) => { for (let i = 0; i < 6; i++) { g.fillStyle = ['#e07a5f', '#f2cc8f', '#81b29a', '#3d405b', '#f4f1de', '#e9c46a'][i]; g.fillRect(i * s / 6, 0, s / 6 + 1, s); } },
+    (g, s) => { g.fillStyle = '#1d3557'; g.fillRect(0, 0, s, s); g.fillStyle = '#f1faee'; for (let i = 0; i < 40; i++) g.fillRect(Math.random() * s, Math.random() * s * .7, 2, 2); g.fillStyle = '#a8dadc'; g.beginPath(); g.arc(s * .75, s * .25, s * .08, 0, 7); g.fill(); g.fillStyle = '#457b9d'; g.fillRect(0, s * .75, s, s * .25); },
+    (g, s) => { g.fillStyle = '#fefae0'; g.fillRect(0, 0, s, s); for (const [x, y, r, c] of [[.3, .4, .18, '#e63946'], [.62, .55, .22, '#f4a261'], [.45, .72, .12, '#2a9d8f']]) { g.fillStyle = c; g.beginPath(); g.arc(s * x, s * y, s * r, 0, 7); g.fill(); } },
+    (g, s) => { g.fillStyle = '#e9f5db'; g.fillRect(0, 0, s, s); g.strokeStyle = '#588157'; g.lineWidth = s / 40; for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(s * (.15 + i * .17), s); g.quadraticCurveTo(s * (.1 + i * .17), s * .4, s * (.25 + i * .15), s * .15); g.stroke(); } },
+  ].map(d => new THREE.MeshBasicMaterial({ map: ctex(128, d) }));
+  const SKIP = new Set(['A', 'X', 'O', 'S', 'W', 'Bw', 'Bm', 'm', 'MB', 'Q', 'Y', 'P', 'Gy', 'Ar', 'Cn', 'V', 'Pw', 'Ct', 'Pk']);
+  const spots = []; (function walk(o) { if (!o || typeof o !== 'object') return; if (typeof o.x === 'number' && typeof o.z === 'number') { spots.push(o); return; } for (const v of Object.values(o)) walk(v); })(SPOTS);
+  const nearSpot = (x, z) => spots.some(p => Math.hypot(p.x - x, p.z - z) < 1.3);
+  const nearDoor = (x, z) => DOORS.some(([dx, dz]) => Math.abs(dx - x) <= 1 && Math.abs(dz - z) <= 1);
+  const isWall = (x, z) => x >= 0 && z >= 0 && x < GW && z < GH && cell[ci(x, z)] === 2;
+  const pot = std({ color: '#d8cfc2', roughness: .8 }), frame = MAT.walnut, sconce = glow('#ffe2b0');
+  let n = 0;
+  for (const [id, r] of Object.entries(ROOMS)) {
+    if (r.hall) {
+      const long = r.w > r.h, len = (long ? r.w : r.h) - .6;
+      box(long ? len : .55, .012, long ? .55 : len, MAT.rug2, r.x + r.w / 2, .001, r.z + r.h / 2);
+      for (let k = 1.5; k < (long ? r.w : r.h) - 1; k += 3) { const x = long ? r.x + k : r.x + .04, z = long ? r.z + .04 : r.z + k; box(long ? .3 : .06, .12, long ? .06 : .3, sconce, x, 1.9, z); }
+      continue;
+    }
+    if (SKIP.has(id) || /^R\d/.test(id)) continue;
+    // up to two paintings on the north wall, where the wall is solid
+    const xs = r.w >= 6 ? [r.x + Math.floor(r.w * .3), r.x + Math.floor(r.w * .7)] : [r.x + Math.floor(r.w / 2)];
+    for (const x of xs) if (isWall(x, r.z - 1) && isWall(x - 1, r.z - 1) && !nearDoor(x, r.z - 1)) {
+      box(1.04, .74, .05, frame, x + .5, 1.12, r.z + .03); put(geo('artP', () => new THREE.PlaneGeometry(.9, .6)), ARTS[n++ % ARTS.length], x + .5, 1.49, r.z + .06);
+    }
+    // plants in free corners
+    for (const [cx, cz] of [[r.x, r.z], [r.x + r.w - 1, r.z], [r.x, r.z + r.h - 1], [r.x + r.w - 1, r.z + r.h - 1]]) {
+      if (!walkable(cx, cz) || nearDoor(cx, cz) || nearSpot(cx + .5, cz + .5) || Math.random() < .35) continue;
+      const k = .75 + Math.random() * .4; cyl(.2 * k, .15 * k, .4 * k, pot, cx + .5, 0, cz + .5, 14); ball(.34 * k, MAT.leaf2, cx + .5, .72 * k, cz + .5); ball(.24 * k, MAT.leaf, cx + .58, 1.02 * k, cz + .44);
+    }
+  }
 }
 function buildSuite() {
   const C = c => std({ color: c, roughness: .7 }), G = c => glow(c), wood = MAT.walnut, white = MAT.white;
